@@ -1,0 +1,29 @@
+# Podman Quadlet unit.
+# Rootless: copy to ~/.config/containers/systemd/, then
+#   systemctl --user daemon-reload && systemctl --user start mediatimeline
+# Rootful: /etc/containers/systemd/
+
+[Unit]
+Description=mediatimeline – public photo timelines from Immich
+Wants=network-online.target
+After=network-online.target
+
+[Container]
+Image=localhost/mediatimeline:latest
+ContainerName=mediatimeline
+# Only reachable through nginx on the same host.
+PublishPort=127.0.0.1:8080:8080
+Volume=%h/.config/mediatimeline/config.yaml:/config/config.yaml:ro,Z
+Volume=mediatimeline-data:/data:U,Z
+# Optional: keep the Immich API key out of config.yaml
+#   printf '%s' 'KEY' | podman secret create immich_api_key -
+# Secret=immich_api_key,type=mount,target=/run/secrets/immich_api_key
+# Environment=MEDIATIMELINE_IMMICH_API_KEY_FILE=/run/secrets/immich_api_key
+HealthCmd=wget -qO- http://127.0.0.1:8080/healthz || exit 1
+HealthInterval=30s
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

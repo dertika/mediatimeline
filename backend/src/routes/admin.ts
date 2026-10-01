@@ -1,0 +1,114 @@
+import type { FastifyInstance, FastifyRequest } from "fastify";
+import { z } from "zod";
+import { createAdminGuard } from "../auth/adminGuard.js";
+import { hashPassword } from "../auth/unlock.js";
+import type { Share } from "../store/db.js";
+import type { AppDeps } from "../app.js";
+import { forwardableHeaders, pipeUpstream } from "./proxy.js";
+import { isExpired } from "./public.js";
+
+const CreateShareBody = z.object({ albumId: z.string().min(1) });
+
+const UpdateShareBody = z.object({
+  enabled: z.boolean().optional(),
+  titleOverride: z
+    .string()
+    .trim()
+    .max(200)
+    .nullable()
+    .optional()
+    .transform((v) => (v === "" ? null : v)),
+  expiresAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  password: z.string().min(1).max(200).nullable().optional(),
+});
+
+const IdParams = z.object({ id: z.coerce.number().int().positive() });
+
+export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
+  const { store, immich, cache, config } = deps;
+
+  app.addHook(
+    "onRequest",
+    createAdminGuard({ trustedProxies: config.server.trustedProxies, ...config.admin }),
+  );
+
+  const baseUrl = (req: FastifyRequest) =>
+    config.server.publicBaseUrl ?? `${req.protocol}://${req.host}`;
+
+  const toDto = (share: Share, req: FastifyRequest) => ({
+    id: share.id,
+    albumId: share.albumId,
+    url: `${baseUrl(req)}/t/${share.token}`,
+    titleOverride: share.titleOverride,
+    enabled: share.enabled,
+    expiresAt: share.expiresAt,
+    expired: isExpired(share),
+    hasPassword: share.passwordHash !== null,
+    createdAt: share.createdAt,
+    createdBy: share.createdBy,
+  });
+
+  app.get("/api/admin/me", async (req) => req.adminUser);
+
+  app.get("/api/admin/immich/albums", async (req) => {
+    const albums = await immich.listAlbums();
+    const shares = store.list();
+    return albums
+      .map((a) => ({
+        id: a.id,
+        albumName: a.albumName,
+        description: a.description ?? null,
+        assetCount: a.assetCount,
+        thumbnailAssetId: a.albumThumbnailAssetId ?? null,
+        startDate: a.startDate ?? null,
+        endDate: a.endDate ?? null,
+        shares: shares.filter((s) => s.albumId === a.id).map((s) => toDto(s, req)),
+      }))
+      .sort((a, b) => (b.startDate ?? "").localeCompare(a.startDate ?? ""));
+  });
+
+  app.get<{ Params: { assetId: string } }>(
+    "/api/admin/immich/assets/:assetId/thumbnail",
+    async (req, reply) => {
+      const upstream = await immich.thumbnail(req.params.assetId, "thumbnail", forwardableHeaders(req));
+      return pipeUpstream(reply, upstream, "private, max-age=3600");
+    },
+  );
+
+  app.get("/api/admin/shares", async (req) => store.list().map((s) => toDto(s, req)));
+
+  app.post("/api/admin/shares", async (req, reply) => {
+    const body = CreateShareBody.safeParse(req.body);
+    if (!body.success) return reply.code(400).send({ error: "invalid_body" });
+    // Verifies the album exists and that the API key can read it.
+    await immich.getAlbum(body.data.albumId);
+    const share = store.create(body.data.albumId, req.adminUser?.name ?? null);
+    return reply.code(201).send(toDto(share, req));
+  });
+
+  app.patch("/api/admin/shares/:id", async (req, reply) => {
+    const params = IdParams.safeParse(req.params);
+    const body = UpdateShareBody.safeParse(req.body);
+    if (!params.success || !body.success) return reply.code(400).send({ error: "invalid_body" });
+    const { password, ...rest } = body.data;
+    const updated = store.update(params.data.id, {
+      ...rest,
+      expiresAt: rest.expiresAt === undefined ? undefined : rest.expiresAt && new Date(rest.expiresAt).toISOString(),
+      passwordHash: password === undefined ? undefined : password && (await hashPassword(password)),
+    });
+    if (!updated) return reply.code(404).send({ error: "not_found" });
+    return toDto(updated, req);
+  });
+
+  app.delete("/api/admin/shares/:id", async (req, reply) => {
+    const params = IdParams.safeParse(req.params);
+    if (!params.success) return reply.code(400).send({ error: "invalid_body" });
+    if (!store.delete(params.data.id)) return reply.code(404).send({ error: "not_found" });
+    return reply.code(204).send();
+  });
+
+  app.post("/api/admin/cache/clear", async () => {
+    cache.invalidate();
+    return { ok: true };
+  });
+}

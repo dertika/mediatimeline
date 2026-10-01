@@ -1,0 +1,20 @@
+{
+  "name": "mediatimeline",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Öffentliche Foto-Timelines aus Immich-Alben",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build -w frontend && npm run build -w backend",
+    "test": "npm test -w backend",
+    "check": "npm run check -w backend && npm run check -w frontend",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}

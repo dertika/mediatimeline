@@ -1,0 +1,21 @@
+# Alternative to the Quadlet unit: podman-compose -f deploy/compose.yaml up -d
+services:
+  mediatimeline:
+    image: localhost/mediatimeline:latest
+    build:
+      context: ..
+      dockerfile: deploy/Containerfile
+    container_name: mediatimeline
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ../config.yaml:/config/config.yaml:ro,Z
+      - mediatimeline-data:/data:U,Z
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 5s
+
+volumes:
+  mediatimeline-data:

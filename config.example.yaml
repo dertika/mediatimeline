@@ -1,0 +1,37 @@
+# mediatimeline – Beispielkonfiguration
+# Im Container wird diese Datei read-only unter /config/config.yaml eingebunden.
+
+immich:
+  # Basis-URL der Immich-Instanz (ohne /api)
+  url: https://immich.example.com
+  # API-Key (Immich → Kontoeinstellungen → API-Schlüssel). Benötigte Rechte:
+  # album.read, asset.read, asset.view
+  # Alternativ per ENV MEDIATIMELINE_IMMICH_API_KEY oder als Podman-Secret
+  # über MEDIATIMELINE_IMMICH_API_KEY_FILE.
+  apiKey: "change-me"
+
+server:
+  port: 8080
+  # Öffentliche Basis-URL für die generierten Links.
+  # Ohne Angabe wird sie aus dem Request (X-Forwarded-Host/Proto) abgeleitet.
+  publicBaseUrl: https://timeline.example.com
+  # Adressen/Netze des Reverse-Proxys (nginx). Nur von dort wird Remote-User
+  # akzeptiert und X-Forwarded-* vertraut. Erlaubt sind IPs, CIDRs und die
+  # Schlüsselwörter loopback, linklocal, uniquelocal.
+  trustedProxies: ["loopback", "10.0.2.2", "10.88.0.0/16"]
+  # Geheimnis zum Signieren der Freischalt-Cookies passwortgeschützter Links.
+  # Fehlt es, wird eines erzeugt und in /data/session-secret gespeichert.
+  # sessionSecret: "mindestens-32-zufaellige-zeichen..."
+  # Wie lange ein eingegebenes Passwort gültig bleibt (Stunden).
+  unlockTtlHours: 12
+
+admin:
+  # Von Authelia via nginx gesetzte Header
+  userHeader: Remote-User
+  groupsHeader: Remote-Groups
+  # Nur diese Authelia-Gruppen dürfen die Adminseite nutzen (leer = jeder angemeldete Benutzer)
+  allowedGroups: ["admins"]
+
+cache:
+  # Wie lange Albuminhalte aus Immich zwischengespeichert werden (Sekunden)
+  albumTtlSeconds: 300

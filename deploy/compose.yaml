@@ -1,7 +1,8 @@
 # Alternative to the Quadlet unit: podman-compose -f deploy/compose.yaml up -d
 services:
   mediatimeline:
-    image: localhost/mediatimeline:latest
+    image: ghcr.io/dertika/mediatimeline:latest
+    # `podman-compose build` builds the image locally instead
     build:
       context: ..
       dockerfile: deploy/Containerfile

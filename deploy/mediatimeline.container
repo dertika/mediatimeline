@@ -9,7 +9,9 @@ Wants=network-online.target
 After=network-online.target
 
 [Container]
-Image=localhost/mediatimeline:latest
+Image=ghcr.io/dertika/mediatimeline:latest
+# Locally built image instead: Image=localhost/mediatimeline:latest
+AutoUpdate=registry
 ContainerName=mediatimeline
 # Only reachable through nginx on the same host.
 PublishPort=127.0.0.1:8080:8080

@@ -20,8 +20,10 @@ Der Immich-API-Key verlässt nie das Backend: alle Bilder und Videos werden übe
 ## Schnellstart (Podman)
 
 ```sh
-# 1. Image bauen
-podman build -f deploy/Containerfile -t mediatimeline:latest .
+# 1. Image holen (wird von GitHub Actions gebaut, siehe unten)
+podman pull ghcr.io/dertika/mediatimeline:latest
+#    oder lokal bauen:
+#    podman build -f deploy/Containerfile -t mediatimeline:latest .
 
 # 2. Konfiguration anlegen
 mkdir -p ~/.config/mediatimeline
@@ -37,10 +39,26 @@ systemctl --user start mediatimeline
 podman run -d --name mediatimeline -p 127.0.0.1:8080:8080 \
   -v ~/.config/mediatimeline/config.yaml:/config/config.yaml:ro,Z \
   -v mediatimeline-data:/data:U,Z \
-  localhost/mediatimeline:latest
+  ghcr.io/dertika/mediatimeline:latest
 ```
 
 Alternativ: `podman-compose -f deploy/compose.yaml up -d` (erwartet `config.yaml` im Repo-Root).
+
+Die Quadlet-Unit setzt `AutoUpdate=registry`; mit `podman auto-update` (oder dem Timer `podman-auto-update.timer`) wird ein neues `latest`-Image automatisch geholt und der Dienst neu gestartet.
+
+### Container-Image (GitHub Actions)
+
+`.github/workflows/container.yml` testet und baut das Image (linux/amd64) und veröffentlicht es in der GitHub Container Registry:
+
+| Ereignis | Image-Tags |
+| --- | --- |
+| Push auf `main` | `latest`, `sha-<commit>` |
+| Git-Tag `v1.2.3` | `1.2.3`, `1.2`, `sha-<commit>` |
+| Pull Request | nur Test + Build, kein Push |
+
+Release erstellen: `git tag v0.1.0 && git push origin v0.1.0`.
+
+Neue GHCR-Pakete sind zunächst **privat**. Entweder unter *GitHub → Packages → mediatimeline → Package settings* auf „Public“ stellen oder auf dem Server einloggen: `podman login ghcr.io` (Benutzername + Personal Access Token mit Scope `read:packages`).
 
 ### Immich-API-Key
 

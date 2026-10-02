@@ -10,7 +10,7 @@ Auf einer Adminseite (geschützt durch Authelia) wählst du Immich-Alben aus und
 
 Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, Pfeiltasten, Pinch-Zoom; Tag, Ort und Bildunterschrift stehen klein in den Ecken. Die Karte passt sich dem Dark Mode an.
 
-**Tour:** Über „▶ Tour starten“ läuft eine animierte Vollbild-Führung. Sie startet in der Kartenübersicht, fliegt zum ersten Ort und zeigt dort die Fotos und Videos chronologisch. Danach geht es weiter zum nächsten Ort, wobei die Karte nur so weit herauszoomt, wie es die Entfernung erfordert. Bedienung:
+**Tour:** Über „▶ Tour starten“ läuft eine animierte Vollbild-Führung. Sie startet in der Kartenübersicht und fliegt zum ersten Ort. Dort bleibt die Karte kurz mit dem Ortsnamen stehen (so lange wie die Wartezeit pro Foto), dann kommen die Fotos und Videos dieses Orts chronologisch. Die Kartenkacheln für den nächsten Ort werden schon vorab geladen. Danach geht es weiter zum nächsten Ort, wobei die Karte nur so weit herauszoomt, wie es die Entfernung erfordert. Bedienung:
 - Knöpfe ⏮ ⏸ ⏭ ✕
 - Tastatur: Leertaste, ←/→, Esc
 - Wischen auf dem Handy

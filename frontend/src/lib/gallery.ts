@@ -27,8 +27,16 @@ function pauseVideos(pswp: PhotoSwipe, except?: HTMLElement) {
   });
 }
 
-/** Opens the fullscreen gallery (swipe, arrows, keyboard, pinch zoom) at `index`. */
-export async function openGallery(assets: TimelineAsset[], index: number, apiBase: string): Promise<void> {
+/**
+ * Opens the fullscreen gallery (swipe, arrows, keyboard, pinch zoom) at `index`.
+ * `onClose` receives the asset that was shown last, so the page can scroll to it.
+ */
+export async function openGallery(
+  assets: TimelineAsset[],
+  index: number,
+  apiBase: string,
+  onClose?: (asset: TimelineAsset) => void,
+): Promise<void> {
   const { default: PhotoSwipe } = await import("photoswipe");
   const pswp = new PhotoSwipe({
     dataSource: assets.map((a) => toSlide(a, apiBase)),
@@ -76,6 +84,10 @@ export async function openGallery(assets: TimelineAsset[], index: number, apiBas
     // Lift the bottom overlays above the native video controls.
     pswp.element?.classList.toggle("mt-is-video", assets[pswp.currIndex]?.type === "video");
   });
-  pswp.on("close", () => pauseVideos(pswp));
+  pswp.on("close", () => {
+    pauseVideos(pswp);
+    const last = assets[pswp.currIndex];
+    if (last) onClose?.(last);
+  });
   pswp.init();
 }

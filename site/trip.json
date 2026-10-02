@@ -1,0 +1,97 @@
+{
+  "title": "Norwegen-Roadtrip 2025",
+  "description": "Vier Tage von Bergen bis Ålesund: Fjorde, Wasserfälle und Serpentinen.",
+  "tour": { "intervalSeconds": 3, "radiusMeters": 2000, "videoMaxSeconds": 6 },
+  "albumComments": [
+    { "author": "Lena", "text": "Was für eine Reise! Nächstes Jahr wieder 😍", "createdAt": "2025-07-18T19:02:00.000Z" }
+  ],
+  "places": [
+    {
+      "name": "Bryggen",
+      "city": "Bergen",
+      "country": "Norwegen",
+      "lat": 60.3975,
+      "lng": 5.3236,
+      "radius": 1200,
+      "photos": [
+        { "time": "2025-07-14T10:15", "caption": "Angekommen! Die bunten Holzhäuser von Bryggen." },
+        { "time": "2025-07-14T11:40" },
+        {
+          "time": "2025-07-14T17:30",
+          "caption": "Abends noch auf den Fløyen.",
+          "comments": [{ "author": "Jonas", "text": "Die Aussicht ist der Wahnsinn!" }]
+        }
+      ]
+    },
+    {
+      "name": "Flåm",
+      "city": "Flåm",
+      "country": "Norwegen",
+      "lat": 60.8628,
+      "lng": 7.1136,
+      "radius": 2500,
+      "photos": [
+        { "time": "2025-07-15T09:20", "caption": "Morgens im Aurlandsfjord." },
+        { "time": "2025-07-15T10:05" }
+      ],
+      "video": { "time": "2025-07-15T11:10", "caption": "Mit der Flåmsbana in die Berge." }
+    },
+    {
+      "name": "Stegastein",
+      "city": "Aurland",
+      "country": "Norwegen",
+      "lat": 60.9089,
+      "lng": 7.2153,
+      "radius": 2500,
+      "photos": [
+        { "time": "2025-07-15T15:45", "caption": "Stegastein: 650 m über dem Fjord." },
+        { "time": "2025-07-15T16:10" }
+      ]
+    },
+    {
+      "name": "Geiranger",
+      "city": "Geiranger",
+      "country": "Norwegen",
+      "lat": 62.1008,
+      "lng": 7.2059,
+      "radius": 4000,
+      "photos": [
+        { "time": "2025-07-16T09:30", "caption": "Der Geirangerfjord – UNESCO-Welterbe." },
+        {
+          "time": "2025-07-16T11:15",
+          "caption": "Die Sieben Schwestern vom Boot aus.",
+          "comments": [
+            { "author": "Lena", "text": "Haben wir alle sieben gezählt?" },
+            { "author": "Jonas", "text": "Sechs. Mindestens." }
+          ]
+        },
+        { "time": "2025-07-16T14:50" }
+      ]
+    },
+    {
+      "name": "Trollstigen",
+      "city": "Rauma",
+      "country": "Norwegen",
+      "lat": 62.4565,
+      "lng": 7.6687,
+      "radius": 3000,
+      "photos": [
+        { "time": "2025-07-17T09:40", "caption": "Elf Haarnadelkurven am Trollstigen." },
+        { "time": "2025-07-17T10:20" }
+      ]
+    },
+    {
+      "name": "Ålesund",
+      "city": "Ålesund",
+      "country": "Norwegen",
+      "lat": 62.4723,
+      "lng": 6.1549,
+      "radius": 1500,
+      "photos": [
+        { "time": "2025-07-17T16:30", "caption": "Jugendstil in Ålesund." },
+        { "time": "2025-07-17T18:00" },
+        { "time": "2025-07-17T21:45", "caption": "Abendlicht vom Aksla – das perfekte Ende." }
+      ]
+    }
+  ]
+}

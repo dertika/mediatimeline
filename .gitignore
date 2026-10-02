@@ -5,3 +5,4 @@ build/
 /data/
 /config.yaml
 *.db
+_site/

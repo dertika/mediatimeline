@@ -2,6 +2,7 @@ import "photoswipe/style.css";
 import type PhotoSwipe from "photoswipe";
 import type { SlideData } from "photoswipe";
 import { formatDayTime, placeOf } from "./format";
+import type { MediaUrl } from "./media";
 import type { TimelineAsset } from "./types";
 
 const FALLBACK_SIZE = { width: 1440, height: 1080 };
@@ -10,15 +11,14 @@ function escapeAttr(value: string): string {
   return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
-function toSlide(asset: TimelineAsset, apiBase: string): SlideData {
-  const base = `${apiBase}/assets/${asset.id}`;
+function toSlide(asset: TimelineAsset, media: MediaUrl): SlideData {
   const size = asset.width && asset.height ? { width: asset.width, height: asset.height } : FALLBACK_SIZE;
   if (asset.type === "video") {
     return {
-      html: `<div class="mt-video"><video controls playsinline preload="metadata" poster="${escapeAttr(`${base}/preview`)}" src="${escapeAttr(`${base}/video`)}"></video></div>`,
+      html: `<div class="mt-video"><video controls playsinline preload="metadata" poster="${escapeAttr(media(asset, "preview"))}" src="${escapeAttr(media(asset, "video"))}"></video></div>`,
     };
   }
-  return { src: `${base}/preview`, msrc: `${base}/thumbnail`, ...size, alt: asset.caption ?? "" };
+  return { src: media(asset, "preview"), msrc: media(asset, "thumbnail"), ...size, alt: asset.caption ?? "" };
 }
 
 function pauseVideos(pswp: PhotoSwipe, except?: HTMLElement) {
@@ -34,12 +34,12 @@ function pauseVideos(pswp: PhotoSwipe, except?: HTMLElement) {
 export async function openGallery(
   assets: TimelineAsset[],
   index: number,
-  apiBase: string,
+  media: MediaUrl,
   onClose?: (asset: TimelineAsset) => void,
 ): Promise<void> {
   const { default: PhotoSwipe } = await import("photoswipe");
   const pswp = new PhotoSwipe({
-    dataSource: assets.map((a) => toSlide(a, apiBase)),
+    dataSource: assets.map((a) => toSlide(a, media)),
     index,
     counter: false,
     zoom: false,

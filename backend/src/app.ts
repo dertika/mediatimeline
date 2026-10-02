@@ -3,7 +3,7 @@ import { join } from "node:path";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
-import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
+import Fastify, { type FastifyInstance, type FastifyReply, type FastifyServerOptions } from "fastify";
 import type { Config } from "./config.js";
 import { AlbumCache } from "./immich/cache.js";
 import { ImmichClient, ImmichError } from "./immich/client.js";
@@ -72,11 +72,15 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
     await app.register(fastifyStatic, { root: staticDir, index: false });
     const indexHtml = readFileSync(join(staticDir, "index.html"), "utf8");
     await app.register(async (scope) => previewRoutes(scope, deps, indexHtml));
+    const sendIndex = (reply: FastifyReply) =>
+      reply.header("cache-control", "no-cache").sendFile("index.html", { cacheControl: false });
+    // The static wildcard would answer "/" (the root directory) with 403.
+    app.get("/", (_req, reply) => sendIndex(reply));
     app.setNotFoundHandler((req, reply) => {
       if (req.method !== "GET" || req.url.startsWith("/api/")) {
         return reply.code(404).send({ error: "not_found" });
       }
-      return reply.header("cache-control", "no-cache").sendFile("index.html");
+      return sendIndex(reply);
     });
   }
 

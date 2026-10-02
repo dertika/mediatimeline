@@ -83,3 +83,15 @@ describe("link preview", () => {
     }
   });
 });
+
+describe("SPA entry", () => {
+  it("serves the app at the root path and for client-side routes", async () => {
+    for (const url of ["/", "/admin"]) {
+      const res = await app.inject({ url });
+      expect(res.statusCode, url).toBe(200);
+      expect(res.headers["content-type"]).toContain("text/html");
+      expect(res.headers["cache-control"], url).toBe("no-cache");
+      expect(res.body).toBe(INDEX);
+    }
+  });
+});

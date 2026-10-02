@@ -1,9 +1,17 @@
 {
   "title": "Norwegen-Roadtrip 2025",
   "description": "Vier Tage von Bergen bis Ålesund: Fjorde, Wasserfälle und Serpentinen.",
-  "tour": { "intervalSeconds": 3, "radiusMeters": 2000, "videoMaxSeconds": 6 },
+  "tour": {
+    "intervalSeconds": 3,
+    "radiusMeters": 2000,
+    "videoMaxSeconds": 6
+  },
   "albumComments": [
-    { "author": "Lena", "text": "Was für eine Reise! Nächstes Jahr wieder 😍", "createdAt": "2025-07-18T19:02:00.000Z" }
+    {
+      "author": "Lena",
+      "text": "Was für eine Reise! Nächstes Jahr wieder 😍",
+      "createdAt": "2025-07-18T19:02:00.000Z"
+    }
   ],
   "places": [
     {
@@ -14,12 +22,24 @@
       "lng": 5.3236,
       "radius": 1200,
       "photos": [
-        { "time": "2025-07-14T10:15", "caption": "Angekommen! Die bunten Holzhäuser von Bryggen." },
-        { "time": "2025-07-14T11:40" },
+        {
+          "time": "2025-07-14T10:15",
+          "file": "File:Bergen Bryggen 2986.jpg",
+          "caption": "Angekommen! Die bunten Holzhäuser von Bryggen."
+        },
+        {
+          "time": "2025-07-14T11:40"
+        },
         {
           "time": "2025-07-14T17:30",
-          "caption": "Abends noch auf den Fløyen.",
-          "comments": [{ "author": "Jonas", "text": "Die Aussicht ist der Wahnsinn!" }]
+          "file": "File:Bryggen 1 (52606770243).jpg",
+          "caption": "Abends noch einmal durch Bryggen.",
+          "comments": [
+            {
+              "author": "Jonas",
+              "text": "Hier will ich wohnen!"
+            }
+          ]
         }
       ]
     },
@@ -31,10 +51,18 @@
       "lng": 7.1136,
       "radius": 2500,
       "photos": [
-        { "time": "2025-07-15T09:20", "caption": "Morgens im Aurlandsfjord." },
-        { "time": "2025-07-15T10:05" }
+        {
+          "time": "2025-07-15T09:20",
+          "caption": "Morgens in Flåm."
+        },
+        {
+          "time": "2025-07-15T10:05"
+        }
       ],
-      "video": { "time": "2025-07-15T11:10", "caption": "Mit der Flåmsbana in die Berge." }
+      "video": {
+        "time": "2025-07-15T11:10",
+        "caption": "Mit der Flåmsbana in die Berge."
+      }
     },
     {
       "name": "Stegastein",
@@ -44,8 +72,14 @@
       "lng": 7.2153,
       "radius": 2500,
       "photos": [
-        { "time": "2025-07-15T15:45", "caption": "Stegastein: 650 m über dem Fjord." },
-        { "time": "2025-07-15T16:10" }
+        {
+          "time": "2025-07-15T15:45",
+          "file": "File:Aurlandsfjorden from Stegastein, Aurland, Vestland, Norway, 2025 June.jpg",
+          "caption": "Stegastein: 650 m über dem Aurlandsfjord."
+        },
+        {
+          "time": "2025-07-15T16:10"
+        }
       ]
     },
     {
@@ -56,16 +90,27 @@
       "lng": 7.2059,
       "radius": 4000,
       "photos": [
-        { "time": "2025-07-16T09:30", "caption": "Der Geirangerfjord – UNESCO-Welterbe." },
         {
-          "time": "2025-07-16T11:15",
-          "caption": "Die Sieben Schwestern vom Boot aus.",
+          "time": "2025-07-16T09:30",
+          "file": "File:Geirangerfjord from Ørnesvingen, 2013 June.jpg",
+          "caption": "Der Geirangerfjord vom Ørnesvingen – UNESCO-Welterbe.",
           "comments": [
-            { "author": "Lena", "text": "Haben wir alle sieben gezählt?" },
-            { "author": "Jonas", "text": "Sechs. Mindestens." }
+            {
+              "author": "Lena",
+              "text": "Schönster Ausblick der ganzen Reise."
+            },
+            {
+              "author": "Jonas",
+              "text": "Und das ohne Filter!"
+            }
           ]
         },
-        { "time": "2025-07-16T14:50" }
+        {
+          "time": "2025-07-16T11:15"
+        },
+        {
+          "time": "2025-07-16T14:50"
+        }
       ]
     },
     {
@@ -76,8 +121,16 @@
       "lng": 7.6687,
       "radius": 3000,
       "photos": [
-        { "time": "2025-07-17T09:40", "caption": "Elf Haarnadelkurven am Trollstigen." },
-        { "time": "2025-07-17T10:20" }
+        {
+          "time": "2025-07-17T09:40",
+          "file": "File:.00 7891 Trollstigen - Norway.jpg",
+          "caption": "Elf Haarnadelkurven am Trollstigen."
+        },
+        {
+          "time": "2025-07-17T10:20",
+          "file": "File:Isterdalen from above Stigfossen, Rauma, Møre og Romsdal, Norway, 2025 May.jpg",
+          "caption": "Oben angekommen: Blick ins Isterdal."
+        }
       ]
     },
     {
@@ -88,9 +141,19 @@
       "lng": 6.1549,
       "radius": 1500,
       "photos": [
-        { "time": "2025-07-17T16:30", "caption": "Jugendstil in Ålesund." },
-        { "time": "2025-07-17T18:00" },
-        { "time": "2025-07-17T21:45", "caption": "Abendlicht vom Aksla – das perfekte Ende." }
+        {
+          "time": "2025-07-17T16:30",
+          "file": "File:St. Olavs Plass - Ålesund, Norway 2022-07-03.jpg",
+          "caption": "Jugendstil in Ålesund."
+        },
+        {
+          "time": "2025-07-17T18:00"
+        },
+        {
+          "time": "2025-07-17T21:45",
+          "file": "File:Vista de Ålesund desde Aksla, Noruega, 2019-09-01, DD 16.jpg",
+          "caption": "Abendlicht vom Aksla – das perfekte Ende."
+        }
       ]
     }
   ]

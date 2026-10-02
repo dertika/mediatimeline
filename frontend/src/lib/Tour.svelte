@@ -3,7 +3,7 @@
   import { fade } from "svelte/transition";
   import type * as Leaflet from "leaflet";
   import { formatDay, formatDayTime, placeOf } from "./format";
-  import { accentColor, createBaseMap, prefetchTiles, type L as LeafletNS } from "./map";
+  import { accentColor, addBackgroundLayer, createBaseMap, prefetchTiles, type L as LeafletNS } from "./map";
   import { buildStops, flightSeconds, type TourStop } from "./tour";
   import type { Timeline, TimelineAsset } from "./types";
 
@@ -14,11 +14,13 @@
   }: {
     timeline: Timeline;
     apiBase: string;
-    /** Called with the asset shown last, so the page can scroll to it. */
-    onclose: (last: TimelineAsset | null) => void;
+    /** Called when the tour ends or is closed. */
+    onclose: () => void;
   } = $props();
 
   const OVERVIEW_MS = 2000;
+  /** Final overview of the whole route before the tour closes itself. */
+  const END_OVERVIEW_MS = 3000;
   const MEDIA_FADE_MS = 350;
   const CONTROLS_HIDE_MS = 3000;
   const RING_CIRCUMFERENCE = 2 * Math.PI * 27;
@@ -46,7 +48,8 @@
   /** Map pause after arriving at a place, before its first photo. */
   let arriving = $state(false);
   let paused = $state(false);
-  let finished = $state(false);
+  /** Last step: flying out to the overview, then the tour closes itself. */
+  let ending = $state(false);
   let soundBlocked = $state(false);
   let controlsVisible = $state(true);
 
@@ -64,14 +67,13 @@
   let hideTimer: ReturnType<typeof setTimeout> | undefined;
   /** The running timed step, kept so that pause/resume can continue it. */
   let step: { fn: () => void; remaining: number; startedAt: number } | null = null;
-  let lastShown: TimelineAsset | null = null;
   let enteredFullscreen = false;
   let swipeX: number | null = null;
 
   const current = $derived(stopIdx >= 0 ? (stops[stopIdx]?.assets[itemIdx] ?? null) : null);
-  const progress = $derived(stopIdx < 0 ? 0 : finished ? 1 : (stopOffsets[stopIdx]! + itemIdx + 1) / totalItems);
+  const progress = $derived(stopIdx < 0 ? 0 : ending ? 1 : (stopOffsets[stopIdx]! + itemIdx + 1) / totalItems);
   const ringMode = $derived(
-    finished || (!showMedia && !arriving) ? "none" : showMedia && current?.type === "video" ? "video" : "timed",
+    ending || (!showMedia && !arriving) ? "none" : showMedia && current?.type === "video" ? "video" : "timed",
   );
   const media = (a: TimelineAsset, kind: "preview" | "video") => `${apiBase}/assets/${a.id}/${kind}`;
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -162,7 +164,7 @@
     const my = ++run;
     cancelStep();
     stopVideo();
-    finished = false;
+    ending = false;
     const travel = s !== flownTo;
     if (travel) {
       showMedia = false;
@@ -187,7 +189,6 @@
     showMedia = true;
     soundBlocked = false;
     videoProgress = 0;
-    lastShown = current;
     preloadNext();
     await tick();
     if (my === run) startCurrent();
@@ -234,7 +235,7 @@
   }
 
   function next() {
-    if (finished) return;
+    if (ending) return;
     if (stopIdx < 0) return void goTo(0, 0);
     if (arriving) {
       // Skip the rest of the map pause.
@@ -249,26 +250,25 @@
 
   function prev() {
     const back = { arrive: false };
-    if (finished) return void goTo(stops.length - 1, stops.at(-1)!.assets.length - 1, back);
+    if (ending) return;
     if (itemIdx > 0 && !arriving) return void goTo(stopIdx, itemIdx - 1, back);
     if (stopIdx > 0) return void goTo(stopIdx - 1, stops[stopIdx - 1]!.assets.length - 1, back);
   }
 
+  /** Shows the whole route once more, then closes the tour by itself. */
   function finish() {
     ++run;
     cancelStep();
     stopVideo();
     showMedia = false;
     arriving = false;
-    finished = true;
+    ending = true;
     flownTo = -1;
     route.setLatLngs(stops.map((s) => s.center));
     map?.flyToBounds(overviewBounds(), { padding: [60, 60], duration: 2 });
-  }
-
-  function restart() {
-    paused = false;
-    goTo(0, 0);
+    // Not pausable: the tour is over, only the closing animation remains.
+    const my = run;
+    timer = setTimeout(() => my === run && close(), END_OVERVIEW_MS);
   }
 
   function togglePause() {
@@ -290,7 +290,7 @@
     cancelStep();
     stopVideo();
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    onclose(lastShown);
+    onclose();
   }
 
   function poke() {
@@ -313,7 +313,7 @@
     // Touch taps fire no pointermove, so they must reveal the controls too.
     poke();
     const target = e.target as Element;
-    swipeX = e.pointerType === "mouse" || target.closest("button, video") ? null : e.clientX;
+    swipeX = e.pointerType === "mouse" || target.closest("button") ? null : e.clientX;
   }
 
   function swipeEnd(e: PointerEvent) {
@@ -339,8 +339,9 @@
       const base = await createBaseMap(mapEl, {
         zoomControl: false,
         attributionControl: true,
-        // Don't load tiles for every intermediate zoom level of a flight.
-        tileOptions: { updateWhenZooming: false, keepBuffer: 4 },
+        // Leaflet's mobile default (updateWhenIdle) loads no tiles at all while
+        // flying, which leaves the map grey on iPhone/iPad; keep loading.
+        tileOptions: { updateWhenIdle: false, updateWhenZooming: true, updateInterval: 100, keepBuffer: 4 },
       });
       L = base.L;
       map = base.map;
@@ -359,6 +360,8 @@
         className: "tour-here",
       }).addTo(map);
       map.fitBounds(overviewBounds(), { padding: [60, 60], maxZoom: 13 });
+      // Coarse map under everything, so zooming out never shows grey.
+      addBackgroundLayer(L, map, map.getZoom());
       prefetchStop(0, null);
 
       const my = ++run;
@@ -379,7 +382,7 @@
 </script>
 
 <!-- Line icons after Lucide (ISC license), inlined to avoid a dependency. -->
-{#snippet icon(name: "prev" | "next" | "play" | "pause" | "close" | "sound" | "restart")}
+{#snippet icon(name: "prev" | "next" | "play" | "pause" | "close" | "sound")}
   <svg viewBox="0 0 24 24" aria-hidden="true" class="icon icon-{name}">
     {#if name === "prev"}
       <polygon points="19 20 9 12 19 4 19 20" /><line x1="5" x2="5" y1="19" y2="5" />
@@ -391,11 +394,9 @@
       <rect x="14" y="4" width="4" height="16" rx="1" /><rect x="6" y="4" width="4" height="16" rx="1" />
     {:else if name === "close"}
       <path d="M18 6 6 18" /><path d="m6 6 12 12" />
-    {:else if name === "sound"}
+    {:else}
       <path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6a1.4 1.4 0 0 1-1 .4H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5z" />
       <path d="M16 9a5 5 0 0 1 0 6" /><path d="M19.4 18.4a9 9 0 0 0 0-12.8" />
-    {:else}
-      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
     {/if}
   </svg>
 {/snippet}
@@ -404,7 +405,7 @@
 
 <div
   class="tour"
-  class:idle={!controlsVisible && !paused && !finished}
+  class:idle={!controlsVisible && !paused}
   class:paused
   role="dialog"
   tabindex="-1"
@@ -437,7 +438,6 @@
             src={media(current, "video")}
             poster={media(current, "preview")}
             playsinline
-            controls
             onended={next}
             ontimeupdate={onVideoTime}
             onerror={next}
@@ -463,20 +463,11 @@
       <span>Ort {stopIdx + 1}/{stops.length} · Foto {itemIdx + 1}/{stops[stopIdx]?.assets.length}</span>
     {:else if arriving && stops[stopIdx]}
       <span>Ort {stopIdx + 1}/{stops.length} · {placeName(stops[stopIdx]!, stopIdx)}</span>
-    {:else if !finished}
+    {:else}
       <span>{stops.length} Orte · {totalItems} Medien</span>
     {/if}
   </div>
 
-  {#if finished}
-    <div class="end glass" transition:fade>
-      <h2>Tour beendet</h2>
-      <div class="end-actions">
-        <button class="glass pill" onclick={restart}>{@render icon("restart")} Nochmal</button>
-        <button class="glass pill" onclick={close}>Schließen</button>
-      </div>
-    </div>
-  {/if}
 
   <button class="glass round close" onclick={close} aria-label="Tour schließen">{@render icon("close")}</button>
 
@@ -486,7 +477,7 @@
       class="round"
       onclick={prev}
       aria-label="Zurück"
-      disabled={(stopIdx <= 0 && (itemIdx === 0 || arriving)) && !finished}
+      disabled={ending || (stopIdx <= 0 && (itemIdx === 0 || arriving))}
     >
       {@render icon("prev")}
     </button>
@@ -515,7 +506,7 @@
       </svg>
       {@render icon(paused ? "play" : "pause")}
     </button>
-    <button class="round" onclick={next} aria-label="Nächstes" disabled={finished}>{@render icon("next")}</button>
+    <button class="round" onclick={next} aria-label="Nächstes" disabled={ending}>{@render icon("next")}</button>
   </div>
 </div>
 
@@ -840,32 +831,6 @@
   }
 
   .sound .icon {
-    width: 18px;
-    height: 18px;
-  }
-
-  .end {
-    position: absolute;
-    z-index: 700;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    padding: 24px 28px;
-    border-radius: 18px;
-    text-align: center;
-  }
-
-  .end h2 {
-    margin: 0 0 16px;
-  }
-
-  .end-actions {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-  }
-
-  .end .icon {
     width: 18px;
     height: 18px;
   }

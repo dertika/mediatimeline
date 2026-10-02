@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>mediatimeline – Eure Reise als Foto-Timeline aus Immich</title>
+    <meta
+      name="description"
+      content="mediatimeline macht aus einem Immich-Album eine teilbare Foto-Timeline mit Karte, Swipe-Galerie und animierter Tour durch alle Orte. Selbst gehostet, im Podman-Container."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="mediatimeline – Eure Reise als Foto-Timeline" />
+    <meta property="og:description" content="Teilbare Foto-Timelines aus Immich: Karte, Galerie und eine animierte Tour durch alle Orte." />
+    <meta property="og:url" content="%SITE_URL%/" />
+    <meta property="og:image" content="%SITE_URL%/media/og.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="favicon.svg" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="nav">
+      <a class="brand" href="./"><img src="favicon.svg" alt="" width="28" height="28" /> mediatimeline</a>
+      <nav>
+        <a href="#funktionen">Funktionen</a>
+        <a href="#tour">Tour</a>
+        <a href="#installation">Installation</a>
+        <a href="https://github.com/dertika/mediatimeline">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-text">
+          <p class="eyebrow">Selbst gehostet · Open Source · für Immich</p>
+          <h1>Eure Reise.<br />Als Geschichte erzählt.</h1>
+          <p class="lead">
+            mediatimeline macht aus einem Immich-Album eine teilbare Foto-Timeline: mit Karte aller Aufnahmeorte, Fotos
+            und Videos nach Tagen, einer Swipe-Galerie und einer animierten Tour, die von Ort zu Ort fliegt.
+          </p>
+          <div class="actions">
+            <a class="button primary" href="demo/">▶ Live-Demo ansehen</a>
+            <a class="button" href="#installation">Installieren</a>
+          </div>
+        </div>
+        <figure class="browser">
+          <div class="browser-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+          <video autoplay muted loop playsinline preload="metadata" poster="media/tour-desktop.jpg" aria-label="Aufnahme der animierten Tour">
+            <source src="media/tour-desktop.mp4" type="video/mp4" />
+          </video>
+        </figure>
+      </section>
+
+      <section class="steps">
+        <div>
+          <span class="step">1</span>
+          <h3>Album in Immich</h3>
+          <p>Fotos und Videos landen wie gewohnt in Immich. Beschreibungen und Kommentare werden zu Bildunterschriften.</p>
+        </div>
+        <div>
+          <span class="step">2</span>
+          <h3>Im Admin freigeben</h3>
+          <p>Album auswählen, Link erzeugen, optional Passwort und Ablaufdatum setzen. Die Adminseite schützt Authelia.</p>
+        </div>
+        <div>
+          <span class="step">3</span>
+          <h3>Link teilen</h3>
+          <p>Familie und Freunde sehen die Timeline im Browser – ohne Konto, ohne App, auf jedem Gerät.</p>
+        </div>
+      </section>
+
+      <section id="funktionen" class="showcase">
+        <div class="showcase-text">
+          <h2>Eine Timeline, die man gern durchblättert</h2>
+          <p>
+            Oben der Albumname und eine Karte mit der Route, darunter alle Fotos und Videos in zeitlicher Reihenfolge,
+            nach Tagen gegliedert. Ein Klick auf einen Kartenpunkt springt zum Foto, ein Klick auf ein Foto öffnet die
+            Vollbild-Galerie.
+          </p>
+          <a class="button primary" href="demo/">Demo-Timeline öffnen</a>
+        </div>
+        <img class="shot" src="media/timeline-desktop.jpg" alt="Demo-Timeline mit Karte und Fotos" loading="lazy" />
+      </section>
+
+      <section id="tour" class="tour">
+        <div class="phone">
+          <video autoplay muted loop playsinline preload="none" poster="media/tour-phone.jpg" aria-label="Tour auf dem Handy">
+            <source src="media/tour-phone.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <div class="tour-text">
+          <p class="eyebrow">Geführte Tour</p>
+          <h2>Ein Knopf – und die Reise läuft noch einmal ab</h2>
+          <ul class="checks">
+            <li>Startet in der Übersicht und fliegt zum ersten Ort. Bei kurzen Wegen wird nur so weit herausgezoomt wie nötig.</li>
+            <li>An jedem Ort eine kurze Kartenpause mit Ortsname, dann die Fotos und Videos von dort, chronologisch.</li>
+            <li>Ein neuer Reisetag wird mit „Tag 2“ angekündigt.</li>
+            <li>Videos laufen mit Ton. Pause, vor, zurück, Wischen und Tastatur funktionieren jederzeit.</li>
+            <li>Wartezeit pro Foto, maximale Videolänge und Ortsradius sind pro Link einstellbar.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="features">
+        <h2>Alles drin, was man zum Teilen braucht</h2>
+        <div class="grid">
+          <article>
+            <span class="icon" aria-hidden="true">🗺️</span>
+            <h3>Karte aus GPS-Daten</h3>
+            <p>Alle Aufnahmeorte mit Vorschaubildern und Route, gruppiert beim Herauszoomen, im Dark Mode dunkel.</p>
+          </article>
+          <article>
+            <span class="icon" aria-hidden="true">🖼️</span>
+            <h3>Swipe-Galerie</h3>
+            <p>Vollbild mit Wischen, Pfeiltasten und Pinch-Zoom. Tag, Ort und Bildunterschrift stehen klein in den Ecken.</p>
+          </article>
+          <article>
+            <span class="icon" aria-hidden="true">💬</span>
+            <h3>Unterschriften &amp; Kommentare</h3>
+            <p>Beschreibung oder erster Immich-Kommentar als Bildunterschrift – oder alle Kommentare mit Namen.</p>
+          </article>
+          <article>
+            <span class="icon" aria-hidden="true">🔒</span>
+            <h3>Passwort &amp; Ablaufdatum</h3>
+            <p>Beides optional pro Link. Links lassen sich jederzeit deaktivieren oder widerrufen.</p>
+          </article>
+          <article>
+            <span class="icon" aria-hidden="true">🔗</span>
+            <h3>Schöne Linkvorschau</h3>
+            <p>WhatsApp, Signal und Telegram zeigen Albumname, Zeitraum und Coverbild.</p>
+          </article>
+          <article>
+            <span class="icon" aria-hidden="true">🛡️</span>
+            <h3>Immich bleibt privat</h3>
+            <p>Der API-Key verlässt nie das Backend. Ausgeliefert werden nur Medien aus freigegebenen Alben.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="installation" class="install">
+        <div>
+          <h2>In fünf Minuten installiert</h2>
+          <p>
+            Ein Container-Image auf der GitHub Container Registry, eine kleine <code>config.yaml</code> mit Immich-URL und
+            API-Key, fertig. Für den Dauerbetrieb liegt eine Podman-Quadlet-Unit mit Auto-Update bei, für nginx und
+            Authelia eine Beispielkonfiguration.
+          </p>
+          <a class="button" href="https://github.com/dertika/mediatimeline#schnellstart-podman">Anleitung im README</a>
+        </div>
+        <pre><code><span class="c"># Image holen</span>
+podman pull ghcr.io/dertika/mediatimeline:latest
+
+<span class="c"># Konfiguration anlegen</span>
+mkdir -p ~/.config/mediatimeline
+$EDITOR ~/.config/mediatimeline/config.yaml
+
+<span class="c"># Starten</span>
+podman run -d --name mediatimeline \
+  -p 127.0.0.1:8080:8080 \
+  -v ~/.config/mediatimeline/config.yaml:/config/config.yaml:ro,Z \
+  -v mediatimeline-data:/data:U,Z \
+  ghcr.io/dertika/mediatimeline:latest</code></pre>
+      </section>
+
+      <section id="bildnachweise" class="credits">
+        <h2>Bildnachweise der Demo</h2>
+        <p>
+          Die Demo-Reise ist ausgedacht, die Fotos sind echt: freie Aufnahmen von Wikimedia Commons, aufgenommen an den
+          jeweiligen Orten. Kartendaten © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende.
+        </p>
+        <!-- CREDITS -->
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>mediatimeline · für <a href="https://immich.app">Immich</a></span>
+      <a href="https://github.com/dertika/mediatimeline">Quellcode auf GitHub</a>
+    </footer>
+  </body>
+</html>

@@ -74,6 +74,19 @@ Release erstellen: `git tag v0.1.0 && git push origin v0.1.0`.
 
 Neue GHCR-Pakete sind zunächst **privat**. Entweder unter *GitHub → Packages → mediatimeline → Package settings* auf „Public“ stellen oder auf dem Server einloggen: `podman login ghcr.io` (Benutzername + Personal Access Token mit Scope `read:packages`).
 
+### Projektseite (GitHub Pages)
+
+`.github/workflows/pages.yml` baut bei jedem Push auf `main` die Projektseite unter `https://<owner>.github.io/mediatimeline/`:
+
+- Werbeseite aus `site/index.html` und `site/style.css`.
+- Live-Demo unter `/demo/`: die echte Timeline-Oberfläche, gebaut mit `VITE_DEMO=1`, mit statischen Daten statt Immich.
+- Die Demo-Reise steht in `site/trip.json`. `site/scripts/demo-data.mjs` sucht dazu freie Fotos und ein Video von Wikimedia Commons, die an den jeweiligen Orten aufgenommen wurden. Einzelne Dateien lassen sich dort mit `"file": "File:…"` festlegen.
+- Tour-Videos für Desktop und Handy nimmt `site/scripts/record-tour.mjs` mit Playwright auf.
+
+Einmalig nötig: unter *Settings → Pages → Build and deployment* als Quelle „GitHub Actions“ wählen.
+
+Lokal bauen: `site/build.sh` (braucht ffmpeg und Playwright). `DEMO_OFFLINE=1` nimmt Platzhalterbilder statt Commons-Fotos.
+
 ### Immich-API-Key
 
 In Immich unter *Kontoeinstellungen → API-Schlüssel* einen Key mit den Rechten `album.read`, `asset.read` und `asset.view` anlegen. Für Kommentare zusätzlich `activity.read` – fehlt es, funktioniert die Timeline weiterhin, nur ohne Kommentare (Warnung im Log). Statt in `config.yaml` kann der Key auch als Podman-Secret übergeben werden (siehe Kommentare in `deploy/mediatimeline.container`).

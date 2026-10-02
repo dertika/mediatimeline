@@ -4,16 +4,17 @@
   import type * as Leaflet from "leaflet";
   import { dayKey, formatDay, formatDayTime, placeOf } from "./format";
   import { accentColor, addBackgroundLayer, createBaseMap, prefetchTiles, type L as LeafletNS } from "./map";
+  import type { MediaUrl } from "./media";
   import { buildStops, dayNumber, flightSeconds, type TourStop } from "./tour";
   import type { Timeline, TimelineAsset } from "./types";
 
   let {
     timeline,
-    apiBase,
+    media,
     onclose,
   }: {
     timeline: Timeline;
-    apiBase: string;
+    media: MediaUrl;
     /** Called when the tour ends or is closed. */
     onclose: () => void;
   } = $props();
@@ -83,7 +84,6 @@
   const ringMode = $derived(
     ending || (!showMedia && !arriving && dayCard === null) ? "none" : showMedia && current?.type === "video" ? "video" : "timed",
   );
-  const media = (a: TimelineAsset, kind: "preview" | "video") => `${apiBase}/assets/${a.id}/${kind}`;
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   const firstLocal = stops[0]?.assets[0]?.localDateTime ?? "";
   const dayOf = (a: TimelineAsset) => dayNumber(firstLocal, a.localDateTime);

@@ -1,15 +1,16 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { accentColor, createBaseMap } from "./map";
+  import type { MediaUrl } from "./media";
   import type { TimelineAsset } from "./types";
 
   let {
     assets,
-    mediaBase,
+    media,
     onselect,
   }: {
     assets: TimelineAsset[];
-    mediaBase: string;
+    media: MediaUrl;
     onselect: (assetId: string) => void;
   } = $props();
 
@@ -34,7 +35,7 @@
       for (const asset of located) {
         const icon = L.divIcon({
           className: "photo-marker",
-          html: `<img src="${mediaBase}/assets/${asset.id}/thumbnail" alt="" loading="lazy" />`,
+          html: `<img src="${media(asset, "thumbnail")}" alt="" loading="lazy" />`,
           iconSize: [40, 40],
           iconAnchor: [20, 20],
         });

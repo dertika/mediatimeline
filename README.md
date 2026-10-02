@@ -8,9 +8,9 @@ Auf einer Adminseite (geschützt durch Authelia) wählst du Immich-Alben aus und
 2. eine **Karte** mit den Aufnahmeorten (Leaflet/OpenStreetMap, Route in zeitlicher Reihenfolge),
 3. alle **Fotos und Videos aufsteigend nach Aufnahmezeit**, nach Tagen gruppiert, mit der Immich-Beschreibung als Bildunterschrift.
 
-Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, Pfeiltasten, Pinch-Zoom; Tag, Ort und Bildunterschrift stehen klein in den Ecken. Die Karte passt sich dem Dark Mode an.
+Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, Pfeiltasten, Pinch-Zoom (ohne Zoom-Knopf); Tag, Ort und Bildunterschrift stehen klein in den Ecken. Die Karte passt sich dem Dark Mode an.
 
-**Tour:** Über „▶ Tour starten“ läuft eine animierte Vollbild-Führung. Sie startet in der Kartenübersicht und fliegt zum ersten Ort. Dort bleibt die Karte kurz mit dem Ortsnamen stehen (so lange wie die Wartezeit pro Foto), dann kommen die Fotos und Videos dieses Orts chronologisch. Die Kartenkacheln für den nächsten Ort werden schon vorab geladen. Danach geht es weiter zum nächsten Ort, wobei die Karte nur so weit herauszoomt, wie es die Entfernung erfordert. Bedienung:
+**Tour:** Über „▶ Tour starten“ läuft eine animierte Vollbild-Führung. Sie startet in der Kartenübersicht und fliegt zum ersten Ort. Dort bleibt die Karte kurz mit dem Ortsnamen stehen (so lange wie die Wartezeit pro Foto), dann kommen die Fotos und Videos dieses Orts chronologisch. Beginnt ein neuer Reisetag, erscheint vorher eine Karte „Tag 2“ mit Datum. Fällt der Tageswechsel mit einem neuen Ort zusammen, trägt die Ortskarte das Tag-Badge. Oben links steht immer „Tag · Ort · Foto“. Die Karte lässt sich während der Tour nicht verschieben. Die Kartenkacheln für den nächsten Ort werden schon vorab geladen. Danach geht es weiter zum nächsten Ort, wobei die Karte nur so weit herauszoomt, wie es die Entfernung erfordert. Bedienung:
 - Knöpfe ⏮ ⏸ ⏭ ✕
 - Tastatur: Leertaste, ←/→, Esc
 - Wischen auf dem Handy

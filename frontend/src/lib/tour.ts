@@ -69,3 +69,13 @@ export function flightSeconds(from: LatLng, to: LatLng): number {
   const km = distanceMeters(from, to) / 1000;
   return Math.min(4, Math.max(1.5, 1.2 + 0.8 * Math.log10(1 + km)));
 }
+
+/**
+ * Day of the trip, counted in calendar days of the local capture time:
+ * the first medium's day is day 1, and gaps count (a photo three days
+ * later is day 4).
+ */
+export function dayNumber(firstLocal: string, local: string): number {
+  const day = (s: string) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
+  return Math.round((day(local) - day(firstLocal)) / 86_400_000) + 1;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStops, distanceMeters, flightSeconds } from "./tour";
+import { buildStops, dayNumber, distanceMeters, flightSeconds } from "./tour";
 import type { TimelineAsset } from "./types";
 
 let seq = 0;
@@ -87,5 +87,19 @@ describe("flightSeconds", () => {
     expect(long).toBeGreaterThan(2.5);
     expect(long).toBeLessThanOrEqual(4);
     expect(flightSeconds(BERGEN, [-33.86, 151.2])).toBe(4);
+  });
+});
+
+describe("dayNumber", () => {
+  const first = "2026-06-01T09:00:00.000Z";
+  it("counts calendar days from the first medium", () => {
+    expect(dayNumber(first, "2026-06-01T23:59:00.000Z")).toBe(1);
+    expect(dayNumber(first, "2026-06-02T00:01:00.000Z")).toBe(2);
+  });
+  it("keeps gaps between days", () => {
+    expect(dayNumber(first, "2026-06-04T12:00:00.000Z")).toBe(4);
+  });
+  it("crosses month boundaries", () => {
+    expect(dayNumber("2026-05-31T18:00:00.000Z", "2026-06-01T08:00:00.000Z")).toBe(2);
   });
 });

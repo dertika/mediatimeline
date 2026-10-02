@@ -28,7 +28,8 @@
           "caption": "Angekommen! Die bunten Holzhäuser von Bryggen."
         },
         {
-          "time": "2025-07-14T11:40"
+          "time": "2025-07-14T11:40",
+          "file": "File:Bryggen 3 (52606524674).jpg"
         },
         {
           "time": "2025-07-14T17:30",
@@ -53,7 +54,8 @@
       "photos": [
         {
           "time": "2025-07-15T09:20",
-          "caption": "Morgens in Flåm."
+          "file": "File:Train FLAMBANA (14709929995).jpg",
+          "caption": "Die Flåmsbana – eine der steilsten Bahnstrecken der Welt."
         },
         {
           "time": "2025-07-15T10:05"
@@ -78,7 +80,9 @@
           "caption": "Stegastein: 650 m über dem Aurlandsfjord."
         },
         {
-          "time": "2025-07-15T16:10"
+          "time": "2025-07-15T16:10",
+          "file": "File:Stegastein viewpoint showing Aurlandsfjord.jpg",
+          "caption": "Die Plattform ragt 30 m über den Hang."
         }
       ]
     },
@@ -147,7 +151,8 @@
           "caption": "Jugendstil in Ålesund."
         },
         {
-          "time": "2025-07-17T18:00"
+          "time": "2025-07-17T18:00",
+          "file": "File:Rønnebergbua in Ålesund.jpg"
         },
         {
           "time": "2025-07-17T21:45",

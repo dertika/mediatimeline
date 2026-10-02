@@ -10,6 +10,13 @@ Auf einer Adminseite (geschützt durch Authelia) wählst du Immich-Alben aus und
 
 Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, Pfeiltasten, Pinch-Zoom; Tag, Ort und Bildunterschrift stehen klein in den Ecken. Die Karte passt sich dem Dark Mode an.
 
+**Tour:** Über „▶ Tour starten“ läuft eine animierte Vollbild-Führung. Sie startet in der Kartenübersicht, fliegt zum ersten Ort und zeigt dort die Fotos und Videos chronologisch. Danach geht es weiter zum nächsten Ort, wobei die Karte nur so weit herauszoomt, wie es die Entfernung erfordert. Bedienung:
+- Knöpfe ⏮ ⏸ ⏭ ✕
+- Tastatur: Leertaste, ←/→, Esc
+- Wischen auf dem Handy
+
+Beim Schließen springt die Timeline zum zuletzt gezeigten Foto. Pro Link einstellbar sind die Wartezeit pro Foto, die maximale Videolänge (0 = ganzes Video) und der Radius, innerhalb dessen Fotos als ein Ort gelten. Videos laufen mit Ton. Blockiert der Browser das, laufen sie stumm weiter und ein „🔊 Ton an“-Knopf erscheint.
+
 Beim Teilen in Messengern (WhatsApp, Signal, Telegram …) zeigt die **Linkvorschau** Albumname, Zeitraum, Anzahl der Medien und das Albumcover. Bei passwortgeschützten Links nur den Namen. Dafür sollte `server.publicBaseUrl` gesetzt sein, weil Messenger absolute Bild-URLs brauchen.
 
 Pro Link optional: **Passwortschutz**, **Ablaufdatum**, eigener Titel, deaktivieren/widerrufen sowie

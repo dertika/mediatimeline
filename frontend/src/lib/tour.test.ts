@@ -1,0 +1,91 @@
+import { describe, expect, it } from "vitest";
+import { buildStops, distanceMeters, flightSeconds } from "./tour";
+import type { TimelineAsset } from "./types";
+
+let seq = 0;
+const asset = (lat: number | null, lng: number | null, id = `a${++seq}`): TimelineAsset => ({
+  id,
+  type: "image",
+  takenAt: "",
+  localDateTime: "",
+  caption: null,
+  comments: [],
+  lat,
+  lng,
+  width: null,
+  height: null,
+  city: null,
+  country: null,
+});
+const ids = (stops: ReturnType<typeof buildStops>) => stops.map((s) => s.assets.map((a) => a.id));
+
+// Bergen harbour and a spot ~400 m away; Oslo ~300 km away.
+const BERGEN: [number, number] = [60.3975, 5.3245];
+const BERGEN_NEAR: [number, number] = [60.3985, 5.3315];
+const OSLO: [number, number] = [59.9139, 10.7522];
+
+describe("distanceMeters", () => {
+  it("measures great-circle distances", () => {
+    expect(distanceMeters(BERGEN, BERGEN)).toBe(0);
+    expect(distanceMeters(BERGEN, BERGEN_NEAR)).toBeGreaterThan(300);
+    expect(distanceMeters(BERGEN, BERGEN_NEAR)).toBeLessThan(500);
+    expect(distanceMeters(BERGEN, OSLO) / 1000).toBeCloseTo(305, -1);
+  });
+});
+
+describe("buildStops", () => {
+  it("returns no stops without located photos", () => {
+    expect(buildStops([], 1000)).toEqual([]);
+    expect(buildStops([asset(null, null)], 1000)).toEqual([]);
+  });
+
+  it("groups consecutive photos within the radius", () => {
+    const stops = buildStops(
+      [asset(...BERGEN, "b1"), asset(...BERGEN_NEAR, "b2"), asset(...OSLO, "o1")],
+      1000,
+    );
+    expect(ids(stops)).toEqual([["b1", "b2"], ["o1"]]);
+    expect(stops[0]!.center[0]).toBeCloseTo((BERGEN[0] + BERGEN_NEAR[0]) / 2, 6);
+    expect(stops[0]!.bounds).toEqual([
+      [BERGEN[0], BERGEN[1]],
+      [BERGEN_NEAR[0], BERGEN_NEAR[1]],
+    ]);
+  });
+
+  it("splits nearby photos when the radius is small", () => {
+    const stops = buildStops([asset(...BERGEN, "b1"), asset(...BERGEN_NEAR, "b2")], 250);
+    expect(ids(stops)).toEqual([["b1"], ["b2"]]);
+  });
+
+  it("keeps photos without GPS with the current stop, leading ones with the first", () => {
+    const stops = buildStops(
+      [
+        asset(null, null, "x0"),
+        asset(...BERGEN, "b1"),
+        asset(null, null, "x1"),
+        asset(...OSLO, "o1"),
+        asset(null, null, "x2"),
+      ],
+      1000,
+    );
+    expect(ids(stops)).toEqual([
+      ["x0", "b1", "x1"],
+      ["o1", "x2"],
+    ]);
+  });
+
+  it("treats returning to an earlier place as a new stop", () => {
+    const stops = buildStops([asset(...BERGEN, "b1"), asset(...OSLO, "o1"), asset(...BERGEN, "b2")], 1000);
+    expect(ids(stops)).toEqual([["b1"], ["o1"], ["b2"]]);
+  });
+});
+
+describe("flightSeconds", () => {
+  it("grows with distance within 1.5–4 s", () => {
+    expect(flightSeconds(BERGEN, BERGEN_NEAR)).toBe(1.5);
+    const long = flightSeconds(BERGEN, OSLO);
+    expect(long).toBeGreaterThan(2.5);
+    expect(long).toBeLessThanOrEqual(4);
+    expect(flightSeconds(BERGEN, [-33.86, 151.2])).toBe(4);
+  });
+});

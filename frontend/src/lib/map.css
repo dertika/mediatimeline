@@ -1,0 +1,51 @@
+/* Shared map styling for the timeline map and the tour (class added by createBaseMap). */
+
+/* must beat Leaflet's ".leaflet-marker-pane img { width: auto }" */
+.leaflet-container .leaflet-marker-pane .photo-marker img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+  background: #ccc;
+}
+
+/* Dark mode: OSM only offers light tiles, so the tile layer is inverted.
+   Markers, route and clusters live in other panes and keep their colours. */
+@media (prefers-color-scheme: dark) {
+  .mt-map {
+    background: #1b1d1c;
+  }
+
+  .mt-map .leaflet-tile-pane {
+    filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9) saturate(0.7);
+  }
+
+  .mt-map .leaflet-bar a {
+    background: var(--surface);
+    color: var(--text);
+    border-bottom-color: var(--border);
+  }
+
+  .mt-map .leaflet-bar {
+    border-color: var(--border);
+  }
+
+  .mt-map .leaflet-control-attribution {
+    background: rgb(29 32 31 / 0.8);
+    color: var(--muted);
+  }
+
+  .mt-map .leaflet-control-attribution a {
+    color: var(--accent);
+  }
+
+  .mt-map .marker-cluster div {
+    color: #0d1f19;
+  }
+
+  .mt-map.mt-map .leaflet-marker-pane .photo-marker img {
+    border-color: var(--surface);
+  }
+}

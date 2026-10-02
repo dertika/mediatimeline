@@ -24,6 +24,9 @@ const UpdateShareBody = z.object({
   password: z.string().min(1).max(200).nullable().optional(),
   captionSource: z.enum(CAPTION_SOURCES).optional(),
   showComments: z.boolean().optional(),
+  tourIntervalSeconds: z.number().int().min(2).max(60).optional(),
+  tourRadiusMeters: z.number().int().min(100).max(50_000).optional(),
+  tourVideoMaxSeconds: z.number().int().min(0).max(600).optional(),
 });
 
 const IdParams = z.object({ id: z.coerce.number().int().positive() });
@@ -49,6 +52,9 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     hasPassword: share.passwordHash !== null,
     captionSource: share.captionSource,
     showComments: share.showComments,
+    tourIntervalSeconds: share.tourIntervalSeconds,
+    tourRadiusMeters: share.tourRadiusMeters,
+    tourVideoMaxSeconds: share.tourVideoMaxSeconds,
     createdAt: share.createdAt,
     createdBy: share.createdBy,
   });

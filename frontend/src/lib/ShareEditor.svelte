@@ -52,6 +52,26 @@
     setTimeout(() => (copied = false), 1500);
   }
 
+  const RADIUS_OPTIONS = [250, 500, 1000, 2000, 5000, 10000];
+  const formatRadius = (m: number) => (m >= 1000 ? `${m / 1000} km` : `${m} m`);
+
+  /** Saves a whole-number setting; out-of-range input resets the field. */
+  async function setNumber(
+    field: "tourIntervalSeconds" | "tourVideoMaxSeconds",
+    min: number,
+    max: number,
+    event: Event,
+  ) {
+    const input = event.currentTarget as HTMLInputElement;
+    const value = Number(input.value);
+    if (!Number.isInteger(value) || value < min || value > max) {
+      input.value = String(share[field]);
+      error = `Bitte eine ganze Zahl zwischen ${min} und ${max} eingeben.`;
+      return;
+    }
+    await patch({ [field]: value });
+  }
+
   async function setExpiry(event: Event) {
     const value = (event.currentTarget as HTMLInputElement).value;
     await patch({ expiresAt: value ? new Date(value).toISOString() : null });
@@ -139,6 +159,44 @@
       Alle Kommentare anzeigen (mit Namen)
     </label>
 
+    <fieldset class="tour">
+      <legend>Tour</legend>
+      <label>
+        Wartezeit pro Foto (s)
+        <input
+          type="number"
+          min="2"
+          max="60"
+          value={share.tourIntervalSeconds}
+          disabled={busy}
+          onchange={(e) => setNumber("tourIntervalSeconds", 2, 60, e)}
+        />
+      </label>
+      <label>
+        Max. Videolänge (s, 0 = ganz)
+        <input
+          type="number"
+          min="0"
+          max="600"
+          value={share.tourVideoMaxSeconds}
+          disabled={busy}
+          onchange={(e) => setNumber("tourVideoMaxSeconds", 0, 600, e)}
+        />
+      </label>
+      <label>
+        Radius für einen Ort
+        <select
+          value={share.tourRadiusMeters}
+          disabled={busy}
+          onchange={(e) => patch({ tourRadiusMeters: Number(e.currentTarget.value) })}
+        >
+          {#each RADIUS_OPTIONS.includes(share.tourRadiusMeters) ? RADIUS_OPTIONS : [...RADIUS_OPTIONS, share.tourRadiusMeters].sort((a, b) => a - b) as m (m)}
+            <option value={m}>{formatRadius(m)}</option>
+          {/each}
+        </select>
+      </label>
+    </fieldset>
+
     <div class="password">
       Passwort (optional)
       {#if share.hasPassword && !editingPassword}
@@ -208,6 +266,31 @@
   .grid label.check {
     flex-direction: row;
     align-items: center;
+  }
+
+  .tour {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px 12px;
+    margin: 0;
+  }
+
+  .tour legend {
+    padding: 0 4px;
+    color: var(--muted);
+  }
+
+  input[type="number"] {
+    font: inherit;
+    color: inherit;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 6px 10px;
   }
 
   select {

@@ -16,6 +16,10 @@ export interface Share {
   passwordVersion: number;
   captionSource: CaptionSource;
   showComments: boolean;
+  tourIntervalSeconds: number;
+  tourRadiusMeters: number;
+  /** Maximum playback time of a video in the tour; 0 = whole video. */
+  tourVideoMaxSeconds: number;
   createdAt: string;
   createdBy: string | null;
 }
@@ -31,6 +35,9 @@ interface ShareRow {
   password_version: number;
   caption_source: string;
   show_comments: number;
+  tour_interval_seconds: number;
+  tour_radius_meters: number;
+  tour_video_max_seconds: number;
   created_at: string;
   created_by: string | null;
 }
@@ -51,6 +58,9 @@ const MIGRATIONS = [
    CREATE INDEX shares_album ON shares(immich_album_id);`,
   `ALTER TABLE shares ADD COLUMN caption_source TEXT NOT NULL DEFAULT 'description';
    ALTER TABLE shares ADD COLUMN show_comments INTEGER NOT NULL DEFAULT 0;`,
+  `ALTER TABLE shares ADD COLUMN tour_interval_seconds INTEGER NOT NULL DEFAULT 5;
+   ALTER TABLE shares ADD COLUMN tour_radius_meters INTEGER NOT NULL DEFAULT 1000;
+   ALTER TABLE shares ADD COLUMN tour_video_max_seconds INTEGER NOT NULL DEFAULT 30;`,
 ];
 
 function fromRow(r: ShareRow): Share {
@@ -65,6 +75,9 @@ function fromRow(r: ShareRow): Share {
     passwordVersion: r.password_version,
     captionSource: r.caption_source as CaptionSource,
     showComments: r.show_comments === 1,
+    tourIntervalSeconds: r.tour_interval_seconds,
+    tourRadiusMeters: r.tour_radius_meters,
+    tourVideoMaxSeconds: r.tour_video_max_seconds,
     createdAt: r.created_at,
     createdBy: r.created_by,
   };
@@ -81,6 +94,9 @@ export interface ShareUpdate {
   passwordHash?: string | null;
   captionSource?: CaptionSource;
   showComments?: boolean;
+  tourIntervalSeconds?: number;
+  tourRadiusMeters?: number;
+  tourVideoMaxSeconds?: number;
 }
 
 export class ShareStore {
@@ -156,6 +172,16 @@ export class ShareStore {
     if (patch.showComments !== undefined) {
       sets.push("show_comments = ?");
       values.push(patch.showComments ? 1 : 0);
+    }
+    for (const [key, column] of [
+      ["tourIntervalSeconds", "tour_interval_seconds"],
+      ["tourRadiusMeters", "tour_radius_meters"],
+      ["tourVideoMaxSeconds", "tour_video_max_seconds"],
+    ] as const) {
+      if (patch[key] !== undefined) {
+        sets.push(`${column} = ?`);
+        values.push(patch[key]);
+      }
     }
     if (patch.passwordHash !== undefined) {
       sets.push("password_hash = ?", "password_version = password_version + 1");

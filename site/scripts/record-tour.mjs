@@ -65,13 +65,14 @@ function serve() {
   return new Promise((resolve) => server.listen(0, "127.0.0.1", () => resolve(server)));
 }
 
+// Published smaller than captured: the page shows the videos about 620 and 300 px wide.
 const VARIANTS = [
-  { name: "desktop", viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 },
-  { name: "phone", viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true },
+  { name: "desktop", viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1, videoWidth: 960 },
+  { name: "phone", viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, videoWidth: 540 },
 ];
 
-/** Turns screencast frames (JPEG + timestamp) into a constant-30-fps MP4. */
-function encode(frames, endTime, file) {
+/** Turns screencast frames (JPEG + timestamp) into a constant-25-fps MP4 `width` pixels wide. */
+function encode(frames, endTime, file, width) {
   const dir = mkdtempSync(join(tmpdir(), "tour-frames-"));
   const lines = ["ffconcat version 1.0"];
   frames.forEach((f, i) => {
@@ -85,14 +86,15 @@ function encode(frames, endTime, file) {
   writeFileSync(join(dir, "list.txt"), lines.join("\n"));
   ffmpeg(
     "-f", "concat", "-safe", "0", "-i", join(dir, "list.txt"),
-    "-vf", "fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
-    "-c:v", "libx264", "-preset", "slow", "-crf", "25", "-movflags", "+faststart", file,
+    "-vf", `fps=25,scale=${width}:-2,format=yuv420p`,
+    // The map stands still most of the time; a high CRF keeps the files small.
+    "-c:v", "libx264", "-preset", "slow", "-crf", "30", "-movflags", "+faststart", file,
   );
   rmSync(dir, { recursive: true, force: true });
 }
 
 async function record(origin, variant) {
-  const { name, ...options } = variant;
+  const { name, videoWidth, ...options } = variant;
   const browser = await chromium.launch({
     channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
     // Without the flag the screencast delivers CSS pixels only.
@@ -146,7 +148,7 @@ async function record(origin, variant) {
   // Screencast timestamps share the wall clock; drop frames from before the start.
   const tour = frames.filter((f) => f.t >= started - 0.5);
   const video = join(mediaDir, `tour-${name}.mp4`);
-  encode(tour, ended, video);
+  encode(tour, ended, video, videoWidth);
   ffmpeg("-ss", posterAt.toFixed(2), "-i", video, "-frames:v", "1", "-q:v", "3", join(mediaDir, `tour-${name}.jpg`));
   console.log(`${name}: ${tour.length} Frames, ${(ended - started).toFixed(0)} s, ${(statSync(video).size / 1e6).toFixed(1)} MB`);
 }

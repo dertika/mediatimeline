@@ -26,7 +26,9 @@ const trip = JSON.parse(readFileSync(join(here, "..", "trip.json"), "utf8"));
 const API = process.env.COMMONS_API ?? "https://commons.wikimedia.org/w/api.php";
 const USER_AGENT = "mediatimeline-demo-build/1.0 (https://github.com/dertika/mediatimeline)";
 const LICENSE_OK = /^(cc0|cc[- ]by(-sa)?[- ]\d|public domain|pd\b)/i;
-const UNWANTED = /map|karte|kart\b|logo|plan\b|diagram|sign|skilt|interior|inside|museum|statue|plaque|ticket|menu|panorama|aerial|drone|night/i;
+const UNWANTED = /map|karte|kart\b|logo|plan\b|diagram|sign|skilt|interior|inside|museum|statue|plaque|ticket|menu|panorama|aerial|drone|night|cruise|ship|ferry|hurtigruten|explorer|butterfly|panoramio/i;
+/** Ship names and prefixes, Latin species names in brackets: "(Parnassius mnemosyne)". */
+const UNWANTED_EXACT = /\b(IMO|AIDA\w*|Costa|MS|MV|CMV)\b|\([A-Z][a-z]+ [a-z]+\)/;
 const QUALITY_CATEGORIES = [
   "Category:Featured pictures on Wikimedia Commons",
   "Category:Quality images",
@@ -70,7 +72,7 @@ async function details(selector) {
   const r = await api({
     action: "query",
     ...selector,
-    prop: "imageinfo|categories",
+    prop: "imageinfo|categories|coordinates",
     iiprop: "url|size|mime|extmetadata",
     // Wikimedia serves standard thumbnail widths (…, 1280, 1920) best.
     iiurlwidth: "1920",
@@ -85,6 +87,9 @@ async function details(selector) {
       const meta = info.extmetadata ?? {};
       return {
         title: p.title,
+        // Camera position; geosearch hits replace it with their own coordinates.
+        lat: p.coordinates?.[0]?.lat,
+        lng: p.coordinates?.[0]?.lon,
         pageUrl: info.descriptionurl,
         url: info.url,
         mime: info.mime,
@@ -124,7 +129,7 @@ async function nearby(place) {
     }
   }
   return files
-    .filter((f) => LICENSE_OK.test(f.license) && !UNWANTED.test(f.title))
+    .filter((f) => LICENSE_OK.test(f.license) && !UNWANTED.test(f.title) && !UNWANTED_EXACT.test(f.title))
     .sort((a, b) => b.quality - a.quality || a.dist - b.dist);
 }
 
@@ -136,7 +141,7 @@ async function pinned(title, place) {
   const [f] = await details({ titles: title });
   if (!f) throw new Error(`pinned file not found: ${title}`);
   // A pinned file without coordinates sits at the place itself.
-  return { lat: place.lat, lng: place.lng, ...f };
+  return { ...f, lat: f.lat ?? place.lat, lng: f.lng ?? place.lng };
 }
 
 /** Picks `count` files, preferring different photographers. */
@@ -260,7 +265,13 @@ async function main() {
       files = await nearby(place);
       console.log(`${place.name}: ${files.filter(isPhoto).length} Fotos, ${files.filter(isVideo).length} Videos in der Nähe`);
     }
-    const photos = offline ? [] : pick(files.filter(isPhoto), place.photos.filter((ph) => !ph.file).length, used);
+    // Pinned files first, so that the automatic pick cannot choose them again.
+    const pins = new Map();
+    for (const photo of offline ? [] : place.photos.filter((ph) => ph.file)) {
+      pins.set(photo, await pinned(photo.file, place));
+      used.add(photo.file);
+    }
+    const photos = offline ? [] : pick(files.filter(isPhoto), place.photos.length - pins.size, used);
     let firstPhotoDir = null;
 
     for (const [i, photo] of place.photos.entries()) {
@@ -272,7 +283,7 @@ async function main() {
         placeholderImage(dir, n);
         file = { lat: place.lat + (i - 1) * 0.002, lng: place.lng + (i % 2) * 0.003, width: 1600, height: 1067 };
       } else {
-        file = photo.file ? await pinned(photo.file, place) : photos.shift();
+        file = pins.get(photo) ?? photos.shift();
         if (!file) throw new Error(`${place.name}: nicht genug freie Fotos gefunden – Datei in trip.json festlegen`);
         writeFileSync(join(dir, "original.jpg"), await get(file.thumbUrl, "buffer"));
         ffmpeg("-i", join(dir, "original.jpg"), "-vf", "scale=1600:-2", "-q:v", "3", join(dir, "preview.jpg"));

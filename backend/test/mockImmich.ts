@@ -35,9 +35,20 @@ export const albums: (ImmichAlbum & { assets: ImmichAsset[] })[] = [
   { id: "album-2", albumName: "Privat", assetCount: 1, assets: [asset("b1", "IMAGE", "2026-01-01T00:00:00Z")] },
 ];
 
+export const activities = [
+  { id: "c3", createdAt: "2026-06-05T10:00:00Z", type: "comment", assetId: "a1", comment: "Was für ein Licht!", user: { name: "Bob Beispiel" } },
+  { id: "c1", createdAt: "2026-06-04T09:00:00Z", type: "comment", assetId: "a1", comment: "Endlich da", user: { name: "Alice Muster" } },
+  { id: "l1", createdAt: "2026-06-04T09:30:00Z", type: "like", assetId: "a1", user: { name: "Bob Beispiel" } },
+  { id: "c2", createdAt: "2026-06-04T11:00:00Z", type: "comment", assetId: "a2", comment: "Fähre!", user: { name: "Bob Beispiel" } },
+  { id: "c4", createdAt: "2026-06-06T08:00:00Z", type: "comment", assetId: null, comment: "Tolle Reise", user: { name: "Alice Muster" } },
+  { id: "c5", createdAt: "2026-06-06T08:00:00Z", type: "comment", assetId: "b1", comment: "anderes Album", user: { name: "X" } },
+];
+
 export async function startMockImmich() {
   const app = Fastify();
   const requests: { url: string; headers: Record<string, unknown> }[] = [];
+  /** Simulates an API key without the activity.read permission. */
+  const state = { activitiesForbidden: false };
 
   app.addHook("onRequest", async (req, reply) => {
     requests.push({ url: req.url, headers: req.headers });
@@ -63,6 +74,16 @@ export async function startMockImmich() {
       return { assets: { items, nextPage, total: items.length, count: items.length } };
     },
   );
+  app.get<{ Querystring: { albumId: string; type?: string } }>("/api/activities", async (req, reply) => {
+    if (state.activitiesForbidden) return reply.code(403).send({ message: "Missing permission: activity.read" });
+    const album = albums.find((a) => a.id === req.query.albumId);
+    const ids = new Set(album?.assets.map((a) => a.id));
+    return activities.filter(
+      (a) =>
+        (!req.query.type || a.type === req.query.type) &&
+        (req.query.albumId === "album-1" ? a.assetId === null || ids.has(a.assetId) : a.assetId !== null && ids.has(a.assetId)),
+    );
+  });
   app.get<{ Params: { id: string } }>("/api/assets/:id/thumbnail", async (req, reply) => {
     const size = (req.query as Record<string, string>).size;
     reply.header("content-type", "image/webp").header("etag", `"${req.params.id}-${size}"`);
@@ -87,5 +108,5 @@ export async function startMockImmich() {
   await app.listen({ port: 0, host: "127.0.0.1" });
   const address = app.server.address();
   const port = typeof address === "object" && address ? address.port : 0;
-  return { app, url: `http://127.0.0.1:${port}`, requests };
+  return { app, url: `http://127.0.0.1:${port}`, requests, state };
 }

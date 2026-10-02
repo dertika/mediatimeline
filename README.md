@@ -8,7 +8,12 @@ Auf einer Adminseite (geschützt durch Authelia) wählst du Immich-Alben aus und
 2. eine **Karte** mit den Aufnahmeorten (Leaflet/OpenStreetMap, Route in zeitlicher Reihenfolge),
 3. alle **Fotos und Videos aufsteigend nach Aufnahmezeit**, nach Tagen gruppiert, mit der Immich-Beschreibung als Bildunterschrift.
 
-Pro Link optional: **Passwortschutz**, **Ablaufdatum**, eigener Titel, deaktivieren/widerrufen.
+Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, Pfeiltasten, Pinch-Zoom; Tag, Ort und Bildunterschrift stehen klein in den Ecken. Die Karte passt sich dem Dark Mode an.
+
+Pro Link optional: **Passwortschutz**, **Ablaufdatum**, eigener Titel, deaktivieren/widerrufen sowie
+
+- **Bildunterschrift**: Immich-Beschreibung · erster Immich-Kommentar · Beschreibung, sonst erster Kommentar · keine
+- **Alle Kommentare anzeigen**: Kommentare aus Immich (mit Namen und Datum) unter jedem Bild, Kommentare zum Album unter der Überschrift
 
 ```
 Browser ──> nginx ──(auth_request /admin, /api/admin)──> Authelia
@@ -62,7 +67,7 @@ Neue GHCR-Pakete sind zunächst **privat**. Entweder unter *GitHub → Packages 
 
 ### Immich-API-Key
 
-In Immich unter *Kontoeinstellungen → API-Schlüssel* einen Key mit den Rechten `album.read`, `asset.read` und `asset.view` anlegen. Statt in `config.yaml` kann der Key auch als Podman-Secret übergeben werden (siehe Kommentare in `deploy/mediatimeline.container`).
+In Immich unter *Kontoeinstellungen → API-Schlüssel* einen Key mit den Rechten `album.read`, `asset.read` und `asset.view` anlegen. Für Kommentare zusätzlich `activity.read` – fehlt es, funktioniert die Timeline weiterhin, nur ohne Kommentare (Warnung im Log). Statt in `config.yaml` kann der Key auch als Podman-Secret übergeben werden (siehe Kommentare in `deploy/mediatimeline.container`).
 
 ## Authelia & nginx
 

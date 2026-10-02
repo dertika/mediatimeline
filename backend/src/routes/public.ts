@@ -1,7 +1,8 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import { isUnlocked, setUnlockCookie, verifyPassword } from "../auth/unlock.js";
+import { buildCaption } from "../caption.js";
 import { ImmichError } from "../immich/client.js";
-import type { AlbumSnapshot } from "../immich/cache.js";
+import { ALBUM_COMMENTS, type AlbumSnapshot } from "../immich/cache.js";
 import type { Share } from "../store/db.js";
 import type { AppDeps } from "../app.js";
 import { forwardableHeaders, pipeUpstream } from "./proxy.js";
@@ -70,14 +71,24 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
   app.get<{ Params: { token: string } }>("/api/public/timeline/:token", async (req, reply) => {
     const r = await resolve(req.params.token, req, reply, { revealTitle: true });
     if (!r) return reply;
-    const { album, assets } = r.snapshot;
+    const { album, assets, comments } = r.snapshot;
+    const { captionSource, showComments } = r.share;
     reply.header("cache-control", "private, no-cache");
     return {
       title: r.share.titleOverride ?? album.albumName,
       description: album.description?.trim() || null,
       startDate: assets[0]?.localDateTime ?? null,
       endDate: assets.at(-1)?.localDateTime ?? null,
-      assets,
+      captionSource,
+      albumComments: showComments ? (comments.get(ALBUM_COMMENTS) ?? []) : [],
+      assets: assets.map(({ description, ...asset }) => {
+        const assetComments = comments.get(asset.id) ?? [];
+        return {
+          ...asset,
+          caption: buildCaption({ description }, assetComments, captionSource),
+          comments: showComments ? assetComments : [],
+        };
+      }),
     };
   });
 

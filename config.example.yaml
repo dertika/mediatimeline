@@ -6,6 +6,7 @@ immich:
   url: https://immich.example.com
   # API-Key (Immich → Kontoeinstellungen → API-Schlüssel). Benötigte Rechte:
   # album.read, asset.read, asset.view
+  # optional activity.read – für Kommentare als Bildunterschrift/Kommentarliste
   # Alternativ per ENV MEDIATIMELINE_IMMICH_API_KEY oder als Podman-Secret
   # über MEDIATIMELINE_IMMICH_API_KEY_FILE.
   apiKey: "change-me"

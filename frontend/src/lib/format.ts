@@ -24,3 +24,16 @@ export function formatRange(start: string | null, end: string | null): string | 
 /** Real local date-time (browser zone) for admin views, e.g. expiry dates. */
 export const formatDateTime = (iso: string) =>
   new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
+
+const galleryDate = new Intl.DateTimeFormat("de-DE", {
+  weekday: "short",
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+/** "Mo., 1. Juni 2026 · 09:00" – shown in the gallery overlay. */
+export const formatDayTime = (local: string) => `${galleryDate.format(new Date(local))} · ${formatTime(local)}`;
+
+export const placeOf = (a: { city: string | null; country: string | null }) =>
+  [a.city, a.country].filter(Boolean).join(", ");

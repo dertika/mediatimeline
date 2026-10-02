@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 import { createAdminGuard } from "../auth/adminGuard.js";
 import { hashPassword } from "../auth/unlock.js";
+import { CAPTION_SOURCES } from "../caption.js";
 import type { Share } from "../store/db.js";
 import type { AppDeps } from "../app.js";
 import { forwardableHeaders, pipeUpstream } from "./proxy.js";
@@ -20,6 +21,8 @@ const UpdateShareBody = z.object({
     .transform((v) => (v === "" ? null : v)),
   expiresAt: z.iso.datetime({ offset: true }).nullable().optional(),
   password: z.string().min(1).max(200).nullable().optional(),
+  captionSource: z.enum(CAPTION_SOURCES).optional(),
+  showComments: z.boolean().optional(),
 });
 
 const IdParams = z.object({ id: z.coerce.number().int().positive() });
@@ -44,6 +47,8 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     expiresAt: share.expiresAt,
     expired: isExpired(share),
     hasPassword: share.passwordHash !== null,
+    captionSource: share.captionSource,
+    showComments: share.showComments,
     createdAt: share.createdAt,
     createdBy: share.createdBy,
   });

@@ -2,9 +2,9 @@
   import { onMount, tick, untrack } from "svelte";
   import { fade } from "svelte/transition";
   import type * as Leaflet from "leaflet";
-  import { formatDay, formatDayTime, placeOf } from "./format";
+  import { dayKey, formatDay, formatDayTime, placeOf } from "./format";
   import { accentColor, addBackgroundLayer, createBaseMap, prefetchTiles, type L as LeafletNS } from "./map";
-  import { buildStops, flightSeconds, type TourStop } from "./tour";
+  import { buildStops, dayNumber, flightSeconds, type TourStop } from "./tour";
   import type { Timeline, TimelineAsset } from "./types";
 
   let {
@@ -47,6 +47,12 @@
   let showMedia = $state(false);
   /** Map pause after arriving at a place, before its first photo. */
   let arriving = $state(false);
+  /** Day badge on the arrival card when the place also starts a new day. */
+  let arrivalDay = $state<number | null>(null);
+  /** "Tag N" card before the first medium of a new day within a place. */
+  let dayCard = $state<number | null>(null);
+  /** While the map flies, the vector layer is hidden (it is only CSS-scaled until the flight ends). */
+  let flying = $state(false);
   let paused = $state(false);
   /** Last step: flying out to the overview, then the tour closes itself. */
   let ending = $state(false);
@@ -68,15 +74,19 @@
   /** The running timed step, kept so that pause/resume can continue it. */
   let step: { fn: () => void; remaining: number; startedAt: number } | null = null;
   let enteredFullscreen = false;
+  /** Calendar day (YYYY-MM-DD) of the last medium shown. */
+  let shownDay: string | null = null;
   let swipeX: number | null = null;
 
   const current = $derived(stopIdx >= 0 ? (stops[stopIdx]?.assets[itemIdx] ?? null) : null);
   const progress = $derived(stopIdx < 0 ? 0 : ending ? 1 : (stopOffsets[stopIdx]! + itemIdx + 1) / totalItems);
   const ringMode = $derived(
-    ending || (!showMedia && !arriving) ? "none" : showMedia && current?.type === "video" ? "video" : "timed",
+    ending || (!showMedia && !arriving && dayCard === null) ? "none" : showMedia && current?.type === "video" ? "video" : "timed",
   );
   const media = (a: TimelineAsset, kind: "preview" | "video") => `${apiBase}/assets/${a.id}/${kind}`;
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const firstLocal = stops[0]?.assets[0]?.localDateTime ?? "";
+  const dayOf = (a: TimelineAsset) => dayNumber(firstLocal, a.localDateTime);
 
   function placeName(stop: TourStop, i: number): string {
     const named = stop.assets.find((a) => a.city || a.country);
@@ -120,6 +130,7 @@
     const from = map.getCenter();
     const duration = flightSeconds([from.lat, from.lng], center);
     const m = map;
+    flying = true;
     // flyTo uses Leaflet's van Wijk curve: it only zooms out as far as the distance requires.
     await new Promise<void>((resolve) => {
       const fallback = setTimeout(done, duration * 1000 + 1000);
@@ -131,6 +142,7 @@
       m.once("moveend", done);
       m.flyTo(center, zoom, { duration });
     });
+    flying = false;
     flownTo = i;
     route.setLatLngs(stops.slice(0, i + 1).map((s) => s.center));
     here.setLatLng(center);
@@ -158,13 +170,15 @@
 
   /**
    * Shows item `i` of stop `s`, flying there first if needed. Arriving at a
-   * new place moving forward pauses on the map before its first photo.
+   * new place moving forward pauses on the map before its first photo; a new
+   * day within a place moving forward shows a day card first.
    */
   async function goTo(s: number, i: number, { arrive = true } = {}) {
     const my = ++run;
     cancelStep();
     stopVideo();
     ending = false;
+    dayCard = null;
     const travel = s !== flownTo;
     if (travel) {
       showMedia = false;
@@ -176,8 +190,15 @@
     }
     stopIdx = s;
     itemIdx = i;
+    const target = stops[s]!.assets[i]!;
+    const newDay = shownDay === null || dayKey(target.localDateTime) !== shownDay;
     if (travel && arrive && i === 0) {
+      arrivalDay = newDay ? dayOf(target) : null;
       arriving = true;
+      startTimed(intervalMs, () => showItem(my));
+    } else if (arrive && newDay) {
+      showMedia = false;
+      dayCard = dayOf(target);
       startTimed(intervalMs, () => showItem(my));
     } else {
       showItem(my);
@@ -186,6 +207,8 @@
 
   async function showItem(my: number) {
     arriving = false;
+    dayCard = null;
+    shownDay = dayKey(stops[stopIdx]!.assets[itemIdx]!.localDateTime);
     showMedia = true;
     soundBlocked = false;
     videoProgress = 0;
@@ -237,8 +260,8 @@
   function next() {
     if (ending) return;
     if (stopIdx < 0) return void goTo(0, 0);
-    if (arriving) {
-      // Skip the rest of the map pause.
+    if (arriving || dayCard !== null) {
+      // Skip the rest of the map pause or day card.
       const my = ++run;
       cancelStep();
       return void showItem(my);
@@ -262,10 +285,15 @@
     stopVideo();
     showMedia = false;
     arriving = false;
+    dayCard = null;
     ending = true;
     flownTo = -1;
     route.setLatLngs(stops.map((s) => s.center));
-    map?.flyToBounds(overviewBounds(), { padding: [60, 60], duration: 2 });
+    if (map) {
+      flying = true;
+      map.once("moveend", () => (flying = false));
+      map.flyToBounds(overviewBounds(), { padding: [60, 60], duration: 2 });
+    }
     // Not pausable: the tour is over, only the closing animation remains.
     const my = run;
     timer = setTimeout(() => my === run && close(), END_OVERVIEW_MS);
@@ -339,6 +367,13 @@
       const base = await createBaseMap(mapEl, {
         zoomControl: false,
         attributionControl: true,
+        // Only the tour moves the map; swipes switch photos instead.
+        dragging: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
         // Leaflet's mobile default (updateWhenIdle) loads no tiles at all while
         // flying, which leaves the map grey on iPhone/iPad; keep loading.
         tileOptions: { updateWhenIdle: false, updateWhenZooming: true, updateInterval: 100, keepBuffer: 4 },
@@ -407,6 +442,7 @@
   class="tour"
   class:idle={!controlsVisible && !paused}
   class:paused
+  class:flying
   role="dialog"
   tabindex="-1"
   aria-modal="true"
@@ -421,9 +457,18 @@
 
   {#if arriving && stops[stopIdx]}
     <div class="arrival" transition:fade={{ duration: MEDIA_FADE_MS }}>
+      {#if arrivalDay !== null}<span class="day-badge">Tag {arrivalDay}</span>{/if}
       <span class="arrival-step">Ort {stopIdx + 1} von {stops.length}</span>
       <h2>{placeName(stops[stopIdx]!, stopIdx)}</h2>
       <span>{formatDay(stops[stopIdx]!.assets[0]!.localDateTime)}</span>
+    </div>
+  {/if}
+
+  {#if dayCard !== null && current}
+    <div class="veil" transition:fade={{ duration: MEDIA_FADE_MS }}></div>
+    <div class="arrival day" transition:fade={{ duration: MEDIA_FADE_MS }}>
+      <h2>Tag {dayCard}</h2>
+      <span>{formatDay(current.localDateTime)}</span>
     </div>
   {/if}
 
@@ -458,11 +503,11 @@
 
   <div class="corner top-left">
     <strong>{timeline.title}</strong>
-    {#if current && showMedia}
+    {#if current && (showMedia || dayCard !== null)}
       <span>{formatDayTime(current.localDateTime)}</span>
-      <span>Ort {stopIdx + 1}/{stops.length} · Foto {itemIdx + 1}/{stops[stopIdx]?.assets.length}</span>
-    {:else if arriving && stops[stopIdx]}
-      <span>Ort {stopIdx + 1}/{stops.length} · {placeName(stops[stopIdx]!, stopIdx)}</span>
+      <span>Tag {dayOf(current)} · Ort {stopIdx + 1}/{stops.length} · Foto {itemIdx + 1}/{stops[stopIdx]?.assets.length}</span>
+    {:else if arriving && current}
+      <span>Tag {dayOf(current)} · Ort {stopIdx + 1}/{stops.length} · {placeName(stops[stopIdx]!, stopIdx)}</span>
     {:else}
       <span>{stops.length} Orte · {totalItems} Medien</span>
     {/if}
@@ -592,6 +637,41 @@
     pointer-events: none;
     width: max-content;
     max-width: 90vw;
+  }
+
+  /* Above the map center, where the current place's marker sits. */
+  .arrival.day {
+    top: 26%;
+  }
+
+  .arrival.day h2 {
+    font-size: clamp(2.4rem, 8vw, 4.5rem);
+  }
+
+  .day-badge {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-weight: 600;
+    text-shadow: none;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.35);
+  }
+
+  .day-badge + .arrival-step {
+    display: block;
+  }
+
+  /* Leaflet only CSS-scales the vector layer during a flight and redraws it
+     afterwards; at a zoom jump of 2^9 the marker dot would fill the screen. */
+  .tour :global(.leaflet-overlay-pane) {
+    transition: opacity 0.25s;
+  }
+
+  .flying :global(.leaflet-overlay-pane) {
+    opacity: 0;
   }
 
   .arrival h2 {

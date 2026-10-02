@@ -28,7 +28,7 @@ function pauseVideos(pswp: PhotoSwipe, except?: HTMLElement) {
 }
 
 /**
- * Opens the fullscreen gallery (swipe, arrows, keyboard, pinch zoom) at `index`.
+ * Opens the fullscreen gallery (swipe, arrows, keyboard, pinch zoom without a zoom button) at `index`.
  * `onClose` receives the asset that was shown last, so the page can scroll to it.
  */
 export async function openGallery(
@@ -42,13 +42,12 @@ export async function openGallery(
     dataSource: assets.map((a) => toSlide(a, apiBase)),
     index,
     counter: false,
-    zoom: true,
+    zoom: false,
     bgOpacity: 1,
     showHideAnimationType: "fade",
     arrowPrevTitle: "Zurück",
     arrowNextTitle: "Weiter",
     closeTitle: "Schließen",
-    zoomTitle: "Zoom",
     errorMsg: "Das Bild konnte nicht geladen werden.",
   });
 

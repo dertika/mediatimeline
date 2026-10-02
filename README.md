@@ -15,7 +15,7 @@ Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, 
 - Tastatur: Leertaste, ←/→, Esc
 - Wischen auf dem Handy
 
-Beim Schließen springt die Timeline zum zuletzt gezeigten Foto. Pro Link einstellbar sind die Wartezeit pro Foto, die maximale Videolänge (0 = ganzes Video) und der Radius, innerhalb dessen Fotos als ein Ort gelten. Videos laufen mit Ton. Blockiert der Browser das, laufen sie stumm weiter und ein „🔊 Ton an“-Knopf erscheint.
+Nach dem letzten Ort zeigt die Karte noch einmal die ganze Route, dann schließt sich die Tour von selbst und die Seite steht wieder dort, wo die Tour gestartet wurde. Videos laufen in der Tour ohne eigene Bedienelemente. Pro Link einstellbar sind die Wartezeit pro Foto, die maximale Videolänge (0 = ganzes Video) und der Radius, innerhalb dessen Fotos als ein Ort gelten. Videos laufen mit Ton. Blockiert der Browser das, laufen sie stumm weiter und ein „🔊 Ton an“-Knopf erscheint.
 
 Beim Teilen in Messengern (WhatsApp, Signal, Telegram …) zeigt die **Linkvorschau** Albumname, Zeitraum, Anzahl der Medien und das Albumcover. Bei passwortgeschützten Links nur den Namen. Dafür sollte `server.publicBaseUrl` gesetzt sein, weil Messenger absolute Bild-URLs brauchen.
 

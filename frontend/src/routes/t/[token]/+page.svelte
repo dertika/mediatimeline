@@ -76,21 +76,23 @@
   }
 
   // The tour (map animation + player) is only loaded when started.
-  let Tour = $state<Component<{
-    timeline: Timeline;
-    apiBase: string;
-    onclose: (last: TimelineAsset | null) => void;
-  }> | null>(null);
+  let Tour = $state<Component<{ timeline: Timeline; apiBase: string; onclose: () => void }> | null>(null);
+  /** Scroll position when the tour started; the page returns there afterwards. */
+  let tourScrollY = 0;
 
   async function startTour() {
+    tourScrollY = window.scrollY;
     // Request fullscreen while the click still counts as a user gesture.
     await document.documentElement.requestFullscreen?.().catch(() => {});
     Tour = (await import("$lib/Tour.svelte")).default;
   }
 
-  function closeTour(last: TimelineAsset | null) {
+  function closeTour() {
     Tour = null;
-    if (last) requestAnimationFrame(() => scrollToAsset(last.id, "instant"));
+    // Leaving fullscreen can move the page; stay where the tour was started.
+    const restore = () => window.scrollTo({ top: tourScrollY, behavior: "instant" });
+    requestAnimationFrame(restore);
+    setTimeout(restore, 300);
   }
 
   async function openFullscreen(timeline: Timeline, asset: TimelineAsset) {

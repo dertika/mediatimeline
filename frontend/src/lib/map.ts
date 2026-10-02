@@ -76,3 +76,18 @@ export function prefetchTiles(map: Leaflet.Map, center: [number, number], zoom: 
   }
   return count;
 }
+
+/**
+ * Adds a coarse copy of the map below the main tiles: Leaflet always shows its
+ * tiles from `maxNativeZoom`, scaled up. Where the sharp tiles are not loaded
+ * yet (e.g. while flying), a blurry map shows through instead of grey.
+ */
+export function addBackgroundLayer(L: L, map: Leaflet.Map, maxNativeZoom: number): Leaflet.TileLayer {
+  return L.tileLayer(TILE_URL, {
+    maxNativeZoom: Math.min(10, Math.max(3, Math.round(maxNativeZoom))),
+    maxZoom: 19,
+    zIndex: 0,
+    updateWhenIdle: false,
+    keepBuffer: 2,
+  }).addTo(map);
+}

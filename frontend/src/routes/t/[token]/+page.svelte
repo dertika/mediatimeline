@@ -68,15 +68,18 @@
     return groups;
   }
 
-  function scrollToAsset(id: string) {
-    document.getElementById(`asset-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+  function scrollToAsset(id: string, behavior: ScrollBehavior = "smooth") {
+    document.getElementById(`asset-${id}`)?.scrollIntoView({ behavior, block: "center" });
     highlighted = id;
     setTimeout(() => (highlighted = highlighted === id ? null : highlighted), 2000);
   }
 
   async function openFullscreen(timeline: Timeline, asset: TimelineAsset) {
     const { openGallery } = await import("$lib/gallery");
-    await openGallery(timeline.assets, timeline.assets.indexOf(asset), apiBase);
+    // Leaving the gallery jumps to the photo that was shown last.
+    await openGallery(timeline.assets, timeline.assets.indexOf(asset), apiBase, (last) =>
+      scrollToAsset(last.id, "instant"),
+    );
   }
 
   // When the first comment already is the caption, don't repeat it in the list.

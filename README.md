@@ -10,6 +10,8 @@ Auf einer Adminseite (geschützt durch Authelia) wählst du Immich-Alben aus und
 
 Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, Pfeiltasten, Pinch-Zoom; Tag, Ort und Bildunterschrift stehen klein in den Ecken. Die Karte passt sich dem Dark Mode an.
 
+Beim Teilen in Messengern (WhatsApp, Signal, Telegram …) zeigt die **Linkvorschau** Albumname, Zeitraum, Anzahl der Medien und das Albumcover. Bei passwortgeschützten Links nur den Namen. Dafür sollte `server.publicBaseUrl` gesetzt sein, weil Messenger absolute Bild-URLs brauchen.
+
 Pro Link optional: **Passwortschutz**, **Ablaufdatum**, eigener Titel, deaktivieren/widerrufen sowie
 
 - **Bildunterschrift**: Immich-Beschreibung · erster Immich-Kommentar · Beschreibung, sonst erster Kommentar · keine

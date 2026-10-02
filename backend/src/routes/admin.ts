@@ -5,6 +5,7 @@ import { hashPassword } from "../auth/unlock.js";
 import { CAPTION_SOURCES } from "../caption.js";
 import type { Share } from "../store/db.js";
 import type { AppDeps } from "../app.js";
+import { publicBaseUrl } from "../url.js";
 import { forwardableHeaders, pipeUpstream } from "./proxy.js";
 import { isExpired } from "./public.js";
 
@@ -35,8 +36,7 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     createAdminGuard({ trustedProxies: config.server.trustedProxies, ...config.admin }),
   );
 
-  const baseUrl = (req: FastifyRequest) =>
-    config.server.publicBaseUrl ?? `${req.protocol}://${req.host}`;
+  const baseUrl = (req: FastifyRequest) => publicBaseUrl(config, req);
 
   const toDto = (share: Share, req: FastifyRequest) => ({
     id: share.id,

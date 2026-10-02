@@ -4,14 +4,17 @@ name: Pages
 on:
   push:
     branches: [main]
+  # Pull requests only build the site (uploaded as artifact), no deployment.
+  pull_request:
+    paths: ["site/**", "frontend/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -29,12 +32,13 @@ jobs:
           sudo apt-get install -y --no-install-recommends ffmpeg
           npm install --no-save playwright
       - id: pages
+        if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5
       - name: Build site
         run: site/build.sh _site
         env:
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          SITE_URL: ${{ steps.pages.outputs.base_url }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path || '/mediatimeline' }}
+          SITE_URL: ${{ steps.pages.outputs.base_url || 'https://dertika.github.io/mediatimeline' }}
           # Google Chrome (preinstalled on the runner) plays H.264, Playwright's Chromium does not.
           PLAYWRIGHT_CHANNEL: chrome
       - uses: actions/upload-pages-artifact@v4
@@ -43,6 +47,7 @@ jobs:
 
   deploy:
     needs: build
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pages: write

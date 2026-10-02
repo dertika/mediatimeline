@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import type { CaptionSource } from "../caption.js";
 
 export interface Share {
   id: number;
@@ -13,6 +14,8 @@ export interface Share {
   passwordHash: string | null;
   /** Incremented whenever the password changes; invalidates existing unlock cookies. */
   passwordVersion: number;
+  captionSource: CaptionSource;
+  showComments: boolean;
   createdAt: string;
   createdBy: string | null;
 }
@@ -26,6 +29,8 @@ interface ShareRow {
   expires_at: string | null;
   password_hash: string | null;
   password_version: number;
+  caption_source: string;
+  show_comments: number;
   created_at: string;
   created_by: string | null;
 }
@@ -44,6 +49,8 @@ const MIGRATIONS = [
      created_by       TEXT
    );
    CREATE INDEX shares_album ON shares(immich_album_id);`,
+  `ALTER TABLE shares ADD COLUMN caption_source TEXT NOT NULL DEFAULT 'description';
+   ALTER TABLE shares ADD COLUMN show_comments INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 function fromRow(r: ShareRow): Share {
@@ -56,6 +63,8 @@ function fromRow(r: ShareRow): Share {
     expiresAt: r.expires_at,
     passwordHash: r.password_hash,
     passwordVersion: r.password_version,
+    captionSource: r.caption_source as CaptionSource,
+    showComments: r.show_comments === 1,
     createdAt: r.created_at,
     createdBy: r.created_by,
   };
@@ -70,6 +79,8 @@ export interface ShareUpdate {
   titleOverride?: string | null;
   expiresAt?: string | null;
   passwordHash?: string | null;
+  captionSource?: CaptionSource;
+  showComments?: boolean;
 }
 
 export class ShareStore {
@@ -137,6 +148,14 @@ export class ShareStore {
     if (patch.expiresAt !== undefined) {
       sets.push("expires_at = ?");
       values.push(patch.expiresAt);
+    }
+    if (patch.captionSource !== undefined) {
+      sets.push("caption_source = ?");
+      values.push(patch.captionSource);
+    }
+    if (patch.showComments !== undefined) {
+      sets.push("show_comments = ?");
+      values.push(patch.showComments ? 1 : 0);
     }
     if (patch.passwordHash !== undefined) {
       sets.push("password_hash = ?", "password_version = password_version + 1");

@@ -104,8 +104,10 @@ describe("public timeline", () => {
     const body = res.json();
     expect(body.title).toBe("Norwegen 2026");
     expect(body.assets.map((a: { id: string }) => a.id)).toEqual(["a1", "a2", "a3"]);
-    expect(body.assets[0]).toMatchObject({ type: "image", description: "Ankunft", lat: 60.4, lng: 5.3 });
-    expect(body.assets[1]).toMatchObject({ type: "video", description: null, lat: null, width: 3000, height: 4000 });
+    expect(body.assets[0]).toMatchObject({ type: "image", caption: "Ankunft", lat: 60.4, lng: 5.3, comments: [] });
+    expect(body.assets[1]).toMatchObject({ type: "video", caption: null, lat: null, width: 3000, height: 4000 });
+    expect(body.assets[0]).not.toHaveProperty("description");
+    expect(body.albumComments).toEqual([]);
   });
 
   it("returns 404 for unknown or disabled tokens", async () => {
@@ -121,6 +123,69 @@ describe("public timeline", () => {
     const token = tokenOf(url);
     expect((await app.inject({ url: `/api/public/timeline/${token}` })).statusCode).toBe(410);
     expect((await app.inject({ url: `/api/public/timeline/${token}/assets/a1/preview` })).statusCode).toBe(410);
+  });
+});
+
+describe("comments", () => {
+  async function shareWith(settings: Record<string, unknown>) {
+    const { id, url } = await createShare();
+    const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: settings });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject(settings);
+    return (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
+  }
+  const captions = (body: { assets: { id: string; caption: string | null }[] }) =>
+    Object.fromEntries(body.assets.map((a) => [a.id, a.caption]));
+
+  it("defaults to the description without exposing comments", async () => {
+    const { url } = await createShare();
+    const shares = (await app.inject({ url: "/api/admin/shares", headers: ADMIN })).json();
+    expect(shares[0]).toMatchObject({ captionSource: "description", showComments: false });
+    const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
+    expect(JSON.stringify(body)).not.toContain("Alice");
+  });
+
+  it("uses the oldest comment as caption", async () => {
+    const body = await shareWith({ captionSource: "firstComment" });
+    expect(captions(body)).toEqual({ a1: "Endlich da", a2: "Fähre!", a3: null });
+    expect(JSON.stringify(body)).not.toContain("Bob");
+  });
+
+  it("falls back from description to the first comment", async () => {
+    const body = await shareWith({ captionSource: "descriptionOrFirstComment" });
+    expect(captions(body)).toEqual({ a1: "Ankunft", a2: "Fähre!", a3: "Abschied" });
+  });
+
+  it("can hide captions entirely", async () => {
+    const body = await shareWith({ captionSource: "none" });
+    expect(captions(body)).toEqual({ a1: null, a2: null, a3: null });
+  });
+
+  it("shows all comments with author names, oldest first, without likes", async () => {
+    const body = await shareWith({ showComments: true });
+    expect(body.assets[0].comments).toEqual([
+      { author: "Alice Muster", text: "Endlich da", createdAt: "2026-06-04T09:00:00Z" },
+      { author: "Bob Beispiel", text: "Was für ein Licht!", createdAt: "2026-06-05T10:00:00Z" },
+    ]);
+    expect(body.albumComments).toEqual([{ author: "Alice Muster", text: "Tolle Reise", createdAt: "2026-06-06T08:00:00Z" }]);
+    expect(JSON.stringify(body)).not.toContain("anderes Album");
+  });
+
+  it("rejects unknown caption modes", async () => {
+    const { id } = await createShare();
+    const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { captionSource: "exif" } });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("keeps working when the API key may not read comments", async () => {
+    immich.state.activitiesForbidden = true;
+    try {
+      const body = await shareWith({ captionSource: "descriptionOrFirstComment", showComments: true });
+      expect(captions(body)).toEqual({ a1: "Ankunft", a2: null, a3: "Abschied" });
+      expect(body.albumComments).toEqual([]);
+    } finally {
+      immich.state.activitiesForbidden = false;
+    }
   });
 });
 

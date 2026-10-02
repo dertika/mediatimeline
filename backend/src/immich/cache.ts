@@ -1,4 +1,4 @@
-import type { ImmichAlbum, ImmichAsset, ImmichClient } from "./client.js";
+import { ImmichError, type ImmichActivity, type ImmichAlbum, type ImmichAsset, type ImmichClient } from "./client.js";
 
 export interface TimelineAsset {
   id: string;
@@ -16,10 +16,21 @@ export interface TimelineAsset {
   country: string | null;
 }
 
+export interface TimelineComment {
+  author: string;
+  text: string;
+  createdAt: string;
+}
+
+/** Key under which comments on the album itself (not on an asset) are stored. */
+export const ALBUM_COMMENTS = "album";
+
 export interface AlbumSnapshot {
   album: ImmichAlbum;
   assets: TimelineAsset[];
   assetIds: Set<string>;
+  /** Comments per asset id (or ALBUM_COMMENTS), oldest first. */
+  comments: Map<string, TimelineComment[]>;
 }
 
 const ROTATED_ORIENTATIONS = new Set(["5", "6", "7", "8"]);
@@ -53,6 +64,20 @@ export function toTimelineAsset(asset: ImmichAsset): TimelineAsset | null {
   };
 }
 
+export function groupComments(activities: ImmichActivity[]): Map<string, TimelineComment[]> {
+  const groups = new Map<string, TimelineComment[]>();
+  const sorted = activities
+    .filter((a) => a.type === "comment" && a.comment?.trim())
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  for (const a of sorted) {
+    const key = a.assetId ?? ALBUM_COMMENTS;
+    const list = groups.get(key) ?? [];
+    list.push({ author: a.user.name, text: a.comment!.trim(), createdAt: a.createdAt });
+    groups.set(key, list);
+  }
+  return groups;
+}
+
 export function sortByTakenAt(assets: TimelineAsset[]): TimelineAsset[] {
   return [...assets].sort((a, b) => a.takenAt.localeCompare(b.takenAt) || a.id.localeCompare(b.id));
 }
@@ -65,6 +90,7 @@ export class AlbumCache {
     private readonly client: ImmichClient,
     private readonly ttlMs: number,
     private readonly now: () => number = Date.now,
+    private readonly warn: (msg: string, err: unknown) => void = () => {},
   ) {}
 
   get(albumId: string): Promise<AlbumSnapshot> {
@@ -83,13 +109,27 @@ export class AlbumCache {
   }
 
   private async load(albumId: string): Promise<AlbumSnapshot> {
-    const [album, rawAssets] = await Promise.all([
+    const [album, rawAssets, comments] = await Promise.all([
       this.client.getAlbum(albumId),
       this.client.getAlbumAssets(albumId),
+      this.loadComments(albumId),
     ]);
     const assets = sortByTakenAt(
       rawAssets.map(toTimelineAsset).filter((a): a is TimelineAsset => a !== null),
     );
-    return { album, assets, assetIds: new Set(assets.map((a) => a.id)) };
+    return { album, assets, assetIds: new Set(assets.map((a) => a.id)), comments };
+  }
+
+  /** Comments are optional: without the activity.read permission the timeline still works. */
+  private async loadComments(albumId: string): Promise<Map<string, TimelineComment[]>> {
+    try {
+      return groupComments(await this.client.getAlbumComments(albumId));
+    } catch (err) {
+      if (err instanceof ImmichError) {
+        this.warn("Immich comments not readable (API key without activity.read?)", err);
+        return new Map();
+      }
+      throw err;
+    }
   }
 }

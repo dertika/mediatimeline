@@ -95,7 +95,7 @@
   </div>
 
   <div class="grid">
-    <label>
+    <label class="check">
       <input type="checkbox" checked={share.enabled} disabled={busy} onchange={(e) => patch({ enabled: e.currentTarget.checked })} />
       Link aktiv
     </label>
@@ -117,6 +117,26 @@
         <input type="datetime-local" value={toLocalInput(share.expiresAt)} disabled={busy} onchange={setExpiry} />
         {#if share.expiresAt}<button disabled={busy} onclick={() => patch({ expiresAt: null })}>Entfernen</button>{/if}
       </span>
+    </label>
+
+    <label>
+      Bildunterschrift
+      <select value={share.captionSource} disabled={busy} onchange={(e) => patch({ captionSource: e.currentTarget.value })}>
+        <option value="description">Beschreibung</option>
+        <option value="firstComment">Erster Kommentar</option>
+        <option value="descriptionOrFirstComment">Beschreibung, sonst 1. Kommentar</option>
+        <option value="none">Keine</option>
+      </select>
+    </label>
+
+    <label class="check">
+      <input
+        type="checkbox"
+        checked={share.showComments}
+        disabled={busy}
+        onchange={(e) => patch({ showComments: e.currentTarget.checked })}
+      />
+      Alle Kommentare anzeigen (mit Namen)
     </label>
 
     <div class="password">
@@ -185,9 +205,19 @@
     gap: 4px;
   }
 
-  .grid label:first-child {
+  .grid label.check {
     flex-direction: row;
     align-items: center;
+  }
+
+  select {
+    width: 100%;
+    font: inherit;
+    color: inherit;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 6px 10px;
   }
 
   .inline {

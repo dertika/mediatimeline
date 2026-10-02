@@ -1,7 +1,8 @@
 <script lang="ts">
   import { page } from "$app/state";
+  import Comments from "$lib/Comments.svelte";
   import TimelineMap from "$lib/TimelineMap.svelte";
-  import { dayKey, formatDay, formatRange, formatTime } from "$lib/format";
+  import { dayKey, formatDay, formatRange, formatTime, placeOf } from "$lib/format";
   import type { Timeline, TimelineAsset } from "$lib/types";
 
   type State =
@@ -73,7 +74,17 @@
     setTimeout(() => (highlighted = highlighted === id ? null : highlighted), 2000);
   }
 
-  const place = (a: TimelineAsset) => [a.city, a.country].filter(Boolean).join(", ");
+  async function openFullscreen(timeline: Timeline, asset: TimelineAsset) {
+    const { openGallery } = await import("$lib/gallery");
+    await openGallery(timeline.assets, timeline.assets.indexOf(asset), apiBase);
+  }
+
+  // When the first comment already is the caption, don't repeat it in the list.
+  const extraComments = (timeline: Timeline, asset: TimelineAsset) =>
+    timeline.captionSource === "firstComment" ||
+    (timeline.captionSource === "descriptionOrFirstComment" && asset.caption === asset.comments[0]?.text)
+      ? asset.comments.slice(1)
+      : asset.comments;
 
   $effect(() => {
     document.title = view.kind === "ready" ? `${view.timeline.title} · mediatimeline` : "mediatimeline";
@@ -120,6 +131,7 @@
         <p class="muted">{formatRange(timeline.startDate, timeline.endDate)} · {timeline.assets.length} Medien</p>
       {/if}
       {#if timeline.description}<p class="description">{timeline.description}</p>{/if}
+      <Comments comments={timeline.albumComments} />
     </header>
 
     {#if located.length > 0}
@@ -142,12 +154,15 @@
                 width={asset.width}
                 height={asset.height}
               ></video>
+              <button class="fullscreen" onclick={() => openFullscreen(timeline, asset)} aria-label="Im Vollbild öffnen">⛶</button>
             {:else}
+              <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
               <img
+                onclick={() => openFullscreen(timeline, asset)}
                 src="{apiBase}/assets/{asset.id}/preview"
                 srcset="{apiBase}/assets/{asset.id}/thumbnail 250w, {apiBase}/assets/{asset.id}/preview 1440w"
                 sizes="(max-width: 900px) 100vw, 880px"
-                alt={asset.description ?? ""}
+                alt={asset.caption ?? ""}
                 loading="lazy"
                 decoding="async"
                 width={asset.width}
@@ -155,8 +170,9 @@
               />
             {/if}
             <figcaption>
-              {#if asset.description}<span class="caption">{asset.description}</span>{/if}
-              <span class="meta">{formatTime(asset.localDateTime)}{place(asset) ? ` · ${place(asset)}` : ""}</span>
+              {#if asset.caption}<span class="caption">{asset.caption}</span>{/if}
+              <span class="meta">{formatTime(asset.localDateTime)}{placeOf(asset) ? ` · ${placeOf(asset)}` : ""}</span>
+              <Comments comments={extraComments(timeline, asset)} />
             </figcaption>
           </figure>
         {/each}
@@ -210,9 +226,25 @@
   }
 
   figure {
+    position: relative;
     margin: 0 0 28px;
     border-radius: var(--radius);
     transition: box-shadow 0.3s;
+  }
+
+  img {
+    cursor: zoom-in;
+  }
+
+  .fullscreen {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 8px;
+    font-size: 1.1rem;
+    background: rgb(0 0 0 / 0.5);
+    color: #fff;
+    border: none;
   }
 
   figure.highlighted {

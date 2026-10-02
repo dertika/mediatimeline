@@ -36,6 +36,15 @@ export interface ImmichAlbum {
   assets?: ImmichAsset[];
 }
 
+export interface ImmichActivity {
+  id: string;
+  createdAt: string;
+  type: "comment" | "like";
+  assetId: string | null;
+  comment?: string | null;
+  user: { name: string };
+}
+
 export type ThumbnailSize = "thumbnail" | "preview";
 
 export class ImmichError extends Error {
@@ -113,6 +122,13 @@ export class ImmichClient {
       const album = await this.json<ImmichAlbum>(`/albums/${encodeURIComponent(id)}`);
       return album.assets ?? [];
     }
+  }
+
+  /** All comments of an album (on the album itself and on its assets). */
+  getAlbumComments(albumId: string): Promise<ImmichActivity[]> {
+    return this.json<ImmichActivity[]>(
+      `/activities?albumId=${encodeURIComponent(albumId)}&type=comment`,
+    );
   }
 
   /**

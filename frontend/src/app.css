@@ -100,3 +100,67 @@ input[type="datetime-local"] {
 .error {
   color: var(--danger);
 }
+
+/* ---- Fullscreen gallery (PhotoSwipe) overlays ---- */
+.pswp__mt-date,
+.pswp__mt-place,
+.pswp__mt-caption {
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.8);
+  pointer-events: none;
+}
+
+.pswp__mt-date {
+  margin-right: auto;
+  align-self: center;
+  padding: 0 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pswp__mt-place,
+.pswp__mt-caption {
+  position: absolute;
+  bottom: 16px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s, bottom 0.2s;
+}
+
+.pswp--ui-visible .pswp__mt-place,
+.pswp--ui-visible .pswp__mt-caption {
+  opacity: 1;
+}
+
+.mt-is-video .pswp__mt-place,
+.mt-is-video .pswp__mt-caption {
+  bottom: 72px;
+}
+
+.pswp__mt-place {
+  left: 16px;
+  max-width: 40%;
+}
+
+.pswp__mt-caption {
+  right: 16px;
+  max-width: 50%;
+  text-align: right;
+  white-space: pre-line;
+}
+
+.mt-video {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.mt-video video {
+  max-width: 100%;
+  max-height: 100%;
+}

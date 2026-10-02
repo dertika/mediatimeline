@@ -28,13 +28,16 @@ export interface BuildOptions {
 export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
   const { config, store } = opts;
   const immich = opts.immich ?? new ImmichClient(config.immich.url, config.immich.apiKey);
-  const cache = new AlbumCache(immich, config.cache.albumTtlSeconds * 1000);
-  const deps: AppDeps = { config, store, immich, cache };
 
   const app = Fastify({
     logger: opts.logger ?? true,
     trustProxy: config.server.trustedProxies,
   });
+
+  const cache = new AlbumCache(immich, config.cache.albumTtlSeconds * 1000, Date.now, (msg, err) =>
+    app.log.warn({ err }, msg),
+  );
+  const deps: AppDeps = { config, store, immich, cache };
 
   await app.register(cookie, { secret: opts.sessionSecret });
   await app.register(rateLimit, { global: false });

@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "leaflet": "^1.9.4",
-    "leaflet.markercluster": "^1.5.3"
+    "leaflet.markercluster": "^1.5.3",
+    "photoswipe": "^5.4.4"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",

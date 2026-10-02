@@ -28,7 +28,15 @@ export interface Timeline {
   endDate: string | null;
   captionSource: CaptionSource;
   albumComments: TimelineComment[];
+  tour: TourSettings;
   assets: TimelineAsset[];
+}
+
+export interface TourSettings {
+  intervalSeconds: number;
+  radiusMeters: number;
+  /** 0 = play videos to the end. */
+  videoMaxSeconds: number;
 }
 
 export interface ShareDto {
@@ -42,6 +50,9 @@ export interface ShareDto {
   hasPassword: boolean;
   captionSource: CaptionSource;
   showComments: boolean;
+  tourIntervalSeconds: number;
+  tourRadiusMeters: number;
+  tourVideoMaxSeconds: number;
   createdAt: string;
   createdBy: string | null;
 }

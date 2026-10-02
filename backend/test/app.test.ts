@@ -126,6 +126,39 @@ describe("public timeline", () => {
   });
 });
 
+describe("tour settings", () => {
+  it("has defaults and exposes them in the timeline", async () => {
+    const { url } = await createShare();
+    const shares = (await app.inject({ url: "/api/admin/shares", headers: ADMIN })).json();
+    expect(shares[0]).toMatchObject({ tourIntervalSeconds: 5, tourRadiusMeters: 1000, tourVideoMaxSeconds: 30 });
+    const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
+    expect(body.tour).toEqual({ intervalSeconds: 5, radiusMeters: 1000, videoMaxSeconds: 30 });
+  });
+
+  it("can be changed by the admin", async () => {
+    const { id, url } = await createShare();
+    const settings = { tourIntervalSeconds: 8, tourRadiusMeters: 2000, tourVideoMaxSeconds: 0 };
+    const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: settings });
+    expect(res.json()).toMatchObject(settings);
+    const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
+    expect(body.tour).toEqual({ intervalSeconds: 8, radiusMeters: 2000, videoMaxSeconds: 0 });
+  });
+
+  it.each([
+    { tourIntervalSeconds: 1 },
+    { tourIntervalSeconds: 61 },
+    { tourIntervalSeconds: 2.5 },
+    { tourRadiusMeters: 50 },
+    { tourRadiusMeters: 60_000 },
+    { tourVideoMaxSeconds: -1 },
+    { tourVideoMaxSeconds: 601 },
+  ])("rejects out-of-range values %o", async (payload) => {
+    const { id } = await createShare();
+    const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload });
+    expect(res.statusCode).toBe(400);
+  });
+});
+
 describe("comments", () => {
   async function shareWith(settings: Record<string, unknown>) {
     const { id, url } = await createShare();

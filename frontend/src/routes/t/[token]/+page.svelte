@@ -4,6 +4,7 @@
   import TimelineMap from "$lib/TimelineMap.svelte";
   import { dayKey, formatDay, formatRange, formatTime, placeOf } from "$lib/format";
   import type { Timeline, TimelineAsset } from "$lib/types";
+  import type { Component } from "svelte";
 
   type State =
     | { kind: "loading" }
@@ -74,6 +75,24 @@
     setTimeout(() => (highlighted = highlighted === id ? null : highlighted), 2000);
   }
 
+  // The tour (map animation + player) is only loaded when started.
+  let Tour = $state<Component<{
+    timeline: Timeline;
+    apiBase: string;
+    onclose: (last: TimelineAsset | null) => void;
+  }> | null>(null);
+
+  async function startTour() {
+    // Request fullscreen while the click still counts as a user gesture.
+    await document.documentElement.requestFullscreen?.().catch(() => {});
+    Tour = (await import("$lib/Tour.svelte")).default;
+  }
+
+  function closeTour(last: TimelineAsset | null) {
+    Tour = null;
+    if (last) requestAnimationFrame(() => scrollToAsset(last.id, "instant"));
+  }
+
   async function openFullscreen(timeline: Timeline, asset: TimelineAsset) {
     const { openGallery } = await import("$lib/gallery");
     // Leaving the gallery jumps to the photo that was shown last.
@@ -138,6 +157,7 @@
     </header>
 
     {#if located.length > 0}
+      <button class="primary start-tour" onclick={startTour}>▶ Tour starten</button>
       <TimelineMap assets={timeline.assets} mediaBase={apiBase} onselect={scrollToAsset} />
     {/if}
 
@@ -184,9 +204,18 @@
 
     <footer class="muted">Erstellt mit mediatimeline</footer>
   </main>
+  {#if Tour}
+    <Tour {timeline} {apiBase} onclose={closeTour} />
+  {/if}
 {/if}
 
 <style>
+  .start-tour {
+    margin: 0 0 12px;
+    padding: 8px 16px;
+    font-weight: 600;
+  }
+
   .unlock {
     display: flex;
     gap: 8px;

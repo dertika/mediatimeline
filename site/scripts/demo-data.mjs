@@ -26,9 +26,9 @@ const trip = JSON.parse(readFileSync(join(here, "..", "trip.json"), "utf8"));
 const API = process.env.COMMONS_API ?? "https://commons.wikimedia.org/w/api.php";
 const USER_AGENT = "mediatimeline-demo-build/1.0 (https://github.com/dertika/mediatimeline)";
 const LICENSE_OK = /^(cc0|cc[- ]by(-sa)?[- ]\d|public domain|pd\b)/i;
-const UNWANTED = /map|karte|kart\b|logo|plan\b|diagram|sign|skilt|interior|inside|museum|statue|plaque|ticket|menu|panorama|aerial|drone|night|cruise|ship|ferry|hurtigruten|explorer|butterfly|panoramio/i;
+const UNWANTED = /map|karte|kart\b|logo|plan\b|diagram|sign|skilt|interior|inside|museum|statue|plaque|ticket|menu|panorama|aerial|drone|night|cruise|ship|ferry|hurtigruten|explorer|butterfly|panoramio|wasp|insect|beetle|\bbird|flower|departing|arriving|\bbow\b|\bstern\b|polarlys|zeiss|instrument/i;
 /** Ship names and prefixes, Latin species names in brackets: "(Parnassius mnemosyne)". */
-const UNWANTED_EXACT = /\b(IMO|AIDA\w*|Costa|MS|MV|CMV)\b|\([A-Z][a-z]+ [a-z]+\)/;
+const UNWANTED_EXACT = /\b(IMO|AIDA\w*|Costa|MS|MV|CMV)\b|\([A-Z][a-z]+ (sp\.|[a-z]+)\)/;
 const QUALITY_CATEGORIES = [
   "Category:Featured pictures on Wikimedia Commons",
   "Category:Quality images",
@@ -130,7 +130,9 @@ async function nearby(place) {
   }
   return files
     .filter((f) => LICENSE_OK.test(f.license) && !UNWANTED.test(f.title) && !UNWANTED_EXACT.test(f.title))
-    .sort((a, b) => b.quality - a.quality || a.dist - b.dist);
+    // Titles naming the place mostly show the place itself, not objects found there.
+    .map((f) => ({ ...f, named: [place.name, place.city].some((n) => f.title.includes(n)) ? 1 : 0 }))
+    .sort((a, b) => b.named - a.named || b.quality - a.quality || a.dist - b.dist);
 }
 
 const isPhoto = (f) =>

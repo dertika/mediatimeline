@@ -23,7 +23,6 @@
     footer?: Snippet;
   } = $props();
 
-  let highlighted = $state<string | null>(null);
   const located = $derived(timeline.assets.filter((a) => a.lat !== null));
 
   const tourStops = $derived(withTrip(buildStops(timeline.assets, timeline.tour.radiusMeters), timeline.trip));
@@ -67,8 +66,6 @@
       window.scrollBy({ top: offset - Math.sign(offset) * window.innerHeight, behavior: "instant" });
     }
     el.scrollIntoView({ behavior, block: "center" });
-    highlighted = id;
-    setTimeout(() => (highlighted = highlighted === id ? null : highlighted), 2000);
   }
 
   /** Photos seen on this link (page path) in this browser; on the first visit all count as seen. */
@@ -232,7 +229,7 @@
     <section>
       <h2 class="day">{group.label}</h2>
       {#each group.assets as asset (asset.id)}
-        <figure id="asset-{asset.id}" class:highlighted={highlighted === asset.id} use:watchSeen={asset.id}>
+        <figure id="asset-{asset.id}" use:watchSeen={asset.id}>
           {#if isNew.has(asset.id)}<span class="new-badge">Neu</span>{/if}
           {#if asset.type === "video"}
             <!-- svelte-ignore a11y_media_has_caption -->
@@ -555,7 +552,6 @@
     position: relative;
     margin: 0 0 28px;
     border-radius: var(--radius);
-    transition: box-shadow 0.3s;
   }
 
   img {
@@ -582,10 +578,6 @@
     background: rgb(0 0 0 / 0.5);
     color: #fff;
     border: none;
-  }
-
-  figure.highlighted {
-    box-shadow: 0 0 0 3px var(--accent);
   }
 
   img,

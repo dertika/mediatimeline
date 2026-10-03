@@ -11,10 +11,16 @@
   let {
     timeline,
     media,
+    startAt = null,
+    onprogress,
     onclose,
   }: {
     timeline: Timeline;
     media: MediaUrl;
+    /** Continue a tour that was left off here instead of starting from the beginning. */
+    startAt?: { stop: number; item: number } | null;
+    /** Reports where the tour is, or null once it has been watched to the end. */
+    onprogress?: (position: { stop: number; item: number; label: string } | null) => void;
     /** Called when the tour ends or is closed. */
     onclose: () => void;
   } = $props();
@@ -104,6 +110,14 @@
   // The first stop may be the start of the trip, which has no photos.
   const firstLocal = stops.find((s) => s.assets.length > 0)?.assets[0]?.localDateTime ?? "";
   const dayOf = (a: TimelineAsset) => dayNumber(firstLocal, a.localDateTime);
+
+  // Remember the position for resuming after the page was reloaded or the tour closed.
+  $effect(() => {
+    if (stopIdx < 0 || ending) return;
+    const kind = stops[stopIdx]?.waypoint;
+    const label = kind === "start" ? "Start" : kind === "end" ? "Ziel" : `Ort ${placeNumber(stopIdx)} von ${placeCount}`;
+    untrack(() => onprogress?.({ stop: stopIdx, item: itemIdx, label }));
+  });
 
   function placeName(stop: TourStop, i: number): string {
     const named = stop.assets.find((a) => a.city || a.country);
@@ -358,6 +372,7 @@
     dayCard = null;
     dimmed = false;
     ending = true;
+    onprogress?.(null);
     flownTo = -1;
     route.setLatLngs(stops.map((s) => s.center));
     if (map) {
@@ -424,10 +439,41 @@
 
   onMount(() => {
     let cancelled = false;
+    // Keep the screen on while the tour runs (iOS 16.4+, Chrome); it is
+    // released whenever the page is hidden and requested again on return.
+    let wakeLock: WakeLockSentinel | null = null;
+    const keepAwake = async () => {
+      try {
+        wakeLock = (await navigator.wakeLock?.request("screen")) ?? null;
+      } catch {
+        wakeLock = null;
+      }
+    };
+    /** When the page was last hidden, e.g. because the phone was locked. */
+    let hiddenAt = 0;
+    const pause = () => !paused && !ending && togglePause();
+    const onVisibility = () => {
+      if (document.hidden) {
+        hiddenAt = Date.now();
+        pause();
+      } else {
+        keepAwake();
+        poke();
+      }
+    };
     const onFullscreen = () => {
       if (document.fullscreenElement) enteredFullscreen = true;
-      else if (enteredFullscreen) close();
+      else if (enteredFullscreen) {
+        // Locking the phone also leaves fullscreen: then pause instead of closing.
+        setTimeout(() => {
+          if (cancelled) return;
+          if (document.hidden || Date.now() - hiddenAt < 1000) pause();
+          else close();
+        }, 300);
+      }
     };
+    keepAwake();
+    document.addEventListener("visibilitychange", onVisibility);
     document.addEventListener("fullscreenchange", onFullscreen);
     enteredFullscreen = !!document.fullscreenElement;
     const overflow = document.body.style.overflow;
@@ -475,11 +521,14 @@
       map.fitBounds(overviewBounds(), { padding: [60, 60], maxZoom: 13 });
       // Coarse map under everything, so zooming out never shows grey.
       addBackgroundLayer(L, map, map.getZoom());
-      prefetchFlight(0);
+      prefetchFlight(startAt && stops[startAt.stop] ? startAt.stop : 0);
 
       const my = ++run;
       await sleep(OVERVIEW_MS);
-      if (my === run) goTo(0, 0);
+      if (my !== run) return;
+      const resume = startAt && stops[startAt.stop] ? startAt : null;
+      if (resume) goTo(resume.stop, Math.min(resume.item, Math.max(0, stops[resume.stop]!.assets.length - 1)));
+      else goTo(0, 0);
     })();
 
     return () => {
@@ -488,6 +537,8 @@
       clearTimeout(timer);
       clearTimeout(hideTimer);
       document.removeEventListener("fullscreenchange", onFullscreen);
+      document.removeEventListener("visibilitychange", onVisibility);
+      wakeLock?.release().catch(() => {});
       document.body.style.overflow = overflow;
       map?.remove();
     };

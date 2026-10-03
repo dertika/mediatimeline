@@ -3,6 +3,7 @@
   import { fade } from "svelte/transition";
   import type * as Leaflet from "leaflet";
   import { dayKey, formatDay, formatDayTime, placeOf } from "./format";
+  import { keepScreenOn } from "./keepAwake";
   import { accentColor, addBackgroundLayer, createBaseMap, flightPath, prefetchTiles, type L as LeafletNS } from "./map";
   import type { MediaUrl } from "./media";
   import { buildStops, dayNumber, flightDuration, withTrip, type TourStop } from "./tour";
@@ -46,6 +47,7 @@
   /** Index of the first item of each stop within the whole tour. */
   const stopOffsets = stops.map((_, i) => stops.slice(0, i).reduce((n, s) => n + s.assets.length, 0));
 
+  let tourEl: HTMLDivElement;
   let mapEl: HTMLDivElement;
   let videoEl = $state<HTMLVideoElement>();
   let L: LeafletNS;
@@ -439,16 +441,7 @@
 
   onMount(() => {
     let cancelled = false;
-    // Keep the screen on while the tour runs (iOS 16.4+, Chrome); it is
-    // released whenever the page is hidden and requested again on return.
-    let wakeLock: WakeLockSentinel | null = null;
-    const keepAwake = async () => {
-      try {
-        wakeLock = (await navigator.wakeLock?.request("screen")) ?? null;
-      } catch {
-        wakeLock = null;
-      }
-    };
+    const releaseScreen = keepScreenOn(tourEl);
     /** When the page was last hidden, e.g. because the phone was locked. */
     let hiddenAt = 0;
     const pause = () => !paused && !ending && togglePause();
@@ -457,7 +450,6 @@
         hiddenAt = Date.now();
         pause();
       } else {
-        keepAwake();
         poke();
       }
     };
@@ -472,7 +464,6 @@
         }, 300);
       }
     };
-    keepAwake();
     document.addEventListener("visibilitychange", onVisibility);
     document.addEventListener("fullscreenchange", onFullscreen);
     enteredFullscreen = !!document.fullscreenElement;
@@ -538,7 +529,7 @@
       clearTimeout(hideTimer);
       document.removeEventListener("fullscreenchange", onFullscreen);
       document.removeEventListener("visibilitychange", onVisibility);
-      wakeLock?.release().catch(() => {});
+      releaseScreen();
       document.body.style.overflow = overflow;
       map?.remove();
     };
@@ -568,6 +559,7 @@
 <svelte:window onkeydown={onKey} />
 
 <div
+  bind:this={tourEl}
   class="tour"
   class:idle={!controlsVisible && !paused}
   class:paused

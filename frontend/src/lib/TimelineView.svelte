@@ -1,9 +1,11 @@
 <script lang="ts">
-  import type { Component, Snippet } from "svelte";
+  import { untrack, type Component, type Snippet } from "svelte";
+  import { fly } from "svelte/transition";
   import Comments from "./Comments.svelte";
   import TimelineMap from "./TimelineMap.svelte";
   import { dayKey, formatDay, formatRange, formatTime, placeOf } from "./format";
   import type { MediaUrl } from "./media";
+  import { loadSeen, newAssetIds, saveSeen } from "./seenMedia";
   import { buildStops, estimateTourSeconds, remainingStops, withTrip } from "./tour";
   import { loadPosition, savePosition, type TourPosition } from "./tourProgress";
   import type { Timeline, TimelineAsset } from "./types";
@@ -55,6 +57,67 @@
     document.getElementById(`asset-${id}`)?.scrollIntoView({ behavior, block: "center" });
     highlighted = id;
     setTimeout(() => (highlighted = highlighted === id ? null : highlighted), 2000);
+  }
+
+  /** Photos seen on this link (page path) in this browser; on the first visit all count as seen. */
+  const seenId = location.pathname;
+  // Taken once when the page loads: new photos keep their badge until it is loaded again.
+  const { seen, isNew } = untrack(() => {
+    const stored = loadSeen(seenId);
+    const seen = stored ?? new Set(timeline.assets.map((a) => a.id));
+    if (!stored) saveSeen(seenId, seen, timeline.assets);
+    return { seen, isNew: new Set(newAssetIds(timeline.assets, stored)) };
+  });
+  /** New ones not looked at yet, counted by the hint at the bottom. */
+  let unseen = $state(new Set(isNew));
+  /** How long a new photo must be in view to count as seen, so scrolling past doesn't. */
+  const SEEN_AFTER_MS = 800;
+
+  const newLabel = $derived.by(() => {
+    const items = timeline.assets.filter((a) => unseen.has(a.id));
+    const videos = items.filter((a) => a.type === "video").length;
+    if (videos === 0) return n(items.length, "neues Foto", "neue Fotos");
+    if (videos === items.length) return n(items.length, "neues Video", "neue Videos");
+    return n(items.length, "neues Medium", "neue Medien");
+  });
+
+  function markSeen(ids: string[]) {
+    const fresh = ids.filter((id) => unseen.has(id));
+    if (fresh.length === 0) return;
+    for (const id of fresh) seen.add(id);
+    unseen = new Set([...unseen].filter((id) => !fresh.includes(id)));
+    saveSeen(seenId, seen, timeline.assets);
+  }
+
+  /** Jumps to the next new photo below the middle of the screen, else to the first one. */
+  function nextNew() {
+    const ids = timeline.assets.filter((a) => unseen.has(a.id)).map((a) => a.id);
+    const middle = window.innerHeight / 2;
+    const top = (id: string) => document.getElementById(`asset-${id}`)?.getBoundingClientRect().top ?? -Infinity;
+    const id = ids.find((id) => top(id) > middle) ?? ids[0];
+    if (!id) return;
+    scrollToAsset(id);
+    markSeen([id]);
+  }
+
+  /** Marks a new photo as seen once at least half of it stayed in view for a moment. */
+  function watchSeen(node: HTMLElement, id: string) {
+    if (!unseen.has(id)) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        clearTimeout(timer);
+        if (entry?.isIntersecting) timer = setTimeout(() => (markSeen([id]), observer.disconnect()), SEEN_AFTER_MS);
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(node);
+    return {
+      destroy() {
+        clearTimeout(timer);
+        observer.disconnect();
+      },
+    };
   }
 
   // The tour (map animation + player) is only loaded when started.
@@ -112,7 +175,7 @@
       : asset.comments;
 </script>
 
-<main class="timeline">
+<main class="timeline" class:has-new={unseen.size > 0}>
   <header>
     <h1>{timeline.title}</h1>
     {#if formatRange(timeline.startDate, timeline.endDate)}
@@ -157,7 +220,8 @@
     <section>
       <h2 class="day">{group.label}</h2>
       {#each group.assets as asset (asset.id)}
-        <figure id="asset-{asset.id}" class:highlighted={highlighted === asset.id}>
+        <figure id="asset-{asset.id}" class:highlighted={highlighted === asset.id} use:watchSeen={asset.id}>
+          {#if isNew.has(asset.id)}<span class="new-badge">Neu</span>{/if}
           {#if asset.type === "video"}
             <!-- svelte-ignore a11y_media_has_caption -->
             <video
@@ -196,6 +260,19 @@
 
   <footer class="muted">{#if footer}{@render footer()}{:else}Erstellt mit mediatimeline{/if}</footer>
 </main>
+{#if unseen.size > 0 && !Tour}
+  <!-- Two sibling buttons, like the resume card. -->
+  <div class="new-media" transition:fly={{ y: 40, duration: 250 }}>
+    <button class="new-media-next" onclick={nextNew}>
+      <span class="new-media-count">{newLabel}</span>
+      <span class="new-media-action">Zum nächsten</span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>
+    </button>
+    <button class="new-media-dismiss" onclick={() => markSeen([...unseen])} aria-label="Hinweis auf neue Fotos ausblenden">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+    </button>
+  </div>
+{/if}
 {#if Tour}
   <Tour {timeline} {media} {startAt} onprogress={onTourProgress} onclose={closeTour} />
 {/if}
@@ -329,6 +406,109 @@
     max-width: var(--content);
     margin: 0 auto;
     padding: 24px 16px 48px;
+  }
+
+  /* Keep the footer clear of the hint on new photos. */
+  .timeline.has-new {
+    padding-bottom: 112px;
+  }
+
+  .new-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 1;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+    pointer-events: none;
+  }
+
+  /* Floating hint at the bottom: how many photos are new, tap to jump to the next. */
+  .new-media {
+    position: fixed;
+    left: 50%;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    max-width: calc(100vw - 32px);
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #0b3d30));
+    color: var(--accent-contrast);
+    box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
+  }
+
+  .new-media button {
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .new-media button:focus-visible {
+    outline: 2px solid var(--accent-contrast);
+    outline-offset: -4px;
+  }
+
+  .new-media-next {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 12px 6px 12px 20px;
+    white-space: nowrap;
+  }
+
+  .new-media-count {
+    font-weight: 700;
+  }
+
+  .new-media-action {
+    opacity: 0.85;
+  }
+
+  .new-media-action::before {
+    content: "· ";
+  }
+
+  /* Small phones: the arrow alone says where the button goes. */
+  @media (max-width: 380px) {
+    .new-media-action {
+      display: none;
+    }
+  }
+
+  .new-media svg {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .new-media-dismiss {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin: 0 6px 0 2px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .new-media-dismiss:hover {
+    background: rgb(255 255 255 / 0.18) !important;
   }
 
   header h1 {

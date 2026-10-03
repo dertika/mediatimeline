@@ -5,6 +5,7 @@
   import { dayKey, formatDay, formatRange, formatTime, placeOf } from "./format";
   import type { MediaUrl } from "./media";
   import { buildStops, estimateTourSeconds, withTrip } from "./tour";
+  import { loadPosition, savePosition, type TourPosition } from "./tourProgress";
   import type { Timeline, TimelineAsset } from "./types";
 
   let {
@@ -48,11 +49,28 @@
   }
 
   // The tour (map animation + player) is only loaded when started.
-  let Tour = $state<Component<{ timeline: Timeline; media: MediaUrl; onclose: () => void }> | null>(null);
+  type TourProps = {
+    timeline: Timeline;
+    media: MediaUrl;
+    startAt?: { stop: number; item: number } | null;
+    onprogress?: (position: Omit<TourPosition, "savedAt"> | null) => void;
+    onclose: () => void;
+  };
+  let Tour = $state<Component<TourProps> | null>(null);
+  /** Where the tour was left off on this link (page path), if it was not watched to the end. */
+  const progressId = location.pathname;
+  let saved = $state(loadPosition(progressId));
+  let startAt = $state<TourPosition | null>(null);
+
+  function onTourProgress(position: Omit<TourPosition, "savedAt"> | null) {
+    saved = position && { ...position, savedAt: Date.now() };
+    savePosition(progressId, saved);
+  }
   /** Scroll position when the tour started; the page returns there afterwards. */
   let tourScrollY = 0;
 
-  async function startTour() {
+  async function startTour(fromBeginning = false) {
+    startAt = fromBeginning ? null : saved;
     tourScrollY = window.scrollY;
     // Request fullscreen while the click still counts as a user gesture.
     await document.documentElement.requestFullscreen?.().catch(() => {});
@@ -94,16 +112,19 @@
   </header>
 
   {#if located.length > 0}
-    <button class="start-tour" onclick={startTour}>
+    <button class="start-tour" onclick={() => startTour()}>
       <span class="start-tour-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4" /></svg>
       </span>
       <span class="start-tour-text">
-        <span class="start-tour-title">Tour starten</span>
-        <span class="start-tour-meta">{tourSummary}</span>
+        <span class="start-tour-title">{saved ? "Tour fortsetzen" : "Tour starten"}</span>
+        <span class="start-tour-meta">{saved ? `Weiter ab ${saved.label}` : tourSummary}</span>
       </span>
       <svg class="start-tour-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
     </button>
+    {#if saved}
+      <button class="restart-tour" onclick={() => startTour(true)}>Von vorn starten</button>
+    {/if}
     <TimelineMap assets={timeline.assets} trip={timeline.trip} {media} onselect={scrollToAsset} />
   {/if}
 
@@ -151,7 +172,7 @@
   <footer class="muted">{#if footer}{@render footer()}{:else}Erstellt mit mediatimeline{/if}</footer>
 </main>
 {#if Tour}
-  <Tour {timeline} {media} onclose={closeTour} />
+  <Tour {timeline} {media} {startAt} onprogress={onTourProgress} onclose={closeTour} />
 {/if}
 
 <style>
@@ -222,6 +243,19 @@
     display: block;
     font-size: 0.85rem;
     opacity: 0.85;
+  }
+
+  .restart-tour {
+    display: block;
+    margin: -6px 0 14px auto;
+    padding: 2px 4px;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    cursor: pointer;
   }
 
   .start-tour-chevron {

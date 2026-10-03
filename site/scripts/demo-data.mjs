@@ -26,9 +26,9 @@ const trip = JSON.parse(readFileSync(join(here, "..", "trip.json"), "utf8"));
 const API = process.env.COMMONS_API ?? "https://commons.wikimedia.org/w/api.php";
 const USER_AGENT = "mediatimeline-demo-build/1.0 (https://github.com/dertika/mediatimeline)";
 const LICENSE_OK = /^(cc0|cc[- ]by(-sa)?[- ]\d|public domain|pd\b)/i;
-const UNWANTED = /map|karte|kart\b|logo|plan\b|diagram|sign|skilt|interior|inside|museum|statue|plaque|ticket|menu|panorama|aerial|drone|night|cruise|ship|ferry|hurtigruten|explorer|butterfly|panoramio|wasp|insect|beetle|\bbird|flower|departing|arriving|\bbow\b|\bstern\b|polarlys|zeiss|instrument/i;
+const UNWANTED = /map|karte|kart\b|logo|plan\b|diagram|sign|skilt|interior|inside|museum|statue|plaque|ticket|menu|panorama|aerial|drone|night|cruise|ship|ferry|hurtigruten|explorer|butterfly|panoramio|wasp|insect|beetle|\bbird|flower|departing|arriving|\bbow\b|\bstern\b|polarlys|zeiss|instrument|close-up/i;
 /** Ship names and prefixes, Latin species names in brackets: "(Parnassius mnemosyne)". */
-const UNWANTED_EXACT = /\b(IMO|AIDA\w*|Costa|MS|MV|CMV)\b|\([A-Z][a-z]+ (sp\.|[a-z]+)\)/;
+const UNWANTED_EXACT = /\b(IMO|AIDA\w*|Costa|MSC?|MV|CMV)\b|\([A-Z][a-z]+ (sp\.|[a-z]+)\)/;
 const QUALITY_CATEGORIES = [
   "Category:Featured pictures on Wikimedia Commons",
   "Category:Quality images",

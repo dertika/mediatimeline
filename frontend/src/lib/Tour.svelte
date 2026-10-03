@@ -3,9 +3,9 @@
   import { fade } from "svelte/transition";
   import type * as Leaflet from "leaflet";
   import { dayKey, formatDay, formatDayTime, placeOf } from "./format";
-  import { accentColor, addBackgroundLayer, createBaseMap, prefetchTiles, type L as LeafletNS } from "./map";
+  import { accentColor, addBackgroundLayer, createBaseMap, flightPath, prefetchTiles, type L as LeafletNS } from "./map";
   import type { MediaUrl } from "./media";
-  import { buildStops, dayNumber, flightSeconds, type TourStop } from "./tour";
+  import { buildStops, dayNumber, flightDuration, type TourStop } from "./tour";
   import type { Timeline, TimelineAsset } from "./types";
 
   let {
@@ -42,6 +42,8 @@
   let map: Leaflet.Map | undefined;
   let route: Leaflet.Polyline;
   let here: Leaflet.CircleMarker;
+  /** Renderer of the route and the markers, redrawn on every frame of a flight. */
+  let renderer: Leaflet.SVG;
 
   let stopIdx = $state(-1);
   let itemIdx = $state(0);
@@ -52,8 +54,6 @@
   let arrivalDay = $state<number | null>(null);
   /** "Tag N" card before the first medium of a new day within a place. */
   let dayCard = $state<number | null>(null);
-  /** While the map flies, the vector layer is hidden (it is only CSS-scaled until the flight ends). */
-  let flying = $state(false);
   let paused = $state(false);
   /** Last step: flying out to the overview, then the tour closes itself. */
   let ending = $state(false);
@@ -68,6 +68,9 @@
 
   /** Stop the map is currently zoomed to (-1 = overview). */
   let flownTo = -1;
+  let flying = false;
+  /** Places already passed while flying on to the next one; the marker draws the route from there. */
+  let flightTrail: [number, number][] | null = null;
   /** Bumped on every navigation; async steps of an outdated navigation stop themselves. */
   let run = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -105,33 +108,34 @@
   }
 
   /**
-   * Preloads the tiles for the flight to stop `i`: its final view plus the
-   * levels of the approach, and the highest point of the flight, where both
-   * places are in view. Intermediate levels are still loaded by Leaflet on the
-   * way, but the parts one actually looks at come from the cache.
+   * Preloads the tiles for the flight from the current view to stop `i`:
+   * the final view with the levels of the approach, and every view along
+   * the flight at the zoom level Leaflet will load there. The map then stays
+   * sharp while flying instead of showing the coarse background.
    */
-  function prefetchStop(i: number, from: [number, number] | null) {
+  function prefetchFlight(i: number) {
     if (!map || !stops[i]) return;
     const { center, zoom } = stopView(i);
     prefetchTiles(map, center, zoom, 3);
-    if (from) {
-      const leg = L.latLngBounds([from, center]);
-      const apex = map.getBoundsZoom(leg.pad(0.2));
-      if (apex < zoom - 2) {
-        const mid = leg.getCenter();
-        prefetchTiles(map, [mid.lat, mid.lng], apex, 2);
-      }
+    for (const view of flightPath(map, center, zoom, 40).views) {
+      prefetchTiles(map, view.center, Math.min(19, Math.max(0, Math.round(view.zoom))), 1, 0);
     }
   }
 
   async function flyToStop(i: number) {
     if (!map) return;
     const { center, zoom } = stopView(i);
-    const from = map.getCenter();
-    const duration = flightSeconds([from.lat, from.lng], center);
     const m = map;
-    flying = true;
     // flyTo uses Leaflet's van Wijk curve: it only zooms out as far as the distance requires.
+    // Longer curves get more time, so that long legs don't rush past.
+    const duration = flightDuration(flightPath(m, center, zoom).length);
+    if (flownTo >= 0 && i > flownTo) {
+      flightTrail = stops.slice(0, i).map((s) => s.center);
+    } else {
+      route.setLatLngs(stops.slice(0, i + 1).map((s) => s.center));
+      here.setLatLng(center);
+    }
+    flying = true;
     await new Promise<void>((resolve) => {
       const fallback = setTimeout(done, duration * 1000 + 1000);
       function done() {
@@ -143,11 +147,25 @@
       m.flyTo(center, zoom, { duration });
     });
     flying = false;
+    flightTrail = null;
     flownTo = i;
     route.setLatLngs(stops.slice(0, i + 1).map((s) => s.center));
     here.setLatLng(center);
-    // Plenty of time while this place is shown: warm up the next one.
-    prefetchStop(i + 1, center);
+    // Plenty of time while this place is shown: warm up the next flight.
+    prefetchFlight(i + 1);
+  }
+
+  /** Runs on every frame of a flight. */
+  function onFlightFrame() {
+    if (!flying || !map) return;
+    if (flightTrail) {
+      const c = map.getCenter();
+      here.setLatLng(c);
+      route.setLatLngs([...flightTrail, [c.lat, c.lng]]);
+    }
+    // While zooming, Leaflet only scales the vector layer and redraws it at
+    // the end, so the marker would grow to fill the screen; redraw it now.
+    (renderer as unknown as { _reset(): void })._reset();
   }
 
   function stopVideo() {
@@ -382,11 +400,14 @@
       map = base.map;
       if (cancelled) return map.remove();
       const accent = accentColor(mapEl);
+      renderer = L.svg({ padding: 0.3 });
+      map.on("move", onFlightFrame);
       for (const stop of stops) {
-        L.circleMarker(stop.center, { radius: 5, color: accent, weight: 2, fillOpacity: 0.4 }).addTo(map);
+        L.circleMarker(stop.center, { renderer, radius: 5, color: accent, weight: 2, fillOpacity: 0.4 }).addTo(map);
       }
-      route = L.polyline([], { color: accent, weight: 4, opacity: 0.8, dashArray: "8 8" }).addTo(map);
+      route = L.polyline([], { renderer, color: accent, weight: 4, opacity: 0.8, dashArray: "8 8" }).addTo(map);
       here = L.circleMarker(stops[0]!.center, {
+        renderer,
         radius: 10,
         color: "#fff",
         weight: 3,
@@ -397,7 +418,7 @@
       map.fitBounds(overviewBounds(), { padding: [60, 60], maxZoom: 13 });
       // Coarse map under everything, so zooming out never shows grey.
       addBackgroundLayer(L, map, map.getZoom());
-      prefetchStop(0, null);
+      prefetchFlight(0);
 
       const my = ++run;
       await sleep(OVERVIEW_MS);
@@ -442,7 +463,6 @@
   class="tour"
   class:idle={!controlsVisible && !paused}
   class:paused
-  class:flying
   role="dialog"
   tabindex="-1"
   aria-modal="true"
@@ -662,16 +682,6 @@
 
   .day-badge + .arrival-step {
     display: block;
-  }
-
-  /* Leaflet only CSS-scales the vector layer during a flight and redraws it
-     afterwards; at a zoom jump of 2^9 the marker dot would fill the screen. */
-  .tour :global(.leaflet-overlay-pane) {
-    transition: opacity 0.25s;
-  }
-
-  .flying :global(.leaflet-overlay-pane) {
-    opacity: 0;
   }
 
   .arrival h2 {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStops, dayNumber, distanceMeters, flightSeconds } from "./tour";
+import { buildStops, dayNumber, distanceMeters, flightCurve, flightDuration } from "./tour";
 import type { TimelineAsset } from "./types";
 
 let seq = 0;
@@ -80,13 +80,30 @@ describe("buildStops", () => {
   });
 });
 
-describe("flightSeconds", () => {
-  it("grows with distance within 1.5–4 s", () => {
-    expect(flightSeconds(BERGEN, BERGEN_NEAR)).toBe(1.5);
-    const long = flightSeconds(BERGEN, OSLO);
-    expect(long).toBeGreaterThan(2.5);
-    expect(long).toBeLessThanOrEqual(4);
-    expect(flightSeconds(BERGEN, [-33.86, 151.2])).toBe(4);
+describe("flightCurve", () => {
+  const W = 1280;
+  it("starts at the origin and ends at the target", () => {
+    const c = flightCurve(W, W / 8, 50_000);
+    expect(c.u(0)).toBeCloseTo(0, 6);
+    expect(c.w(0)).toBeCloseTo(W, 6);
+    expect(c.u(c.length) / 50_000).toBeCloseTo(1, 6);
+    expect(c.w(c.length) / (W / 8)).toBeCloseTo(1, 6);
+  });
+  it("zooms out in between on long legs", () => {
+    const c = flightCurve(W, W, 100_000);
+    expect(c.w(c.length / 2)).toBeGreaterThan(20 * W);
+  });
+});
+
+describe("flightDuration", () => {
+  // Same zoom at both ends, 1.16 m per pixel (zoom 16 in Norway).
+  const seconds = (km: number) => flightDuration(flightCurve(1280, 1280, (km * 1000) / 1.16).length);
+  it("takes longer for longer legs, within 1.5–8 s", () => {
+    expect(seconds(0.5)).toBe(1.5);
+    expect(seconds(10)).toBeGreaterThan(2.5);
+    expect(seconds(100)).toBeGreaterThan(5);
+    expect(seconds(100)).toBeGreaterThan(seconds(10));
+    expect(seconds(20_000)).toBe(8);
   });
 });
 

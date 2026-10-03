@@ -1,6 +1,7 @@
 import "leaflet/dist/leaflet.css";
 import "./map.css";
 import type * as Leaflet from "leaflet";
+import { flightCurve } from "./tour";
 
 export type L = typeof Leaflet;
 
@@ -47,10 +48,15 @@ const inFlight = new Set<HTMLImageElement>();
 /**
  * Warms the browser cache with the tiles that will cover the map at `center`
  * and `zoom`, plus `levels - 1` zoom levels above it that an approach passes
- * just before. Only the viewport plus a one-tile margin is fetched per level,
- * as a normal view would.
+ * just before. Per level the viewport plus `margin` tiles is fetched.
  */
-export function prefetchTiles(map: Leaflet.Map, center: [number, number], zoom: number, levels = 1): number {
+export function prefetchTiles(
+  map: Leaflet.Map,
+  center: [number, number],
+  zoom: number,
+  levels = 1,
+  margin = 1,
+): number {
   const half = map.getSize().divideBy(2);
   let count = 0;
   for (let z = zoom; z > zoom - levels && z >= 0; z--) {
@@ -58,8 +64,8 @@ export function prefetchTiles(map: Leaflet.Map, center: [number, number], zoom: 
     const min = c.subtract(half).divideBy(TILE_SIZE).floor();
     const max = c.add(half).divideBy(TILE_SIZE).floor();
     const n = 2 ** z;
-    for (let x = min.x - 1; x <= max.x + 1; x++) {
-      for (let y = min.y - 1; y <= max.y + 1; y++) {
+    for (let x = min.x - margin; x <= max.x + margin; x++) {
+      for (let y = min.y - margin; y <= max.y + margin; y++) {
         if (y < 0 || y >= n) continue;
         const url = TILE_URL.replace("{z}", String(z))
           .replace("{x}", String(((x % n) + n) % n))
@@ -75,6 +81,33 @@ export function prefetchTiles(map: Leaflet.Map, center: [number, number], zoom: 
     }
   }
   return count;
+}
+
+/**
+ * The flight `map.flyTo(target, targetZoom)` would take from the current
+ * view: the length of its curve and `steps + 1` views evenly along it.
+ * Mirrors Leaflet's own computation, see `flightCurve`.
+ */
+export function flightPath(
+  map: Leaflet.Map,
+  target: [number, number],
+  targetZoom: number,
+  steps = 0,
+): { length: number; views: { center: [number, number]; zoom: number }[] } {
+  const startZoom = map.getZoom();
+  const from = map.project(map.getCenter(), startZoom);
+  const to = map.project(target, startZoom);
+  const size = map.getSize();
+  const w0 = Math.max(size.x, size.y);
+  const u1 = to.distanceTo(from) || 1;
+  const curve = flightCurve(w0, w0 * map.getZoomScale(startZoom, targetZoom), u1);
+  const views = [];
+  for (let k = 0; k <= steps; k++) {
+    const s = (curve.length * k) / Math.max(1, steps);
+    const c = map.unproject(from.add(to.subtract(from).multiplyBy(curve.u(s) / u1)), startZoom);
+    views.push({ center: [c.lat, c.lng] as [number, number], zoom: map.getScaleZoom(w0 / curve.w(s), startZoom) });
+  }
+  return { length: curve.length, views };
 }
 
 /**

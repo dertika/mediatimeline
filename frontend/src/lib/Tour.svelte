@@ -216,7 +216,7 @@
       itemIdx = i;
       arrivalDay = newDay ? dayOf(target) : null;
       arriving = true;
-      startTimed(intervalMs, () => showItem(my));
+      startTimed(intervalMs, () => endCard(my));
     } else if (arrive && newDay) {
       // The photo fades out completely before the day card fades in.
       dimmed = true;
@@ -226,7 +226,7 @@
       stopIdx = s;
       itemIdx = i;
       dayCard = dayOf(target);
-      startTimed(intervalMs, () => endDayCard(my));
+      startTimed(intervalMs, () => endCard(my));
     } else {
       stopIdx = s;
       itemIdx = i;
@@ -234,8 +234,10 @@
     }
   }
 
-  /** Fades the day card out before the next photo fades in. */
-  async function endDayCard(my: number) {
+  /** Fades the place or day card out before the next photo fades in; the map stays dimmed. */
+  async function endCard(my: number) {
+    dimmed = true;
+    arriving = false;
     dayCard = null;
     // A little longer than the fade, so that it has surely finished.
     await sleep(MEDIA_FADE_MS + 50);
@@ -302,7 +304,7 @@
       // Skip the rest of the map pause or day card.
       const my = ++run;
       cancelStep();
-      return void (dayCard !== null ? endDayCard(my) : showItem(my));
+      return void endCard(my);
     }
     if (itemIdx + 1 < stops[stopIdx]!.assets.length) return void goTo(stopIdx, itemIdx + 1);
     if (stopIdx + 1 < stops.length) return void goTo(stopIdx + 1, 0);
@@ -505,7 +507,7 @@
     </div>
   {/if}
 
-  {#if showMedia || dayCard !== null || dimmed}
+  {#if showMedia || arriving || dayCard !== null || dimmed}
     <div class="veil" transition:fade={{ duration: MEDIA_FADE_MS }}></div>
   {/if}
 
@@ -518,7 +520,7 @@
 
   {#if showMedia && current}
     {#key current.id}
-      <figure class="media" transition:fade={{ duration: MEDIA_FADE_MS }}>
+      <figure class="media" transition:fade|global={{ duration: MEDIA_FADE_MS }}>
         {#if current.type === "video"}
           <!-- svelte-ignore a11y_media_has_caption -->
           <video

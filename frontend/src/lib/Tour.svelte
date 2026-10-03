@@ -6,6 +6,7 @@
   import { keepScreenOn } from "./keepAwake";
   import { accentColor, addBackgroundLayer, createBaseMap, flightPath, prefetchTiles, type L as LeafletNS } from "./map";
   import type { MediaUrl } from "./media";
+  import { nearestAhead, stopLegs } from "./route";
   import { buildStops, dayNumber, flightDuration, withTrip, type TourStop } from "./tour";
   import type { Timeline, TimelineAsset } from "./types";
 
@@ -40,6 +41,20 @@
     videoMaxSeconds: timeline.tour.videoMaxSeconds,
     totalItems: timeline.assets.length,
   }));
+  /** The recorded way to each stop (GeoPulse), or null where it is drawn as a straight line. */
+  const legs = untrack(() => stopLegs(stops, timeline.route));
+  const hasRoute = legs.some((l) => l !== null);
+
+  /** The route up to stop `i`: the recorded way where there is one, else straight from stop to stop. */
+  function trailTo(i: number): [number, number][] {
+    const out: [number, number][] = [];
+    for (let k = 0; k <= i && k < stops.length; k++) {
+      if (k > 0 && legs[k]) out.push(...legs[k]!);
+      out.push(stops[k]!.center);
+    }
+    return out;
+  }
+
   /** Places with photos; the start and end of the trip don't count. */
   const placeCount = stops.filter((s) => !s.waypoint).length;
   /** 1-based number of the place at stop `i`. */
@@ -85,6 +100,9 @@
   let flying = false;
   /** Places already passed while flying on to the next one; the marker draws the route from there. */
   let flightTrail: [number, number][] | null = null;
+  /** The recorded way of the current flight, followed by the marker; null for a straight flight. */
+  let flightWay: [number, number][] | null = null;
+  let flightWayIdx = 0;
   /** Bumped on every navigation; async steps of an outdated navigation stop themselves. */
   let run = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -161,9 +179,12 @@
     // Longer curves get more time, so that long legs don't rush past.
     const duration = flightDuration(flightPath(m, center, zoom).length);
     if (flownTo >= 0 && i > flownTo) {
-      flightTrail = stops.slice(0, i).map((s) => s.center);
+      flightTrail = trailTo(flownTo);
+      const ahead = trailTo(i).slice(flightTrail.length);
+      flightWay = legs.slice(flownTo + 1, i + 1).some((l) => l !== null) ? ahead : null;
+      flightWayIdx = 0;
     } else {
-      route.setLatLngs(stops.slice(0, i + 1).map((s) => s.center));
+      route.setLatLngs(trailTo(i));
       here.setLatLng(center);
     }
     flying = true;
@@ -179,8 +200,9 @@
     });
     flying = false;
     flightTrail = null;
+    flightWay = null;
     flownTo = i;
-    route.setLatLngs(stops.slice(0, i + 1).map((s) => s.center));
+    route.setLatLngs(trailTo(i));
     here.setLatLng(center);
     // Plenty of time while this place is shown: warm up the next flight.
     prefetchFlight(i + 1);
@@ -189,7 +211,13 @@
   /** Runs on every frame of a flight. */
   function onFlightFrame() {
     if (!flying || !map) return;
-    if (flightTrail) {
+    if (flightTrail && flightWay) {
+      // Along the recorded way: the marker sits where the way passes the map center.
+      const c = map.getCenter();
+      flightWayIdx = nearestAhead(flightWay, [c.lat, c.lng], flightWayIdx);
+      here.setLatLng(flightWay[flightWayIdx]!);
+      route.setLatLngs([...flightTrail, ...flightWay.slice(0, flightWayIdx + 1)]);
+    } else if (flightTrail) {
       const c = map.getCenter();
       here.setLatLng(c);
       route.setLatLngs([...flightTrail, [c.lat, c.lng]]);
@@ -376,7 +404,7 @@
     ending = true;
     onprogress?.(null);
     flownTo = -1;
-    route.setLatLngs(stops.map((s) => s.center));
+    route.setLatLngs(trailTo(stops.length - 1));
     if (map) {
       flying = true;
       map.once("moveend", () => (flying = false));
@@ -499,7 +527,8 @@
           : { radius: 5, weight: 2, fillOpacity: 0.4 };
         L.circleMarker(stop.center, { renderer, color: accent, ...style }).addTo(map);
       }
-      route = L.polyline([], { renderer, color: accent, weight: 4, opacity: 0.8, dashArray: "8 8" }).addTo(map);
+      // A recorded route is drawn solid, straight lines between the stops dashed.
+      route = L.polyline([], { renderer, color: accent, weight: 4, opacity: 0.8, dashArray: hasRoute ? undefined : "8 8" }).addTo(map);
       here = L.circleMarker(stops[0]!.center, {
         renderer,
         radius: 10,

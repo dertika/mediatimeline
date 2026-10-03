@@ -5,10 +5,13 @@
 
   let {
     share,
+    geopulse = false,
     onchange,
     ondelete,
   }: {
     share: ShareDto;
+    /** GeoPulse is configured on the server: offer the recorded route. */
+    geopulse?: boolean;
     onchange: (updated: ShareDto) => void;
     ondelete: (id: number) => void;
   } = $props();
@@ -227,6 +230,21 @@
         Start und Ziel erscheinen auf der Karte und in der Tour, ohne Fotos. Sie sind für alle mit dem Link sichtbar:
         Wer die eigene Adresse nicht zeigen möchte, wählt nur den Ort.
       </p>
+      {#if geopulse}
+        <label class="check">
+          <input
+            type="checkbox"
+            checked={share.showRoute}
+            disabled={busy}
+            onchange={(e) => patch({ showRoute: e.currentTarget.checked })}
+          />
+          Echte Route aus GeoPulse zeigen
+        </label>
+        <p class="hint muted">
+          Statt gerader Linien zeigen Karte und Tour die aufgezeichnete Strecke zwischen dem ersten und letzten Foto,
+          nach Verkehrsmittel eingefärbt. Rund um Start und Ziel wird sie abgeschnitten.
+        </p>
+      {/if}
     </fieldset>
 
     <div class="password">

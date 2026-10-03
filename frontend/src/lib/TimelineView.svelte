@@ -222,7 +222,7 @@
         </button>
       </div>
     {/if}
-    <TimelineMap assets={timeline.assets} trip={timeline.trip} {media} onselect={scrollToAsset} />
+    <TimelineMap assets={timeline.assets} trip={timeline.trip} route={timeline.route} {media} onselect={scrollToAsset} />
   {/if}
 
   {#each groupByDay(timeline.assets) as group (group.day)}

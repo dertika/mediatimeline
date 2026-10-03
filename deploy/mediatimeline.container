@@ -21,6 +21,13 @@ Volume=mediatimeline-data:/data:U,Z
 #   printf '%s' 'KEY' | podman secret create immich_api_key -
 # Secret=immich_api_key,type=mount,target=/run/secrets/immich_api_key
 # Environment=MEDIATIMELINE_IMMICH_API_KEY_FILE=/run/secrets/immich_api_key
+# Optional: GeoPulse on the same host. Join its Podman network so that
+# geopulse.url can use the container name (e.g. http://geopulse-backend:8080),
+# and keep its API token in a secret as well.
+# Network=geopulse.network
+#   printf '%s' 'TOKEN' | podman secret create geopulse_api_key -
+# Secret=geopulse_api_key,type=mount,target=/run/secrets/geopulse_api_key
+# Environment=MEDIATIMELINE_GEOPULSE_API_KEY_FILE=/run/secrets/geopulse_api_key
 HealthCmd=wget -qO- http://127.0.0.1:8080/healthz || exit 1
 HealthInterval=30s
 

@@ -32,6 +32,8 @@ export interface Share {
   tripEnd: Place | null;
   /** Round trip: the end is the start, also after the start changes. */
   tripEndSameAsStart: boolean;
+  /** Show the real route from GeoPulse instead of straight lines between the photos. */
+  showRoute: boolean;
   createdAt: string;
   createdBy: string | null;
 }
@@ -53,6 +55,7 @@ interface ShareRow {
   trip_start: string | null;
   trip_end: string | null;
   trip_end_same: number;
+  show_route: number;
   created_at: string;
   created_by: string | null;
 }
@@ -79,6 +82,7 @@ const MIGRATIONS = [
   `ALTER TABLE shares ADD COLUMN trip_start TEXT;
    ALTER TABLE shares ADD COLUMN trip_end TEXT;
    ALTER TABLE shares ADD COLUMN trip_end_same INTEGER NOT NULL DEFAULT 0;`,
+  `ALTER TABLE shares ADD COLUMN show_route INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 const placeFromJson = (json: string | null): Place | null => (json ? (JSON.parse(json) as Place) : null);
@@ -101,6 +105,7 @@ function fromRow(r: ShareRow): Share {
     tripStart: placeFromJson(r.trip_start),
     tripEnd: placeFromJson(r.trip_end),
     tripEndSameAsStart: r.trip_end_same === 1,
+    showRoute: r.show_route === 1,
     createdAt: r.created_at,
     createdBy: r.created_by,
   };
@@ -123,6 +128,7 @@ export interface ShareUpdate {
   tripStart?: Place | null;
   tripEnd?: Place | null;
   tripEndSameAsStart?: boolean;
+  showRoute?: boolean;
 }
 
 export class ShareStore {
@@ -221,6 +227,10 @@ export class ShareStore {
     if (patch.tripEndSameAsStart !== undefined) {
       sets.push("trip_end_same = ?");
       values.push(patch.tripEndSameAsStart ? 1 : 0);
+    }
+    if (patch.showRoute !== undefined) {
+      sets.push("show_route = ?");
+      values.push(patch.showRoute ? 1 : 0);
     }
     if (patch.passwordHash !== undefined) {
       sets.push("password_hash = ?", "password_version = password_version + 1");

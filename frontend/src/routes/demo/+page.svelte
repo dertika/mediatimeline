@@ -2,6 +2,7 @@
   import { base } from "$app/paths";
   import TimelineView from "$lib/TimelineView.svelte";
   import { staticMedia } from "$lib/media";
+  import { CHANGELOG_URL, VERSION } from "$lib/version";
   import type { Timeline } from "$lib/types";
 
   // Only the GitHub Pages build ships the demo data (see site/).
@@ -41,7 +42,8 @@
   <TimelineView {timeline} {media}>
     {#snippet footer()}
       Demo von <a href="{base}/">mediatimeline</a> · Fotos:
-      <a href="{base}/#bildnachweise">Bildnachweise</a> · Karte © OpenStreetMap
+      <a href="{base}/#bildnachweise">Bildnachweise</a> · Karte © OpenStreetMap ·
+      <a href={CHANGELOG_URL}>v{VERSION}</a>
     {/snippet}
   </TimelineView>
 {/if}

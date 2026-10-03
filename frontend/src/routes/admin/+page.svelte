@@ -2,6 +2,7 @@
   import ShareEditor from "$lib/ShareEditor.svelte";
   import { formatRange } from "$lib/format";
   import type { AdminAlbum, ShareDto } from "$lib/types";
+  import { CHANGELOG_URL, VERSION } from "$lib/version";
 
   let albums = $state<AdminAlbum[]>([]);
   let user = $state<{ name: string } | null>(null);
@@ -120,6 +121,8 @@
       <p class="muted">Keine Alben gefunden.</p>
     {/each}
   {/if}
+
+  <footer class="muted">mediatimeline · <a href={CHANGELOG_URL}>v{VERSION}</a></footer>
 </main>
 
 <style>
@@ -127,6 +130,12 @@
     max-width: 1000px;
     margin: 0 auto;
     padding: 24px 16px 48px;
+  }
+
+  footer {
+    margin-top: 48px;
+    text-align: center;
+    font-size: 0.8rem;
   }
 
   header {

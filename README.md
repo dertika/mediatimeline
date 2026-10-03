@@ -90,6 +90,12 @@ Einmalig nötig: unter *Settings → Pages → Build and deployment* als Quelle 
 
 Lokal bauen: `site/build.sh` (braucht ffmpeg und Playwright). `DEMO_OFFLINE=1` nimmt Platzhalterbilder statt Commons-Fotos.
 
+### Versionen
+
+Änderungen stehen im [CHANGELOG](CHANGELOG.md). Die Versionsnummer steht in den drei `package.json` (Wurzel, `backend/`, `frontend/`) und erscheint in der Fußzeile der Adminseite und der geteilten Timelines. Ein Test prüft, dass alle drei übereinstimmen und das Changelog mit derselben Version beginnt.
+
+Neue Version veröffentlichen: Version in den `package.json` und im Changelog erhöhen, `npm install --package-lock-only` ausführen, nach dem Merge `git tag v0.7.0 && git push origin v0.7.0` (baut die Image-Tags `0.7.0` und `0.7`).
+
 ### Immich-API-Key
 
 In Immich unter *Kontoeinstellungen → API-Schlüssel* einen Key mit den Rechten `album.read`, `asset.read` und `asset.view` anlegen. Für Kommentare zusätzlich `activity.read` – fehlt es, funktioniert die Timeline weiterhin, nur ohne Kommentare (Warnung im Log). Statt in `config.yaml` kann der Key auch als Podman-Secret übergeben werden (siehe Kommentare in `deploy/mediatimeline.container`).

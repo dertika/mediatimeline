@@ -9,6 +9,7 @@
   import { buildStops, estimateTourSeconds, remainingStops, withTrip } from "./tour";
   import { loadPosition, savePosition, type TourPosition } from "./tourProgress";
   import type { Timeline, TimelineAsset } from "./types";
+  import { CHANGELOG_URL, VERSION } from "./version";
 
   let {
     timeline,
@@ -258,7 +259,7 @@
     </section>
   {/each}
 
-  <footer class="muted">{#if footer}{@render footer()}{:else}Erstellt mit mediatimeline{/if}</footer>
+  <footer class="muted">{#if footer}{@render footer()}{:else}Erstellt mit mediatimeline · <a href={CHANGELOG_URL}>v{VERSION}</a>{/if}</footer>
 </main>
 {#if unseen.size > 0 && !Tour}
   <!-- Two sibling buttons, like the resume card. -->

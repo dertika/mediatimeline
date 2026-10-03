@@ -4,7 +4,7 @@
   import TimelineMap from "./TimelineMap.svelte";
   import { dayKey, formatDay, formatRange, formatTime, placeOf } from "./format";
   import type { MediaUrl } from "./media";
-  import { buildStops, estimateTourSeconds, withTrip } from "./tour";
+  import { buildStops, estimateTourSeconds, remainingStops, withTrip } from "./tour";
   import { loadPosition, savePosition, type TourPosition } from "./tourProgress";
   import type { Timeline, TimelineAsset } from "./types";
 
@@ -22,14 +22,23 @@
   let highlighted = $state<string | null>(null);
   const located = $derived(timeline.assets.filter((a) => a.lat !== null));
 
+  const tourStops = $derived(withTrip(buildStops(timeline.assets, timeline.tour.radiusMeters), timeline.trip));
+  const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+  /** "ca. 2 Min." with non-breaking spaces, so it never wraps apart. */
+  const minutes = (seconds: number) => `ca.\u00a0${Math.max(1, Math.round(seconds / 60))}\u00a0Min.`;
+
+  /** Rough tour length in seconds from the given stop and item on. */
+  function tourSeconds(from = { stop: 0, item: 0 }) {
+    const rest = remainingStops(tourStops, from);
+    const days = new Set(rest.flatMap((s) => s.assets).map((a) => dayKey(a.localDateTime))).size;
+    return estimateTourSeconds(rest, days, timeline.tour);
+  }
+
   /** "6 Orte · 3 Tage · ca. 2 Min." for the tour button. */
   const tourSummary = $derived.by(() => {
-    const stops = buildStops(timeline.assets, timeline.tour.radiusMeters);
+    const places = tourStops.filter((s) => !s.waypoint).length;
     const days = new Set(timeline.assets.map((a) => dayKey(a.localDateTime))).size;
-    const seconds = estimateTourSeconds(withTrip(stops, timeline.trip), days, timeline.tour);
-    const minutes = Math.max(1, Math.round(seconds / 60));
-    const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
-    return `${n(stops.length, "Ort", "Orte")} · ${n(days, "Tag", "Tage")} · ca. ${minutes} Min.`;
+    return `${n(places, "Ort", "Orte")} · ${n(days, "Tag", "Tage")} · ${minutes(tourSeconds())}`;
   });
 
   function groupByDay(assets: TimelineAsset[]) {
@@ -60,6 +69,8 @@
   /** Where the tour was left off on this link (page path), if it was not watched to the end. */
   const progressId = location.pathname;
   let saved = $state(loadPosition(progressId));
+  /** "Ab Ort 3 von 6 · noch ca. 1 Min." for the resume button. */
+  const resumeSummary = $derived(saved && `Ab ${saved.label} · noch ${minutes(tourSeconds(saved))}`);
   let startAt = $state<TourPosition | null>(null);
 
   function onTourProgress(position: Omit<TourPosition, "savedAt"> | null) {
@@ -131,7 +142,7 @@
           </span>
           <span class="start-tour-text">
             <span class="start-tour-title">Tour fortsetzen</span>
-            <span class="start-tour-meta">Weiter ab {saved.label}</span>
+            <span class="start-tour-meta">{resumeSummary}</span>
           </span>
         </button>
         <button class="resume-dismiss" onclick={() => onTourProgress(null)} aria-label="Fortsetzen verwerfen">

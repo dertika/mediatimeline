@@ -6,29 +6,42 @@ const BLANK_WEBM = "data:video/webm;base64,GkXfo59ChoEBQveBAULygQRC84EIQoKEd2Vib
  * Safari and every browser on iOS/iPadOS (all WebKit). Their wake lock works
  * (iOS 16.4+), and a looping video there could only get in the tour's way.
  */
-function isWebKit(): boolean {
-  const ua = navigator.userAgent;
+function isWebKit(ua: string): boolean {
   return /AppleWebKit/.test(ua) && !/Chrome\/|Chromium|Android/.test(ua);
+}
+
+/** Opera offers the wake lock but still lets the screen turn off on Android. */
+function isOpera(ua: string): boolean {
+  return /OPR\//.test(ua);
 }
 
 /**
  * Keeps the screen on until the returned function is called.
  *
- * Uses the Screen Wake Lock API (iOS 16.4+, Chrome) and requests it again
- * whenever the browser drops it while the page is visible. Some Chromium
- * browsers lack the API or don't honour it (e.g. Opera on Android), so outside
- * WebKit a muted, invisible video loops alongside: Chromium keeps the screen
- * on while a video plays that is visible and large enough, which is why it
- * covers the whole container.
+ * Uses the Screen Wake Lock API (Chrome, Edge, Firefox 126+, Safari/iOS 16.4+)
+ * and requests it again whenever the browser drops it while the page is
+ * visible. Where the API is missing or refused, and always in Opera, a muted,
+ * invisible video loops as a fallback (never in WebKit): Chromium keeps the
+ * screen on while a video plays that is visible and large enough, which is
+ * why it covers the whole container.
  */
 export function keepScreenOn(container: HTMLElement): () => void {
+  const ua = navigator.userAgent;
   let stopped = false;
   let sentinel: WakeLockSentinel | null = null;
+  let video: HTMLVideoElement | null = null;
 
-  const video = isWebKit() ? null : blankVideo(container);
-
+  const play = () => {
+    if (!stopped && !document.hidden) video?.play().catch(() => {});
+  };
+  const fallback = () => {
+    if (stopped || video || isWebKit(ua)) return;
+    video = blankVideo(container);
+    play();
+  };
   const request = async () => {
-    if (stopped || document.hidden || sentinel || !navigator.wakeLock) return;
+    if (stopped || document.hidden || sentinel) return;
+    if (!navigator.wakeLock) return fallback();
     try {
       const lock = await navigator.wakeLock.request("screen");
       if (stopped) return void lock.release().catch(() => {});
@@ -40,10 +53,8 @@ export function keepScreenOn(container: HTMLElement): () => void {
       });
     } catch {
       sentinel = null;
+      fallback();
     }
-  };
-  const play = () => {
-    if (!stopped && !document.hidden) video?.play().catch(() => {});
   };
   const onVisibility = () => {
     if (document.hidden) return;
@@ -51,6 +62,7 @@ export function keepScreenOn(container: HTMLElement): () => void {
     play();
   };
 
+  if (isOpera(ua)) fallback();
   request();
   play();
   document.addEventListener("visibilitychange", onVisibility);

@@ -43,6 +43,15 @@ const ConfigSchema = z.object({
         .default("https://photon.komoot.io"),
     })
     .prefault({}),
+  // Optional: the real route of a trip from GeoPulse (https://github.com/tess1o/geopulse).
+  geopulse: z
+    .object({
+      url: z.url().transform((u) => u.replace(/\/+$/, "").replace(/\/api\/v1$/, "")),
+      apiKey: z.string().min(1, "geopulse.apiKey fehlt"),
+      // Leaves out the route this close to the start and end of a trip (e.g. home).
+      privacyRadiusMeters: z.number().int().min(0).default(1000),
+    })
+    .optional(),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;
@@ -65,6 +74,9 @@ export function parseConfig(raw: unknown): Config {
  *  MEDIATIMELINE_IMMICH_URL            overrides immich.url
  *  MEDIATIMELINE_IMMICH_API_KEY        overrides immich.apiKey
  *  MEDIATIMELINE_IMMICH_API_KEY_FILE   reads immich.apiKey from a file (e.g. a Podman secret)
+ *  MEDIATIMELINE_GEOPULSE_URL          overrides geopulse.url
+ *  MEDIATIMELINE_GEOPULSE_API_KEY      overrides geopulse.apiKey
+ *  MEDIATIMELINE_GEOPULSE_API_KEY_FILE reads geopulse.apiKey from a file
  *  MEDIATIMELINE_DATA_DIR / MEDIATIMELINE_STATIC_DIR / PORT
  */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -83,6 +95,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     raw.immich.apiKey = readFileSync(env.MEDIATIMELINE_IMMICH_API_KEY_FILE, "utf8").trim();
   }
   if (env.MEDIATIMELINE_IMMICH_API_KEY) raw.immich.apiKey = env.MEDIATIMELINE_IMMICH_API_KEY;
+  if (env.MEDIATIMELINE_GEOPULSE_URL || env.MEDIATIMELINE_GEOPULSE_API_KEY || env.MEDIATIMELINE_GEOPULSE_API_KEY_FILE) {
+    raw.geopulse ??= {};
+    if (env.MEDIATIMELINE_GEOPULSE_URL) raw.geopulse.url = env.MEDIATIMELINE_GEOPULSE_URL;
+    if (env.MEDIATIMELINE_GEOPULSE_API_KEY_FILE) {
+      raw.geopulse.apiKey = readFileSync(env.MEDIATIMELINE_GEOPULSE_API_KEY_FILE, "utf8").trim();
+    }
+    if (env.MEDIATIMELINE_GEOPULSE_API_KEY) raw.geopulse.apiKey = env.MEDIATIMELINE_GEOPULSE_API_KEY;
+  }
   if (env.MEDIATIMELINE_DATA_DIR) raw.server.dataDir = env.MEDIATIMELINE_DATA_DIR;
   if (env.MEDIATIMELINE_STATIC_DIR) raw.server.staticDir = env.MEDIATIMELINE_STATIC_DIR;
   if (env.PORT) raw.server.port = Number(env.PORT);

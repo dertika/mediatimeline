@@ -5,7 +5,7 @@
   import { CHANGELOG_URL, VERSION } from "$lib/version";
 
   let albums = $state<AdminAlbum[]>([]);
-  let user = $state<{ name: string } | null>(null);
+  let user = $state<{ name: string; geopulse?: boolean } | null>(null);
   let status = $state<"loading" | "ready" | "unauthorized" | "error">("loading");
   let query = $state("");
   let onlyShared = $state(false);
@@ -112,6 +112,7 @@
         {#each album.shares as share (share.id)}
           <ShareEditor
             {share}
+            geopulse={user?.geopulse ?? false}
             onchange={(updated) => replaceShare(album, updated)}
             ondelete={(id) => removeShare(album, id)}
           />

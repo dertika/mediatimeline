@@ -44,3 +44,15 @@ geocoder:
   # weltweit). Standard ist der öffentliche Dienst von komoot; die Anfragen
   # stellt das Backend, nur Admins können suchen.
   # url: https://photon.komoot.io
+
+# Optional: echte Route aus GeoPulse (https://github.com/tess1o/geopulse).
+# Pro Link in der Adminseite einschaltbar; Karte und Tour zeigen dann die
+# aufgezeichnete Strecke zwischen erstem und letztem Foto, nach Verkehrsmittel.
+# geopulse:
+#   # Basis-URL des GeoPulse-Backends (ohne /api/v1), z. B. im selben Podman-Netz
+#   url: http://geopulse-backend:8080
+#   # GeoPulse → Profil → Sicherheit → API-Tokens; besser als Secret über
+#   # MEDIATIMELINE_GEOPULSE_API_KEY_FILE
+#   apiKey: "..."
+#   # So weit um Start und Ziel der Reise (z. B. Zuhause) wird die Route abgeschnitten
+#   privacyRadiusMeters: 1000

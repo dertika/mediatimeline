@@ -4,6 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../src/app.js";
 import { parseConfig } from "../src/config.js";
 import { Geocoder } from "../src/geocoder.js";
+import type { GeoPulseClient } from "../src/geopulse.js";
 import { ShareStore } from "../src/store/db.js";
 import { API_KEY, startMockImmich } from "./mockImmich.js";
 
@@ -72,7 +73,7 @@ describe("admin guard", () => {
 
   it("returns the current user", async () => {
     const res = await app.inject({ url: "/api/admin/me", headers: ADMIN });
-    expect(res.json()).toEqual({ name: "alice", groups: ["users", "admins"] });
+    expect(res.json()).toEqual({ name: "alice", groups: ["users", "admins"], geopulse: false });
   });
 });
 
@@ -243,6 +244,60 @@ describe("place search", () => {
     const res = await app.inject({ url: "/api/admin/geocode?q=kaputt", headers: ADMIN });
     expect(res.statusCode).toBe(502);
     expect(res.json()).toEqual({ error: "geocoder_unavailable" });
+  });
+});
+
+describe("GeoPulse route", () => {
+  const ROUTE = [{ mode: "CAR", points: [[48.1, 11.5, 1], [48.2, 11.6, 2]] }];
+
+  async function appWithGeoPulse(route: () => Promise<unknown>) {
+    await app.close();
+    const config = parseConfig({
+      immich: { url: immich.url, apiKey: API_KEY },
+      server: { trustedProxies: ["loopback"] },
+      admin: { allowedGroups: ["admins"] },
+      geopulse: { url: "http://geopulse:8080/api/v1/", apiKey: "gp-key", privacyRadiusMeters: 500 },
+    });
+    expect(config.geopulse?.url).toBe("http://geopulse:8080");
+    const calls: unknown[][] = [];
+    const geopulse = { route: async (...args: unknown[]) => (calls.push(args), route()) } as unknown as GeoPulseClient;
+    app = await buildApp({ config, store, geopulse, sessionSecret: "x".repeat(32), logger: false });
+    return calls;
+  }
+
+  it("is only included when switched on for the link, with the trip ends as privacy places", async () => {
+    const calls = await appWithGeoPulse(async () => ROUTE);
+    expect((await app.inject({ url: "/api/admin/me", headers: ADMIN })).json().geopulse).toBe(true);
+    const { id, url } = await createShare();
+    const timeline = () => app.inject({ url: `/api/public/timeline/${tokenOf(url)}` }).then((r) => r.json());
+    expect((await timeline()).route).toBeNull();
+    expect(calls).toHaveLength(0);
+
+    const home = { name: "Zuhause", lat: 48.1, lng: 11.5 };
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/api/admin/shares/${id}`,
+      headers: ADMIN,
+      payload: { showRoute: true, tripStart: home, tripEndSameAsStart: true },
+    });
+    expect(res.json().showRoute).toBe(true);
+    const body = await timeline();
+    expect(body.route).toEqual(ROUTE);
+    const [from, to, opts] = calls[0] as [string, string, { privacyRadiusMeters: number; privacyPoints: unknown[] }];
+    expect(from).toBe(body.assets[0].takenAt);
+    expect(to).toBe(body.assets.at(-1).takenAt);
+    expect(opts).toEqual({ privacyRadiusMeters: 500, privacyPoints: [home, home] });
+  });
+
+  it("keeps the timeline working when GeoPulse fails", async () => {
+    await appWithGeoPulse(async () => {
+      throw new Error("down");
+    });
+    const { id, url } = await createShare();
+    await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { showRoute: true } });
+    const res = await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().route).toBeNull();
   });
 });
 

@@ -36,6 +36,7 @@ const UpdateShareBody = z.object({
   tripStart: PlaceBody.nullable().optional(),
   tripEnd: PlaceBody.nullable().optional(),
   tripEndSameAsStart: z.boolean().optional(),
+  showRoute: z.boolean().optional(),
 });
 
 const GeocodeQuery = z.object({ q: z.string().trim().min(2).max(100) });
@@ -69,11 +70,13 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     tripStart: share.tripStart,
     tripEnd: share.tripEnd,
     tripEndSameAsStart: share.tripEndSameAsStart,
+    showRoute: share.showRoute,
     createdAt: share.createdAt,
     createdBy: share.createdBy,
   });
 
-  app.get("/api/admin/me", async (req) => req.adminUser);
+  // Also tells the admin page which optional integrations are set up.
+  app.get("/api/admin/me", async (req) => ({ ...req.adminUser, geopulse: Boolean(config.geopulse) }));
 
   app.get("/api/admin/immich/albums", async (req) => {
     const albums = await immich.listAlbums();

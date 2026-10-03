@@ -7,6 +7,7 @@ import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyServerOptions } from "fastify";
 import type { Config } from "./config.js";
 import { Geocoder } from "./geocoder.js";
+import { GeoPulseClient } from "./geopulse.js";
 import { AlbumCache } from "./immich/cache.js";
 import { ImmichClient, ImmichError } from "./immich/client.js";
 import { adminRoutes } from "./routes/admin.js";
@@ -20,6 +21,8 @@ export interface AppDeps {
   immich: ImmichClient;
   cache: AlbumCache;
   geocoder: Geocoder;
+  /** Only when `geopulse` is configured. */
+  geopulse: GeoPulseClient | null;
 }
 
 export interface BuildOptions {
@@ -28,6 +31,7 @@ export interface BuildOptions {
   sessionSecret: string;
   immich?: ImmichClient;
   geocoder?: Geocoder;
+  geopulse?: GeoPulseClient | null;
   logger?: FastifyServerOptions["logger"];
 }
 
@@ -44,7 +48,13 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
     app.log.warn({ err }, msg),
   );
   const geocoder = opts.geocoder ?? new Geocoder(config.geocoder.url);
-  const deps: AppDeps = { config, store, immich, cache, geocoder };
+  const geopulse =
+    opts.geopulse !== undefined
+      ? opts.geopulse
+      : config.geopulse
+        ? new GeoPulseClient(config.geopulse.url, config.geopulse.apiKey, config.cache.albumTtlSeconds * 1000)
+        : null;
+  const deps: AppDeps = { config, store, immich, cache, geocoder, geopulse };
 
   // JSON and HTML only in practice: images and videos are not compressible types.
   await app.register(compress, { encodings: ["br", "gzip"], threshold: 1024 });

@@ -3,7 +3,8 @@ import { isUnlocked, setUnlockCookie, verifyPassword } from "../auth/unlock.js";
 import { buildCaption } from "../caption.js";
 import { ImmichError } from "../immich/client.js";
 import { ALBUM_COMMENTS, type AlbumSnapshot } from "../immich/cache.js";
-import type { Share } from "../store/db.js";
+import type { RouteLeg } from "../geopulse.js";
+import type { Place, Share } from "../store/db.js";
 import type { AppDeps } from "../app.js";
 import { forwardableHeaders, pipeUpstream } from "./proxy.js";
 
@@ -17,7 +18,23 @@ interface Resolved {
 }
 
 export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
-  const { store, cache, immich, config } = deps;
+  const { store, cache, immich, config, geopulse } = deps;
+
+  /** The real route from GeoPulse, if switched on for the link; the timeline works without it. */
+  async function routeFor(share: Share, snapshot: AlbumSnapshot, req: FastifyRequest): Promise<RouteLeg[] | null> {
+    const { assets } = snapshot;
+    if (!share.showRoute || !geopulse || !config.geopulse || assets.length < 2) return null;
+    const tripEnd = share.tripEndSameAsStart ? share.tripStart : share.tripEnd;
+    try {
+      return await geopulse.route(assets[0]!.takenAt, assets.at(-1)!.takenAt, {
+        privacyRadiusMeters: config.geopulse.privacyRadiusMeters,
+        privacyPoints: [share.tripStart, tripEnd].filter((p): p is Place => p !== null),
+      });
+    } catch (err) {
+      req.log.warn({ err }, "GeoPulse route not available");
+      return null;
+    }
+  }
 
   async function loadSnapshot(share: Share, reply: FastifyReply) {
     try {
@@ -73,6 +90,7 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
     if (!r) return reply;
     const { album, assets, comments } = r.snapshot;
     const { captionSource, showComments } = r.share;
+    const route = await routeFor(r.share, r.snapshot, req);
     reply.header("cache-control", "private, no-cache");
     return {
       title: r.share.titleOverride ?? album.albumName,
@@ -89,6 +107,7 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
         start: r.share.tripStart,
         end: r.share.tripEndSameAsStart ? r.share.tripStart : r.share.tripEnd,
       },
+      route,
       albumComments: showComments ? (comments.get(ALBUM_COMMENTS) ?? []) : [],
       assets: assets.map(({ description, ...asset }) => {
         const assetComments = comments.get(asset.id) ?? [];

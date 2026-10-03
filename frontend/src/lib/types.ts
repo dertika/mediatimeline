@@ -44,7 +44,16 @@ export interface Timeline {
   tour: TourSettings;
   /** Missing in timelines from older servers (and the demo before it had one). */
   trip?: Trip;
+  /** The real route from GeoPulse, when switched on for the link. */
+  route?: RouteLeg[] | null;
   assets: TimelineAsset[];
+}
+
+/** Part of the recorded route with one means of transport (GeoPulse movement type). */
+export interface RouteLeg {
+  mode: string;
+  /** Latitude, longitude, Unix time in seconds. */
+  points: [number, number, number][];
 }
 
 export interface TourSettings {
@@ -71,6 +80,7 @@ export interface ShareDto {
   tripStart: Place | null;
   tripEnd: Place | null;
   tripEndSameAsStart: boolean;
+  showRoute: boolean;
   createdAt: string;
   createdBy: string | null;
 }

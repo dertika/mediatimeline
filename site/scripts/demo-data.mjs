@@ -351,6 +351,7 @@ async function main() {
     captionSource: "description",
     albumComments: trip.albumComments,
     tour: trip.tour,
+    trip: trip.trip ?? { start: null, end: null },
     assets,
   };
   writeFileSync(join(out, "timeline.json"), JSON.stringify(timeline, null, 2));

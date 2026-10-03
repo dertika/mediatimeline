@@ -36,3 +36,9 @@ admin:
 cache:
   # Wie lange Albuminhalte aus Immich zwischengespeichert werden (Sekunden)
   albumTtlSeconds: 300
+
+geocoder:
+  # Ortssuche für Start und Ziel der Reise im Admin (Photon, OpenStreetMap-Daten,
+  # weltweit). Standard ist der öffentliche Dienst von komoot; die Anfragen
+  # stellt das Backend, nur Admins können suchen.
+  # url: https://photon.komoot.io

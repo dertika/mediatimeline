@@ -23,6 +23,7 @@ Pro Link optional: **Passwortschutz**, **Ablaufdatum**, eigener Titel, deaktivie
 
 - **Bildunterschrift**: Immich-Beschreibung · erster Immich-Kommentar · Beschreibung, sonst erster Kommentar · keine
 - **Alle Kommentare anzeigen**: Kommentare aus Immich (mit Namen und Datum) unter jedem Bild, Kommentare zum Album unter der Überschrift
+- **Reiseroute**: Start und Ziel der Reise (z. B. Flughafen oder Zuhause), optional als Rundreise mit Ziel = Start. Sie erscheinen auf der Karte und in der Tour als eigene Stationen ohne Fotos. Die Ortssuche mit Autovervollständigung nutzt [Photon](https://photon.komoot.io) (OpenStreetMap, weltweit), einstellbar unter `geocoder.url`.
 
 ```
 Browser ──> nginx ──(auth_request /admin, /api/admin)──> Authelia

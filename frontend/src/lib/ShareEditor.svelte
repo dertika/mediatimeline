@@ -1,6 +1,7 @@
 <script lang="ts">
+  import PlaceInput from "./PlaceInput.svelte";
   import { formatDateTime } from "./format";
-  import type { ShareDto } from "./types";
+  import type { Place, ShareDto } from "./types";
 
   let {
     share,
@@ -70,6 +71,16 @@
       return;
     }
     await patch({ [field]: value });
+  }
+
+  /** Changing the start of a round trip moves its end along. */
+  function setTripStart(place: Place | null) {
+    patch(share.tripEndSameAsStart ? { tripStart: place, tripEnd: place } : { tripStart: place });
+  }
+
+  function setRoundTrip(event: Event) {
+    const roundTrip = (event.currentTarget as HTMLInputElement).checked;
+    patch(roundTrip ? { tripEndSameAsStart: true, tripEnd: share.tripStart } : { tripEndSameAsStart: false });
   }
 
   async function setExpiry(event: Event) {
@@ -197,6 +208,27 @@
       </label>
     </fieldset>
 
+    <fieldset class="trip">
+      <legend>Reiseroute (optional)</legend>
+      <PlaceInput label="Start" value={share.tripStart} disabled={busy} onchange={setTripStart} />
+      <div class="trip-end">
+        {#if !share.tripEndSameAsStart}
+          <PlaceInput label="Ziel" value={share.tripEnd} disabled={busy} onchange={(p) => patch({ tripEnd: p })} />
+        {:else}
+          <span>Ziel</span>
+          <span class="muted">wie der Start</span>
+        {/if}
+        <label class="check">
+          <input type="checkbox" checked={share.tripEndSameAsStart} disabled={busy} onchange={setRoundTrip} />
+          Ziel = Start (Rundreise)
+        </label>
+      </div>
+      <p class="hint muted">
+        Start und Ziel erscheinen auf der Karte und in der Tour, ohne Fotos. Sie sind für alle mit dem Link sichtbar:
+        Wer die eigene Adresse nicht zeigen möchte, wählt nur den Ort.
+      </p>
+    </fieldset>
+
     <div class="password">
       Passwort (optional)
       {#if share.hasPassword && !editingPassword}
@@ -277,6 +309,40 @@
     border-radius: 8px;
     padding: 8px 12px 12px;
     margin: 0;
+  }
+
+  .trip {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px 12px;
+    margin: 0;
+  }
+
+  .trip legend {
+    padding: 0 4px;
+    color: var(--muted);
+  }
+
+  .trip-end {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .trip-end label.check {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .hint {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.8rem;
   }
 
   .tour legend {

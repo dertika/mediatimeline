@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStops, dayNumber, distanceMeters, estimateTourSeconds, flightCurve, flightDuration } from "./tour";
+import { buildStops, dayNumber, distanceMeters, estimateTourSeconds, flightCurve, flightDuration, withTrip } from "./tour";
 import type { TimelineAsset } from "./types";
 
 let seq = 0;
@@ -131,5 +131,18 @@ describe("estimateTourSeconds", () => {
   it("assumes 20 s for videos played to the end", () => {
     const stops = buildStops([{ ...asset(...BERGEN), type: "video" }], 1000);
     expect(estimateTourSeconds(stops, 1, { ...tour, videoMaxSeconds: 0 })).toBe(2 + 9 + 20 + 3);
+  });
+});
+
+describe("withTrip", () => {
+  const stops = buildStops([asset(...BERGEN, "b"), asset(...OSLO, "o")], 1000);
+  it("adds start and end as stops without photos", () => {
+    const all = withTrip(stops, { start: { name: "Hamburg", lat: 53.55, lng: 10 }, end: { name: "Kiel", lat: 54.32, lng: 10.13 } });
+    expect(all.map((s) => s.waypoint ?? s.assets[0]!.id)).toEqual(["start", "b", "o", "end"]);
+    expect(all[0]).toMatchObject({ name: "Hamburg", center: [53.55, 10], assets: [] });
+  });
+  it("leaves the stops alone without a trip", () => {
+    expect(withTrip(stops, undefined)).toEqual(stops);
+    expect(withTrip(stops, { start: null, end: null })).toEqual(stops);
   });
 });

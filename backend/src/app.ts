@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance, type FastifyReply, type FastifyServerOptions } from "fastify";
 import type { Config } from "./config.js";
+import { Geocoder } from "./geocoder.js";
 import { AlbumCache } from "./immich/cache.js";
 import { ImmichClient, ImmichError } from "./immich/client.js";
 import { adminRoutes } from "./routes/admin.js";
@@ -17,6 +18,7 @@ export interface AppDeps {
   store: ShareStore;
   immich: ImmichClient;
   cache: AlbumCache;
+  geocoder: Geocoder;
 }
 
 export interface BuildOptions {
@@ -24,6 +26,7 @@ export interface BuildOptions {
   store: ShareStore;
   sessionSecret: string;
   immich?: ImmichClient;
+  geocoder?: Geocoder;
   logger?: FastifyServerOptions["logger"];
 }
 
@@ -39,7 +42,8 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
   const cache = new AlbumCache(immich, config.cache.albumTtlSeconds * 1000, Date.now, (msg, err) =>
     app.log.warn({ err }, msg),
   );
-  const deps: AppDeps = { config, store, immich, cache };
+  const geocoder = opts.geocoder ?? new Geocoder(config.geocoder.url);
+  const deps: AppDeps = { config, store, immich, cache, geocoder };
 
   await app.register(cookie, { secret: opts.sessionSecret });
   await app.register(rateLimit, { global: false });

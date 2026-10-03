@@ -85,6 +85,10 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
         radiusMeters: r.share.tourRadiusMeters,
         videoMaxSeconds: r.share.tourVideoMaxSeconds,
       },
+      trip: {
+        start: r.share.tripStart,
+        end: r.share.tripEndSameAsStart ? r.share.tripStart : r.share.tripEnd,
+      },
       albumComments: showComments ? (comments.get(ALBUM_COMMENTS) ?? []) : [],
       assets: assets.map(({ description, ...asset }) => {
         const assetComments = comments.get(asset.id) ?? [];

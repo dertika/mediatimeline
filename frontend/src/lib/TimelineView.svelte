@@ -4,7 +4,7 @@
   import TimelineMap from "./TimelineMap.svelte";
   import { dayKey, formatDay, formatRange, formatTime, placeOf } from "./format";
   import type { MediaUrl } from "./media";
-  import { buildStops, estimateTourSeconds } from "./tour";
+  import { buildStops, estimateTourSeconds, withTrip } from "./tour";
   import type { Timeline, TimelineAsset } from "./types";
 
   let {
@@ -25,7 +25,8 @@
   const tourSummary = $derived.by(() => {
     const stops = buildStops(timeline.assets, timeline.tour.radiusMeters);
     const days = new Set(timeline.assets.map((a) => dayKey(a.localDateTime))).size;
-    const minutes = Math.max(1, Math.round(estimateTourSeconds(stops, days, timeline.tour) / 60));
+    const seconds = estimateTourSeconds(withTrip(stops, timeline.trip), days, timeline.tour);
+    const minutes = Math.max(1, Math.round(seconds / 60));
     const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
     return `${n(stops.length, "Ort", "Orte")} · ${n(days, "Tag", "Tage")} · ca. ${minutes} Min.`;
   });
@@ -103,7 +104,7 @@
       </span>
       <svg class="start-tour-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
     </button>
-    <TimelineMap assets={timeline.assets} {media} onselect={scrollToAsset} />
+    <TimelineMap assets={timeline.assets} trip={timeline.trip} {media} onselect={scrollToAsset} />
   {/if}
 
   {#each groupByDay(timeline.assets) as group (group.day)}

@@ -21,6 +21,19 @@ export interface TimelineAsset {
   country: string | null;
 }
 
+/** A place picked in the admin, e.g. the start of a trip. */
+export interface Place {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+/** Where a trip starts and ends; shown on the map and in the tour without photos. */
+export interface Trip {
+  start: Place | null;
+  end: Place | null;
+}
+
 export interface Timeline {
   title: string;
   description: string | null;
@@ -29,6 +42,8 @@ export interface Timeline {
   captionSource: CaptionSource;
   albumComments: TimelineComment[];
   tour: TourSettings;
+  /** Missing in timelines from older servers (and the demo before it had one). */
+  trip?: Trip;
   assets: TimelineAsset[];
 }
 
@@ -53,6 +68,9 @@ export interface ShareDto {
   tourIntervalSeconds: number;
   tourRadiusMeters: number;
   tourVideoMaxSeconds: number;
+  tripStart: Place | null;
+  tripEnd: Place | null;
+  tripEndSameAsStart: boolean;
   createdAt: string;
   createdBy: string | null;
 }

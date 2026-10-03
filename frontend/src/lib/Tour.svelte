@@ -5,7 +5,7 @@
   import { dayKey, formatDay, formatDayTime, placeOf } from "./format";
   import { accentColor, addBackgroundLayer, createBaseMap, flightPath, prefetchTiles, type L as LeafletNS } from "./map";
   import type { MediaUrl } from "./media";
-  import { buildStops, dayNumber, flightDuration, type TourStop } from "./tour";
+  import { buildStops, dayNumber, flightDuration, withTrip, type TourStop } from "./tour";
   import type { Timeline, TimelineAsset } from "./types";
 
   let {
@@ -28,11 +28,15 @@
 
   // The timeline does not change while the tour is open, so a snapshot is enough.
   const { stops, intervalMs, videoMaxSeconds, totalItems } = untrack(() => ({
-    stops: buildStops(timeline.assets, timeline.tour.radiusMeters),
+    stops: withTrip(buildStops(timeline.assets, timeline.tour.radiusMeters), timeline.trip),
     intervalMs: timeline.tour.intervalSeconds * 1000,
     videoMaxSeconds: timeline.tour.videoMaxSeconds,
     totalItems: timeline.assets.length,
   }));
+  /** Places with photos; the start and end of the trip don't count. */
+  const placeCount = stops.filter((s) => !s.waypoint).length;
+  /** 1-based number of the place at stop `i`. */
+  const placeNumber = (i: number) => stops.slice(0, i + 1).filter((s) => !s.waypoint).length;
   /** Index of the first item of each stop within the whole tour. */
   const stopOffsets = stops.map((_, i) => stops.slice(0, i).reduce((n, s) => n + s.assets.length, 0));
 
@@ -85,12 +89,20 @@
   let swipeX: number | null = null;
 
   const current = $derived(stopIdx >= 0 ? (stops[stopIdx]?.assets[itemIdx] ?? null) : null);
-  const progress = $derived(stopIdx < 0 ? 0 : ending ? 1 : (stopOffsets[stopIdx]! + itemIdx + 1) / totalItems);
+  const waypoint = $derived(stopIdx >= 0 ? (stops[stopIdx]?.waypoint ?? null) : null);
+  const progress = $derived(
+    stopIdx < 0 || waypoint === "start"
+      ? 0
+      : ending || waypoint === "end"
+        ? 1
+        : (stopOffsets[stopIdx]! + itemIdx + 1) / totalItems,
+  );
   const ringMode = $derived(
     ending || (!showMedia && !arriving && dayCard === null) ? "none" : showMedia && current?.type === "video" ? "video" : "timed",
   );
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-  const firstLocal = stops[0]?.assets[0]?.localDateTime ?? "";
+  // The first stop may be the start of the trip, which has no photos.
+  const firstLocal = stops.find((s) => s.assets.length > 0)?.assets[0]?.localDateTime ?? "";
   const dayOf = (a: TimelineAsset) => dayNumber(firstLocal, a.localDateTime);
 
   function placeName(stop: TourStop, i: number): string {
@@ -105,7 +117,8 @@
   /** Center and zoom the tour uses for a stop. */
   function stopView(i: number): { center: [number, number]; zoom: number } {
     const stop = stops[i]!;
-    const zoom = Math.min(16, Math.max(13, map!.getBoundsZoom(L.latLngBounds(stop.bounds).pad(0.5))));
+    // The start or end of the trip is a single point: show the town around it.
+    const zoom = stop.waypoint ? 12 : Math.min(16, Math.max(13, map!.getBoundsZoom(L.latLngBounds(stop.bounds).pad(0.5))));
     return { center: stop.center, zoom };
   }
 
@@ -209,6 +222,15 @@
       await flyToStop(s);
       if (my !== run) return;
     }
+    if (stops[s]!.waypoint) {
+      // Start or end of the trip: only the place, no photos.
+      stopIdx = s;
+      itemIdx = 0;
+      arrivalDay = null;
+      arriving = true;
+      startTimed(intervalMs, forward);
+      return;
+    }
     const target = stops[s]!.assets[i]!;
     const newDay = shownDay === null || dayKey(target.localDateTime) !== shownDay;
     if (travel && arrive && i === 0) {
@@ -297,9 +319,17 @@
     if (nextAsset && nextAsset.type === "image") new Image().src = media(nextAsset, "preview");
   }
 
+  /** On to the next stop, or the end of the tour after the last one. */
+  function forward() {
+    arriving = false;
+    if (stopIdx + 1 < stops.length) goTo(stopIdx + 1, 0);
+    else finish();
+  }
+
   function next() {
     if (ending) return;
     if (stopIdx < 0) return void goTo(0, 0);
+    if (waypoint) return forward();
     if (arriving || dayCard !== null) {
       // Skip the rest of the map pause or day card.
       const my = ++run;
@@ -315,7 +345,7 @@
     const back = { arrive: false };
     if (ending) return;
     if (itemIdx > 0 && !arriving) return void goTo(stopIdx, itemIdx - 1, back);
-    if (stopIdx > 0) return void goTo(stopIdx - 1, stops[stopIdx - 1]!.assets.length - 1, back);
+    if (stopIdx > 0) return void goTo(stopIdx - 1, Math.max(0, stops[stopIdx - 1]!.assets.length - 1), back);
   }
 
   /** Shows the whole route once more, then closes the tour by itself. */
@@ -426,7 +456,11 @@
       renderer = L.svg({ padding: 0.3 });
       map.on("move", onFlightFrame);
       for (const stop of stops) {
-        L.circleMarker(stop.center, { renderer, radius: 5, color: accent, weight: 2, fillOpacity: 0.4 }).addTo(map);
+        // Start and end of the trip: a hollow ring, places with photos: a filled dot.
+        const style = stop.waypoint
+          ? { radius: 7, weight: 3, fillColor: "#fff", fillOpacity: 1 }
+          : { radius: 5, weight: 2, fillOpacity: 0.4 };
+        L.circleMarker(stop.center, { renderer, color: accent, ...style }).addTo(map);
       }
       route = L.polyline([], { renderer, color: accent, weight: 4, opacity: 0.8, dashArray: "8 8" }).addTo(map);
       here = L.circleMarker(stops[0]!.center, {
@@ -499,11 +533,17 @@
   <div class="shade bottom" aria-hidden="true"></div>
 
   {#if arriving && stops[stopIdx]}
+    {@const stop = stops[stopIdx]!}
     <div class="arrival" transition:fade={{ duration: MEDIA_FADE_MS }}>
-      {#if arrivalDay !== null}<span class="day-badge">Tag {arrivalDay}</span>{/if}
-      <span class="arrival-step">Ort {stopIdx + 1} von {stops.length}</span>
-      <h2>{placeName(stops[stopIdx]!, stopIdx)}</h2>
-      <span>{formatDay(stops[stopIdx]!.assets[0]!.localDateTime)}</span>
+      {#if stop.waypoint}
+        <span class="arrival-step">{stop.waypoint === "start" ? "Start der Reise" : "Ziel der Reise"}</span>
+        <h2>{stop.name}</h2>
+      {:else}
+        {#if arrivalDay !== null}<span class="day-badge">Tag {arrivalDay}</span>{/if}
+        <span class="arrival-step">Ort {placeNumber(stopIdx)} von {placeCount}</span>
+        <h2>{placeName(stop, placeNumber(stopIdx) - 1)}</h2>
+        <span>{formatDay(stop.assets[0]!.localDateTime)}</span>
+      {/if}
     </div>
   {/if}
 
@@ -550,11 +590,13 @@
     <strong>{timeline.title}</strong>
     {#if current && (showMedia || dayCard !== null || dimmed)}
       <span>{formatDayTime(current.localDateTime)}</span>
-      <span>Tag {dayOf(current)} · Ort {stopIdx + 1}/{stops.length} · Foto {itemIdx + 1}/{stops[stopIdx]?.assets.length}</span>
+      <span>Tag {dayOf(current)} · Ort {placeNumber(stopIdx)}/{placeCount} · Foto {itemIdx + 1}/{stops[stopIdx]?.assets.length}</span>
     {:else if arriving && current}
-      <span>Tag {dayOf(current)} · Ort {stopIdx + 1}/{stops.length} · {placeName(stops[stopIdx]!, stopIdx)}</span>
+      <span>Tag {dayOf(current)} · Ort {placeNumber(stopIdx)}/{placeCount} · {placeName(stops[stopIdx]!, placeNumber(stopIdx) - 1)}</span>
+    {:else if arriving && waypoint}
+      <span>{waypoint === "start" ? "Start" : "Ziel"} · {stops[stopIdx]!.name}</span>
     {:else}
-      <span>{stops.length} Orte · {totalItems} Medien</span>
+      <span>{placeCount} Orte · {totalItems} Medien</span>
     {/if}
   </div>
 

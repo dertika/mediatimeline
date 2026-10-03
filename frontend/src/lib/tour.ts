@@ -1,4 +1,4 @@
-import type { TimelineAsset, TourSettings } from "./types";
+import type { Place, TimelineAsset, TourSettings, Trip } from "./types";
 
 export type LatLng = [number, number];
 
@@ -9,6 +9,10 @@ export interface TourStop {
   bounds: [LatLng, LatLng];
   /** All assets of the stop in chronological order, including those without GPS. */
   assets: TimelineAsset[];
+  /** Start or end of the trip: a place without photos. */
+  waypoint?: "start" | "end";
+  /** Name of a waypoint. */
+  name?: string;
 }
 
 const EARTH_RADIUS_M = 6_371_000;
@@ -129,4 +133,17 @@ export function estimateTourSeconds(stops: TourStop[], days: number, tour: TourS
     .reduce((sum, a) => sum + (a.type === "video" ? tour.videoMaxSeconds || VIDEO_SECONDS : tour.intervalSeconds), 0);
   const extraDays = Math.max(0, days - 1);
   return 2 + stops.length * (FLIGHT_SECONDS + tour.intervalSeconds) + media + extraDays * tour.intervalSeconds + 3;
+}
+
+/** Adds the start and end of the trip (if set) as stops without photos. */
+export function withTrip(stops: TourStop[], trip: Trip | undefined): TourStop[] {
+  const waypoint = (place: Place, kind: "start" | "end"): TourStop => {
+    const at: LatLng = [place.lat, place.lng];
+    return { center: at, bounds: [at, at], assets: [], waypoint: kind, name: place.name };
+  };
+  return [
+    ...(trip?.start ? [waypoint(trip.start, "start")] : []),
+    ...stops,
+    ...(trip?.end ? [waypoint(trip.end, "end")] : []),
+  ];
 }

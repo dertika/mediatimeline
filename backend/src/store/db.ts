@@ -4,6 +4,13 @@ import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import type { CaptionSource } from "../caption.js";
 
+/** A place picked in the admin, e.g. the start of a trip. */
+export interface Place {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
 export interface Share {
   id: number;
   albumId: string;
@@ -20,6 +27,11 @@ export interface Share {
   tourRadiusMeters: number;
   /** Maximum playback time of a video in the tour; 0 = whole video. */
   tourVideoMaxSeconds: number;
+  /** Where the trip starts and ends, shown on the map and in the tour without photos. */
+  tripStart: Place | null;
+  tripEnd: Place | null;
+  /** Round trip: the end is the start, also after the start changes. */
+  tripEndSameAsStart: boolean;
   createdAt: string;
   createdBy: string | null;
 }
@@ -38,6 +50,9 @@ interface ShareRow {
   tour_interval_seconds: number;
   tour_radius_meters: number;
   tour_video_max_seconds: number;
+  trip_start: string | null;
+  trip_end: string | null;
+  trip_end_same: number;
   created_at: string;
   created_by: string | null;
 }
@@ -61,7 +76,12 @@ const MIGRATIONS = [
   `ALTER TABLE shares ADD COLUMN tour_interval_seconds INTEGER NOT NULL DEFAULT 5;
    ALTER TABLE shares ADD COLUMN tour_radius_meters INTEGER NOT NULL DEFAULT 1000;
    ALTER TABLE shares ADD COLUMN tour_video_max_seconds INTEGER NOT NULL DEFAULT 30;`,
+  `ALTER TABLE shares ADD COLUMN trip_start TEXT;
+   ALTER TABLE shares ADD COLUMN trip_end TEXT;
+   ALTER TABLE shares ADD COLUMN trip_end_same INTEGER NOT NULL DEFAULT 0;`,
 ];
+
+const placeFromJson = (json: string | null): Place | null => (json ? (JSON.parse(json) as Place) : null);
 
 function fromRow(r: ShareRow): Share {
   return {
@@ -78,6 +98,9 @@ function fromRow(r: ShareRow): Share {
     tourIntervalSeconds: r.tour_interval_seconds,
     tourRadiusMeters: r.tour_radius_meters,
     tourVideoMaxSeconds: r.tour_video_max_seconds,
+    tripStart: placeFromJson(r.trip_start),
+    tripEnd: placeFromJson(r.trip_end),
+    tripEndSameAsStart: r.trip_end_same === 1,
     createdAt: r.created_at,
     createdBy: r.created_by,
   };
@@ -97,6 +120,9 @@ export interface ShareUpdate {
   tourIntervalSeconds?: number;
   tourRadiusMeters?: number;
   tourVideoMaxSeconds?: number;
+  tripStart?: Place | null;
+  tripEnd?: Place | null;
+  tripEndSameAsStart?: boolean;
 }
 
 export class ShareStore {
@@ -182,6 +208,19 @@ export class ShareStore {
         sets.push(`${column} = ?`);
         values.push(patch[key]);
       }
+    }
+    for (const [key, column] of [
+      ["tripStart", "trip_start"],
+      ["tripEnd", "trip_end"],
+    ] as const) {
+      if (patch[key] !== undefined) {
+        sets.push(`${column} = ?`);
+        values.push(patch[key] && JSON.stringify(patch[key]));
+      }
+    }
+    if (patch.tripEndSameAsStart !== undefined) {
+      sets.push("trip_end_same = ?");
+      values.push(patch.tripEndSameAsStart ? 1 : 0);
     }
     if (patch.passwordHash !== undefined) {
       sets.push("password_hash = ?", "password_version = password_version + 1");

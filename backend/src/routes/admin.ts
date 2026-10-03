@@ -11,6 +11,12 @@ import { isExpired } from "./public.js";
 
 const CreateShareBody = z.object({ albumId: z.string().min(1) });
 
+const PlaceBody = z.object({
+  name: z.string().trim().min(1).max(200),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
+});
+
 const UpdateShareBody = z.object({
   enabled: z.boolean().optional(),
   titleOverride: z
@@ -27,12 +33,17 @@ const UpdateShareBody = z.object({
   tourIntervalSeconds: z.number().int().min(2).max(60).optional(),
   tourRadiusMeters: z.number().int().min(100).max(50_000).optional(),
   tourVideoMaxSeconds: z.number().int().min(0).max(600).optional(),
+  tripStart: PlaceBody.nullable().optional(),
+  tripEnd: PlaceBody.nullable().optional(),
+  tripEndSameAsStart: z.boolean().optional(),
 });
+
+const GeocodeQuery = z.object({ q: z.string().trim().min(2).max(100) });
 
 const IdParams = z.object({ id: z.coerce.number().int().positive() });
 
 export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
-  const { store, immich, cache, config } = deps;
+  const { store, immich, cache, config, geocoder } = deps;
 
   app.addHook(
     "onRequest",
@@ -55,6 +66,9 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     tourIntervalSeconds: share.tourIntervalSeconds,
     tourRadiusMeters: share.tourRadiusMeters,
     tourVideoMaxSeconds: share.tourVideoMaxSeconds,
+    tripStart: share.tripStart,
+    tripEnd: share.tripEnd,
+    tripEndSameAsStart: share.tripEndSameAsStart,
     createdAt: share.createdAt,
     createdBy: share.createdBy,
   });
@@ -85,6 +99,18 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
       return pipeUpstream(reply, upstream, "private, max-age=3600");
     },
   );
+
+  // Place search for the start and end of a trip.
+  app.get("/api/admin/geocode", async (req, reply) => {
+    const query = GeocodeQuery.safeParse(req.query);
+    if (!query.success) return reply.code(400).send({ error: "invalid_query" });
+    try {
+      return await geocoder.search(query.data.q);
+    } catch (err) {
+      req.log.warn({ err }, "geocoder request failed");
+      return reply.code(502).send({ error: "geocoder_unavailable" });
+    }
+  });
 
   app.get("/api/admin/shares", async (req) => store.list().map((s) => toDto(s, req)));
 

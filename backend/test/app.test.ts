@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../src/app.js";
 import { parseConfig } from "../src/config.js";
+import { Geocoder } from "../src/geocoder.js";
 import { ShareStore } from "../src/store/db.js";
 import { API_KEY, startMockImmich } from "./mockImmich.js";
 
@@ -10,6 +11,20 @@ let app: FastifyInstance;
 let store: ShareStore;
 
 const ADMIN = { "remote-user": "alice", "remote-groups": "users,admins" };
+
+const PHOTON_MUNICH = {
+  features: [
+    { geometry: { coordinates: [11.5755, 48.1374] }, properties: { name: "München", state: "Bayern", country: "Deutschland" } },
+    { geometry: { coordinates: [11.5754, 48.1373] }, properties: { name: "Marienplatz", city: "München", state: "Bayern", country: "Deutschland" } },
+  ],
+};
+const geocoderRequests: string[] = [];
+const fakePhoton: typeof fetch = async (input) => {
+  const url = String(input);
+  geocoderRequests.push(url);
+  if (url.includes("q=kaputt")) return new Response("down", { status: 503 });
+  return Response.json(PHOTON_MUNICH);
+};
 
 beforeAll(async () => {
   immich = await startMockImmich();
@@ -26,7 +41,9 @@ beforeEach(async () => {
     server: { trustedProxies: ["loopback"], publicBaseUrl: "https://timeline.example.com" },
     admin: { allowedGroups: ["admins"] },
   });
-  app = await buildApp({ config, store, sessionSecret: "x".repeat(32), logger: false });
+  geocoderRequests.length = 0;
+  const geocoder = new Geocoder("https://photon.test", fakePhoton);
+  app = await buildApp({ config, store, geocoder, sessionSecret: "x".repeat(32), logger: false });
 });
 
 async function createShare(albumId = "album-1") {
@@ -156,6 +173,75 @@ describe("tour settings", () => {
     const { id } = await createShare();
     const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload });
     expect(res.statusCode).toBe(400);
+  });
+});
+
+describe("trip start and end", () => {
+  const MUNICH = { name: "München", lat: 48.1374, lng: 11.5755 };
+  const ROME = { name: "Rom", lat: 41.8933, lng: 12.4829 };
+
+  it("is unset by default", async () => {
+    const { url } = await createShare();
+    const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
+    expect(body.trip).toEqual({ start: null, end: null });
+  });
+
+  it("is set by the admin and shown in the timeline", async () => {
+    const { id, url } = await createShare();
+    const payload = { tripStart: MUNICH, tripEnd: ROME };
+    const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload });
+    expect(res.json()).toMatchObject({ ...payload, tripEndSameAsStart: false });
+    const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
+    expect(body.trip).toEqual({ start: MUNICH, end: ROME });
+  });
+
+  it("follows the start for a round trip, and can be removed", async () => {
+    const { id, url } = await createShare();
+    const patch = (payload: object) =>
+      app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload });
+    await patch({ tripStart: ROME, tripEnd: ROME, tripEndSameAsStart: true });
+    await patch({ tripStart: MUNICH });
+    const timeline = async () => (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
+    expect((await timeline()).trip).toEqual({ start: MUNICH, end: MUNICH });
+    await patch({ tripStart: null, tripEnd: null, tripEndSameAsStart: false });
+    expect((await timeline()).trip).toEqual({ start: null, end: null });
+  });
+
+  it.each([
+    { tripStart: { name: "", lat: 1, lng: 1 } },
+    { tripStart: { name: "x", lat: 91, lng: 1 } },
+    { tripEnd: { name: "x", lat: 1, lng: 181 } },
+    { tripEnd: "Rom" },
+  ])("rejects invalid places %o", async (payload) => {
+    const { id } = await createShare();
+    const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload });
+    expect(res.statusCode).toBe(400);
+  });
+});
+
+describe("place search", () => {
+  it("returns short names with context, for admins only", async () => {
+    expect((await app.inject({ url: "/api/admin/geocode?q=münchen" })).statusCode).toBe(401);
+    const res = await app.inject({ url: "/api/admin/geocode?q=m%C3%BCnchen", headers: ADMIN });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual([
+      { name: "München", lat: 48.1374, lng: 11.5755, detail: "Bayern, Deutschland" },
+      { name: "Marienplatz, München", lat: 48.1373, lng: 11.5754, detail: "Bayern, Deutschland" },
+    ]);
+    expect(geocoderRequests[0]).toBe("https://photon.test/api/?q=m%C3%BCnchen&limit=6&lang=de");
+  });
+
+  it("caches results", async () => {
+    await app.inject({ url: "/api/admin/geocode?q=rom", headers: ADMIN });
+    await app.inject({ url: "/api/admin/geocode?q=Rom", headers: ADMIN });
+    expect(geocoderRequests).toHaveLength(1);
+  });
+
+  it("rejects too short queries and reports an unavailable geocoder", async () => {
+    expect((await app.inject({ url: "/api/admin/geocode?q=a", headers: ADMIN })).statusCode).toBe(400);
+    const res = await app.inject({ url: "/api/admin/geocode?q=kaputt", headers: ADMIN });
+    expect(res.statusCode).toBe(502);
+    expect(res.json()).toEqual({ error: "geocoder_unavailable" });
   });
 });
 

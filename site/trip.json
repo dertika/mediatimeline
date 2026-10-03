@@ -13,6 +13,18 @@
       "createdAt": "2025-07-18T19:02:00.000Z"
     }
   ],
+  "trip": {
+    "start": {
+      "name": "Flughafen Bergen-Flesland",
+      "lat": 60.2934,
+      "lng": 5.2181
+    },
+    "end": {
+      "name": "Flughafen Ålesund-Vigra",
+      "lat": 62.5625,
+      "lng": 6.1197
+    }
+  },
   "places": [
     {
       "name": "Bryggen",

@@ -34,6 +34,15 @@ const ConfigSchema = z.object({
       albumTtlSeconds: z.number().int().min(0).default(300),
     })
     .prefault({}),
+  geocoder: z
+    .object({
+      // Photon (komoot) offers search-as-you-type on OpenStreetMap data, worldwide.
+      url: z
+        .url()
+        .transform((u) => u.replace(/\/+$/, ""))
+        .default("https://photon.komoot.io"),
+    })
+    .prefault({}),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

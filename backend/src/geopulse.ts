@@ -137,9 +137,29 @@ const count = (legs: RouteLeg[]) => legs.reduce((n, l) => n + l.points.length, 0
 const unwrap = <T>(body: unknown): T =>
   (body && typeof body === "object" && "data" in body && "status" in body ? (body as { data: T }).data : body) as T;
 
+/** GeoPulse's REST API before and after its v2 rework (paths and parameter names differ). */
+const API_VARIANTS = {
+  // Released 1.x (e.g. 1.39): answers wrapped in { status, data }.
+  v1: { timeline: "/api/streaming-timeline", path: "/api/gps/path", from: "startTime", to: "endTime" },
+  // v2 (GeoPulse main branch): plain DTOs.
+  v2: { timeline: "/api/v1/timeline", path: "/api/v1/gps/points/path", from: "from", to: "to" },
+} as const;
+type ApiVariant = keyof typeof API_VARIANTS;
+
+class GeoPulseHttpError extends Error {
+  constructor(
+    readonly status: number,
+    path: string,
+  ) {
+    super(`GeoPulse answered ${status} for ${path}`);
+  }
+}
+
 /** Reads the route of a time range from GeoPulse with a user API token; results are cached briefly. */
 export class GeoPulseClient {
   private cache = new Map<string, { expires: number; value: Promise<RouteLeg[]> }>();
+  /** The API variant that answered last; tried first next time. */
+  private variant: ApiVariant = "v1";
 
   constructor(
     private readonly url: string,
@@ -161,21 +181,42 @@ export class GeoPulseClient {
   }
 
   private async load(from: string, to: string, opts: RouteOptions): Promise<RouteLeg[]> {
-    const range = new URLSearchParams({ from, to });
+    const first = this.variant;
+    const other: ApiVariant = first === "v1" ? "v2" : "v1";
+    try {
+      return await this.loadWith(first, from, to, opts);
+    } catch (err) {
+      if (!(err instanceof GeoPulseHttpError && err.status === 404)) throw err;
+    }
+    try {
+      const legs = await this.loadWith(other, from, to, opts);
+      this.variant = other;
+      return legs;
+    } catch (err) {
+      if (err instanceof GeoPulseHttpError && err.status === 404) {
+        throw new Error(`GeoPulse knows neither API v1 nor v2 at ${this.url}: is geopulse.url the backend, without /api?`);
+      }
+      throw err;
+    }
+  }
+
+  private async loadWith(variant: ApiVariant, from: string, to: string, opts: RouteOptions): Promise<RouteLeg[]> {
+    const api = API_VARIANTS[variant];
+    const range = new URLSearchParams({ [api.from]: from, [api.to]: to });
     const [path, timeline] = await Promise.all([
-      this.get<{ points?: GpsPointJson[]; segments?: GpsPointJson[][] }>(`/gps/points/path?${range}&simplify=false`),
-      this.get<{ trips?: TripJson[] }>(`/timeline?${range}`),
+      this.get<{ points?: GpsPointJson[]; segments?: GpsPointJson[][] }>(`${api.path}?${range}&simplify=false`),
+      this.get<{ trips?: TripJson[] }>(`${api.timeline}?${range}`),
     ]);
     const segments = path.segments?.length ? path.segments : path.points?.length ? [path.points] : [];
     return buildRoute(segments, timeline.trips ?? [], opts);
   }
 
   private async get<T>(path: string): Promise<T> {
-    const res = await this.fetchImpl(`${this.url}/api/v1${path}`, {
+    const res = await this.fetchImpl(`${this.url}${path}`, {
       headers: { "x-api-key": this.apiKey, accept: "application/json" },
       signal: AbortSignal.timeout(15_000),
     });
-    if (!res.ok) throw new Error(`GeoPulse answered ${res.status} for ${path.split("?")[0]}`);
+    if (!res.ok) throw new GeoPulseHttpError(res.status, path.split("?")[0]!);
     return unwrap<T>(await res.json());
   }
 }

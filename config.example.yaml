@@ -49,7 +49,8 @@ geocoder:
 # Pro Link in der Adminseite einschaltbar; Karte und Tour zeigen dann die
 # aufgezeichnete Strecke zwischen erstem und letztem Foto, nach Verkehrsmittel.
 # geopulse:
-#   # Basis-URL des GeoPulse-Backends (ohne /api/v1), z. B. im selben Podman-Netz
+#   # Basis-URL des GeoPulse-Backends (ohne /api), z. B. im selben Podman-Netz.
+#   # Funktioniert mit GeoPulse 1.x und der kommenden v2.
 #   url: http://geopulse-backend:8080
 #   # GeoPulse → Profil → Sicherheit → API-Tokens; besser als Secret über
 #   # MEDIATIMELINE_GEOPULSE_API_KEY_FILE

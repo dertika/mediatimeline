@@ -46,7 +46,7 @@ const ConfigSchema = z.object({
   // Optional: the real route of a trip from GeoPulse (https://github.com/tess1o/geopulse).
   geopulse: z
     .object({
-      url: z.url().transform((u) => u.replace(/\/+$/, "").replace(/\/api\/v1$/, "")),
+      url: z.url().transform((u) => u.replace(/\/+$/, "").replace(/\/api(\/v1)?$/, "")),
       apiKey: z.string().min(1, "geopulse.apiKey fehlt"),
       // Leaves out the route this close to the start and end of a trip (e.g. home).
       privacyRadiusMeters: z.number().int().min(0).default(1000),

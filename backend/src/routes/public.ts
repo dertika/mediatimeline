@@ -25,11 +25,15 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
     const { assets } = snapshot;
     if (!share.showRoute || !geopulse || !config.geopulse || assets.length < 2) return null;
     const tripEnd = share.tripEndSameAsStart ? share.tripStart : share.tripEnd;
+    const from = assets[0]!.takenAt;
+    const to = assets.at(-1)!.takenAt;
     try {
-      return await geopulse.route(assets[0]!.takenAt, assets.at(-1)!.takenAt, {
+      const route = await geopulse.route(from, to, {
         privacyRadiusMeters: config.geopulse.privacyRadiusMeters,
         privacyPoints: [share.tripStart, tripEnd].filter((p): p is Place => p !== null),
       });
+      if (route.length === 0) req.log.info({ from, to }, "GeoPulse has no trips or GPS points for this album");
+      return route;
     } catch (err) {
       req.log.warn({ err }, "GeoPulse route not available");
       return null;

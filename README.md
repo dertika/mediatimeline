@@ -10,6 +10,8 @@ Auf einer Adminseite (geschützt durch Authelia) wählst du Immich-Alben aus und
 
 **Neue Fotos:** Kommen nach einem Besuch Fotos oder Videos dazu, auch mitten in der Timeline, zeigt die Seite beim nächsten Öffnen unten einen Hinweis wie „3 neue Fotos · Zum nächsten ↓“. Jedes Tippen springt zum nächsten neuen Foto, neue Fotos tragen ein „Neu“-Badge. Als gesehen gilt ein Foto, sobald es kurz im Bild war. Der Hinweis lässt sich mit ✕ ausblenden. Gemerkt wird das im Browser (localStorage), beim ersten Besuch gilt alles als gesehen.
 
+Fotos erscheinen zuerst als kleines, unscharfes Vorschaubild und werden durch die große Version ersetzt, sobald sie in die Nähe des Bildschirms kommen. Schnelles Scrollen und Sprünge laden so keine großen Bilder auf dem Weg.
+
 Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, Pfeiltasten, Pinch-Zoom (ohne Zoom-Knopf); Tag, Ort und Bildunterschrift stehen klein in den Ecken. Die Karte passt sich dem Dark Mode an.
 
 **Tour:** Über „▶ Tour starten“ läuft eine animierte Vollbild-Führung. Sie startet in der Kartenübersicht und fliegt zum ersten Ort. Dort bleibt die Karte kurz mit dem Ortsnamen stehen (so lange wie die Wartezeit pro Foto), dann kommen die Fotos und Videos dieses Orts chronologisch. Beginnt ein neuer Reisetag, erscheint vorher eine Karte „Tag 2“ mit Datum. Fällt der Tageswechsel mit einem neuen Ort zusammen, trägt die Ortskarte das Tag-Badge. Oben links steht immer „Tag · Ort · Foto“. Die Karte lässt sich während der Tour nicht verschieben. Während des Flugs zieht der Punkt die gestrichelte Route hinter sich her. Weite Strecken dauern länger als kurze (1,5–8 s). Die Kartenkacheln entlang der ganzen Flugbahn zum nächsten Ort werden schon vorab geladen. Danach geht es weiter zum nächsten Ort, wobei die Karte nur so weit herauszoomt, wie es die Entfernung erfordert. Bedienung:
@@ -107,6 +109,7 @@ In Immich unter *Kontoeinstellungen → API-Schlüssel* einen Key mit den Rechte
 - `/admin` und `/api/admin/` laufen über `auth_request` gegen Authelia (`/api/authz/auth-request`); nginx reicht `Remote-User`/`Remote-Groups` an mediatimeline weiter.
 - Für alle anderen Pfade werden diese Header geleert, damit niemand sie fälschen kann.
 - Die Authelia-Regeln stehen als Kommentar am Ende der Datei (`/admin*` → `two_factor`, Rest → `bypass`).
+- Optional: ein Cache für Vorschaubilder (`proxy_cache_path` oben in der Datei, Verzeichnis `/var/cache/nginx/mediatimeline` anlegen). Er hält Thumbnails und Previews öffentlicher Links 10 Minuten und entlastet Immich, wenn viele Leute dieselbe Reise ansehen. Passwortgeschützte Links werden nie gecacht. Wird ein Link widerrufen oder bekommt er ein Passwort, sind bereits gecachte Bilder noch bis zu 10 Minuten abrufbar. Wer das nicht möchte, lässt den Block weg. Ob es greift, zeigt der Header `X-Cache-Status`.
 
 Zusätzlich akzeptiert das Backend `Remote-User` nur von Adressen in `server.trustedProxies`. Welche Adresse der Container für nginx sieht, hängt vom Podman-Netzwerk ab (rootless mit pasta/slirp4netns oft `10.0.2.2` bzw. die Host-IP). Bei einem 401 auf der Adminseite steht die tatsächliche Adresse im Log (`podman logs mediatimeline`, Feld `remoteAddress`) und gehört dann in `trustedProxies`. Mit `admin.allowedGroups` lässt sich der Zugriff auf Authelia-Gruppen einschränken.
 

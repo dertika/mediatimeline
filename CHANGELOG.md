@@ -2,6 +2,19 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.8.0] – 2026-10-03
+
+### Geändert
+- Fotos laden zuerst als kleines, unscharfes Vorschaubild aus Immich und werden durch die große Version ersetzt, sobald sie in die Nähe des Bildschirms kommen. Schnelles Scrollen lädt keine großen Bilder mehr auf dem Weg.
+- Sprünge über weite Strecken („Zum nächsten“ bei neuen Fotos, Kartenpunkte) springen erst nah ans Ziel und gleiten dann das letzte Stück, das Zielbild wird sofort geladen. Vorher kamen die Fotos am Ende sehr spät.
+
+### Performance (#5)
+- Videos laden erst beim Abspielen (`preload="none"`), das Poster ebenfalls zuerst als Thumbnail.
+- JSON-Antworten werden komprimiert (Brotli/gzip).
+- Album-Cache mit Stale-while-revalidate: Nach Ablauf wird der alte Stand sofort ausgeliefert und im Hintergrund aus Immich neu geladen.
+- nginx-Beispiel mit optionalem Cache für Vorschaubilder öffentlicher Links.
+- Karte: Marker werden in Etappen hinzugefügt (`chunkedLoading`).
+
 ## [0.7.0] – 2026-10-03
 
 ### Neu
@@ -58,7 +71,8 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
-[0.7.0]: https://github.com/dertika/mediatimeline/pull/25
+[0.8.0]: https://github.com/dertika/mediatimeline/pull/27
+[0.7.0]: https://github.com/dertika/mediatimeline/pull/26
 [0.6.0]: https://github.com/dertika/mediatimeline/pull/24
 [0.5.0]: https://github.com/dertika/mediatimeline/pull/20
 [0.4.0]: https://github.com/dertika/mediatimeline/pull/16

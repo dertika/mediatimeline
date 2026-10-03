@@ -41,7 +41,7 @@
       ];
       L.polyline(points, { color: accentColor(container), weight: 3, opacity: 0.7, dashArray: "6 6" }).addTo(map);
 
-      const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 40 });
+      const cluster = L.markerClusterGroup({ showCoverageOnHover: false, maxClusterRadius: 40, chunkedLoading: true });
       for (const asset of located) {
         const icon = L.divIcon({
           className: "photo-marker",

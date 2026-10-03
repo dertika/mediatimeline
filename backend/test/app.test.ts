@@ -1,3 +1,4 @@
+import { gunzipSync } from "node:zlib";
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../src/app.js";
@@ -309,6 +310,20 @@ describe("comments", () => {
 });
 
 describe("media proxy", () => {
+  it("compresses the timeline JSON but not the media", async () => {
+    const { id, url } = await createShare();
+    // With comments the JSON is above the 1 KB threshold.
+    await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { showComments: true } });
+    const token = tokenOf(url);
+    const headers = { "accept-encoding": "gzip" };
+    const json = await app.inject({ url: `/api/public/timeline/${token}`, headers });
+    expect(json.headers["content-encoding"]).toBe("gzip");
+    expect(JSON.parse(gunzipSync(json.rawPayload).toString()).assets).toHaveLength(3);
+    const image = await app.inject({ url: `/api/public/timeline/${token}/assets/a1/preview`, headers });
+    expect(image.headers["content-encoding"]).toBeUndefined();
+    expect(image.body).toBe("a1:preview");
+  });
+
   it("serves thumbnails only for assets of the shared album", async () => {
     const { url } = await createShare();
     const token = tokenOf(url);

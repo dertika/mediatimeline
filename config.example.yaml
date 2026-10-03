@@ -34,7 +34,9 @@ admin:
   allowedGroups: ["admins"]
 
 cache:
-  # Wie lange Albuminhalte aus Immich zwischengespeichert werden (Sekunden)
+  # Wie lange Albuminhalte aus Immich zwischengespeichert werden (Sekunden).
+  # Danach wird bis zu 1 Stunde lang der alte Stand sofort ausgeliefert und im
+  # Hintergrund neu geladen, damit niemand auf Immich warten muss.
   albumTtlSeconds: 300
 
 geocoder:

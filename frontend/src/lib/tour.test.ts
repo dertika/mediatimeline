@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStops, dayNumber, distanceMeters, estimateTourSeconds, flightCurve, flightDuration, withTrip } from "./tour";
+import { buildStops, dayNumber, distanceMeters, estimateTourSeconds, flightCurve, flightDuration, remainingStops, withTrip } from "./tour";
 import type { TimelineAsset } from "./types";
 
 let seq = 0;
@@ -131,6 +131,20 @@ describe("estimateTourSeconds", () => {
   it("assumes 20 s for videos played to the end", () => {
     const stops = buildStops([{ ...asset(...BERGEN), type: "video" }], 1000);
     expect(estimateTourSeconds(stops, 1, { ...tour, videoMaxSeconds: 0 })).toBe(2 + 9 + 20 + 3);
+  });
+});
+
+describe("remainingStops", () => {
+  const stops = buildStops([asset(...BERGEN, "b1"), asset(...BERGEN, "b2"), asset(...OSLO, "o")], 1000);
+  it("drops earlier stops and the items already seen", () => {
+    expect(remainingStops(stops, { stop: 0, item: 1 }).map((s) => s.assets.map((a) => a.id))).toEqual([["b2"], ["o"]]);
+    expect(remainingStops(stops, { stop: 1, item: 0 }).map((s) => s.assets.map((a) => a.id))).toEqual([["o"]]);
+  });
+  it("makes the estimate shrink as the tour goes on", () => {
+    const tour = { intervalSeconds: 5, radiusMeters: 1000, videoMaxSeconds: 10 };
+    const full = estimateTourSeconds(stops, 1, tour);
+    expect(estimateTourSeconds(remainingStops(stops, { stop: 0, item: 0 }), 1, tour)).toBe(full);
+    expect(estimateTourSeconds(remainingStops(stops, { stop: 1, item: 0 }), 1, tour)).toBe(full - 9 - 10);
   });
 });
 

@@ -135,6 +135,11 @@ export function estimateTourSeconds(stops: TourStop[], days: number, tour: TourS
   return 2 + stops.length * (FLIGHT_SECONDS + tour.intervalSeconds) + media + extraDays * tour.intervalSeconds + 3;
 }
 
+/** The part of a tour still ahead when resuming at a stop and item. */
+export function remainingStops(stops: TourStop[], from: { stop: number; item: number }): TourStop[] {
+  return stops.slice(from.stop).map((s, i) => (i === 0 ? { ...s, assets: s.assets.slice(from.item) } : s));
+}
+
 /** Adds the start and end of the trip (if set) as stops without photos. */
 export function withTrip(stops: TourStop[], trip: Trip | undefined): TourStop[] {
   const waypoint = (place: Place, kind: "start" | "end"): TourStop => {

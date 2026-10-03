@@ -1,0 +1,67 @@
+# Changelog
+
+Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
+
+## [0.7.0] – 2026-10-03
+
+### Neu
+- Hinweis auf neue Fotos: Kommen nach einem Besuch Fotos oder Videos dazu, auch mitten in der Timeline, zeigt die Seite unten „3 neue Fotos · Zum nächsten ↓“. Jedes Tippen springt zum nächsten neuen Foto, neue Fotos tragen ein „Neu“-Badge (#25).
+- Versionsnummer in der Fußzeile der Adminseite und der geteilten Timelines, verlinkt auf dieses Changelog.
+
+## [0.6.0] – 2026-10-03
+
+### Neu
+- Tour: Der Bildschirm bleibt während der Tour an (Wake Lock). Wird das Handy gesperrt, pausiert die Tour (#21).
+- Tour fortsetzen: Nach einem Abbruch erscheint unter „Tour starten“ eine eigene Karte „Tour fortsetzen“ mit der letzten Station und der Restzeit. Sie verschwindet nach einem kompletten Durchlauf, nach 6 Stunden oder über ✕ (#21, #22, #24).
+
+### Behoben
+- Opera auf Android schaltete den Bildschirm trotz Wake Lock ab. Dort und in Browsern ohne Wake Lock hält ihn jetzt ein unsichtbares, stummes Video an, in Safari/iOS nicht nötig (#23, #24).
+
+## [0.5.0] – 2026-10-03
+
+### Neu
+- Reiseroute: Start und Ziel der Reise pro Link, mit Ortssuche (Photon) in der Adminseite, optional als Rundreise. Sie erscheinen auf der Karte und in der Tour als eigene Stationen (#20).
+- Tour starten als große Karte über die ganze Breite, mit Anzahl der Orte, Tage und geschätzter Dauer (#19).
+
+### Geändert
+- Tour: Die Tageskarte erscheint erst, wenn das Foto ausgeblendet ist, und verschwindet vor dem nächsten (#17).
+- Tour: Hinter der Ortskarte wird die Karte abgedunkelt, keine Überblendungen mehr mit Fotos (#18).
+
+## [0.4.0] – 2026-10-03
+
+### Neu
+- Projektseite auf GitHub Pages mit Live-Demo, freien Demo-Fotos von Wikimedia Commons und aufgenommenen Tour-Videos (#12, #13, #14, #16).
+
+### Geändert
+- Tour: Punkt und Route bleiben während des Flugs sichtbar, Kartenkacheln entlang der ganzen Flugbahn werden vorgeladen, die Flugdauer hängt von der Entfernung ab (#15).
+
+## [0.3.0] – 2026-10-02
+
+### Neu
+- Animierte Vollbild-Tour durch alle Orte eines Albums: Kartenpause mit Ortsname, dann die Fotos und Videos des Orts, Tageswechsel, Steuerung per Knopf, Tastatur und Wischen (#7, #8, #9, #10).
+
+### Behoben
+- Die Startseite „/“ lieferte 403 Forbidden (#11).
+- Graue Karte während des Flugs auf dem iPhone (#9).
+
+## [0.2.0] – 2026-10-02
+
+### Neu
+- Immich-Beschreibungen und -Kommentare als Bildunterschriften, auf Wunsch alle Kommentare (#3).
+- Vollbild-Galerie mit Wischen und Pinch-Zoom, Karte im Dark Mode (#3).
+- Nach dem Schließen der Galerie steht die Seite beim zuletzt angesehenen Foto (#4).
+- Linkvorschau mit Albumname, Zeitraum und Cover für Messenger (#6).
+
+## [0.1.0] – 2026-10-01
+
+### Neu
+- Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
+- Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
+
+[0.7.0]: https://github.com/dertika/mediatimeline/pull/25
+[0.6.0]: https://github.com/dertika/mediatimeline/pull/24
+[0.5.0]: https://github.com/dertika/mediatimeline/pull/20
+[0.4.0]: https://github.com/dertika/mediatimeline/pull/16
+[0.3.0]: https://github.com/dertika/mediatimeline/pull/11
+[0.2.0]: https://github.com/dertika/mediatimeline/pull/6
+[0.1.0]: https://github.com/dertika/mediatimeline/pull/2

@@ -7,8 +7,8 @@ export interface TourPosition {
   savedAt: number;
 }
 
-/** After a day the trip has probably been watched in full or forgotten. */
-const MAX_AGE_MS = 24 * 3600_000;
+/** After six hours the tour is offered from the beginning only. */
+const MAX_AGE_MS = 6 * 3600_000;
 
 const storageKey = (id: string) => `mediatimeline:tour:${id}`;
 

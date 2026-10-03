@@ -112,18 +112,32 @@
   </header>
 
   {#if located.length > 0}
-    <button class="start-tour" onclick={() => startTour()}>
+    <button class="start-tour" onclick={() => startTour(true)}>
       <span class="start-tour-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4" /></svg>
       </span>
       <span class="start-tour-text">
-        <span class="start-tour-title">{saved ? "Tour fortsetzen" : "Tour starten"}</span>
-        <span class="start-tour-meta">{saved ? `Weiter ab ${saved.label}` : tourSummary}</span>
+        <span class="start-tour-title">Tour starten</span>
+        <span class="start-tour-meta">{tourSummary}</span>
       </span>
       <svg class="start-tour-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
     </button>
     {#if saved}
-      <button class="restart-tour" onclick={() => startTour(true)}>Von vorn starten</button>
+      <!-- Two sibling buttons: a button may not contain another one. -->
+      <div class="resume-tour">
+        <button class="start-tour" onclick={() => startTour()}>
+          <span class="start-tour-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4" /></svg>
+          </span>
+          <span class="start-tour-text">
+            <span class="start-tour-title">Tour fortsetzen</span>
+            <span class="start-tour-meta">Weiter ab {saved.label}</span>
+          </span>
+        </button>
+        <button class="resume-dismiss" onclick={() => onTourProgress(null)} aria-label="Fortsetzen verwerfen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
     {/if}
     <TimelineMap assets={timeline.assets} trip={timeline.trip} {media} onselect={scrollToAsset} />
   {/if}
@@ -245,17 +259,48 @@
     opacity: 0.85;
   }
 
-  .restart-tour {
-    display: block;
-    margin: -6px 0 14px auto;
-    padding: 2px 4px;
+  .resume-tour {
+    position: relative;
+  }
+
+  /* Room for the dismiss button where the start card has its chevron. */
+  .resume-tour .start-tour {
+    padding-right: 60px;
+  }
+
+  .resume-dismiss {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-top: -18px;
+    padding: 0;
     border: 0;
-    background: none;
-    color: var(--muted);
-    font: inherit;
-    font-size: 0.85rem;
-    text-decoration: underline;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.18);
+    color: var(--accent-contrast);
     cursor: pointer;
+  }
+
+  .resume-dismiss:hover {
+    background: rgb(255 255 255 / 0.3);
+  }
+
+  .resume-dismiss:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .resume-dismiss svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
   }
 
   .start-tour-chevron {

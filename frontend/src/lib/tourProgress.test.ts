@@ -22,9 +22,10 @@ describe("tour progress", () => {
     expect(loadPosition("/t/a", 2_000)).toBeNull();
   });
 
-  it("expires after a day", () => {
+  it("expires after six hours", () => {
     savePosition("/t/a", pos);
-    expect(loadPosition("/t/a", pos.savedAt + 25 * 3600_000)).toBeNull();
+    expect(loadPosition("/t/a", pos.savedAt + 5 * 3600_000)).toEqual(pos);
+    expect(loadPosition("/t/a", pos.savedAt + 6 * 3600_000 + 1)).toBeNull();
   });
 
   it("works without storage", () => {

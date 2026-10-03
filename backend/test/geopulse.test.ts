@@ -64,27 +64,60 @@ describe("buildRoute", () => {
 });
 
 describe("GeoPulseClient", () => {
-  it("asks GeoPulse with the API key and reads both plain and enveloped answers", async () => {
-    const fetchImpl = vi.fn(async (url: string | URL | Request) => {
-      const u = String(url);
-      const body = u.includes("/gps/points/path")
-        ? { status: "success", data: { segments: [[pt(60, 5, 0), pt(60.1, 5.1, 5)]] } }
-        : { trips: [{ timestamp: at(0), tripDuration: 600, movementType: "TRAIN" }] };
-      return new Response(JSON.stringify(body), { status: 200 });
+  const path = [[pt(60, 5, 0), pt(60.1, 5.1, 5)]];
+  const trips = [{ timestamp: at(0), tripDuration: 600, movementType: "TRAIN" }];
+  const expected = [{ mode: "TRAIN", points: [[60, 5, Date.parse(at(0)) / 1000], [60.1, 5.1, Date.parse(at(5)) / 1000]] }];
+
+  /** Fake GeoPulse that only knows one API variant. */
+  function fakeGeoPulse(variant: "v1" | "v2") {
+    return vi.fn(async (input: string | URL | Request) => {
+      const url = new URL(String(input));
+      const p = url.pathname;
+      if (variant === "v1" && p === "/api/gps/path" && url.searchParams.has("startTime")) {
+        return Response.json({ status: "success", data: { segments: path } });
+      }
+      if (variant === "v1" && p === "/api/streaming-timeline" && url.searchParams.has("endTime")) {
+        return Response.json({ status: "success", data: { trips } });
+      }
+      if (variant === "v2" && p === "/api/v1/gps/points/path" && url.searchParams.has("from")) {
+        return Response.json({ segments: path });
+      }
+      if (variant === "v2" && p === "/api/v1/timeline" && url.searchParams.has("to")) return Response.json({ trips });
+      return new Response("not found", { status: 404 });
     });
+  }
+
+  it("reads the released 1.x API (enveloped answers) with the API key", async () => {
+    const fetchImpl = fakeGeoPulse("v1");
     const client = new GeoPulseClient("http://geopulse:8080", "secret", 60_000, fetchImpl as typeof fetch);
-    const legs = await client.route(at(0), at(60), opts);
-    expect(legs).toEqual([{ mode: "TRAIN", points: [[60, 5, Date.parse(at(0)) / 1000], [60.1, 5.1, Date.parse(at(5)) / 1000]] }]);
-    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toMatch(/^http:\/\/geopulse:8080\/api\/v1\//);
+    expect(await client.route(at(0), at(60), opts)).toEqual(expected);
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
     expect((init.headers as Record<string, string>)["x-api-key"]).toBe("secret");
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
     // Cached: no new requests.
     await client.route(at(0), at(60), opts);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
-  it("fails when GeoPulse answers with an error", async () => {
-    const client = new GeoPulseClient("http://g", "k", 60_000, (async () => new Response("", { status: 401 })) as typeof fetch);
+  it("falls back to the v2 API on 404 and keeps using it", async () => {
+    const fetchImpl = fakeGeoPulse("v2");
+    const client = new GeoPulseClient("http://geopulse:8080", "secret", 60_000, fetchImpl as typeof fetch);
+    expect(await client.route(at(0), at(60), opts)).toEqual(expected);
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+    await client.route(at(1), at(60), opts);
+    expect(fetchImpl).toHaveBeenCalledTimes(6);
+    expect(String(fetchImpl.mock.calls[5]![0])).toContain("/api/v1/");
+  });
+
+  it("explains a wrong URL when neither API exists there", async () => {
+    const client = new GeoPulseClient("http://g", "k", 60_000, (async () => new Response("", { status: 404 })) as typeof fetch);
+    await expect(client.route(at(0), at(1), opts)).rejects.toThrow("neither API v1 nor v2");
+  });
+
+  it("reports other errors without trying the other API", async () => {
+    const fetchImpl = vi.fn(async () => new Response("", { status: 401 }));
+    const client = new GeoPulseClient("http://g", "k", 60_000, fetchImpl as typeof fetch);
     await expect(client.route(at(0), at(1), opts)).rejects.toThrow("401");
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 });

@@ -31,7 +31,7 @@ describe("config", () => {
 
     const withGeoPulse = loadConfig({
       MEDIATIMELINE_CONFIG: path,
-      MEDIATIMELINE_GEOPULSE_URL: "http://geopulse:8080/",
+      MEDIATIMELINE_GEOPULSE_URL: "http://geopulse:8080/api/",
       MEDIATIMELINE_GEOPULSE_API_KEY_FILE: join(dir, "secret"),
     });
     expect(withGeoPulse.geopulse).toEqual({ url: "http://geopulse:8080", apiKey: "from-secret", privacyRadiusMeters: 1000 });

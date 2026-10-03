@@ -64,10 +64,44 @@ export function buildStops(assets: TimelineAsset[], radiusMeters: number): TourS
   return stops.map(({ located: _located, ...stop }) => stop);
 }
 
-/** Flight duration in seconds: short hops are quick, long legs take up to 4 s. */
-export function flightSeconds(from: LatLng, to: LatLng): number {
-  const km = distanceMeters(from, to) / 1000;
-  return Math.min(4, Math.max(1.5, 1.2 + 0.8 * Math.log10(1 + km)));
+export interface FlightCurve {
+  /** Length of the flight in Leaflet's units; its flyTo takes 0.8 s per unit by default. */
+  length: number;
+  /** Distance travelled (in start-zoom pixels) after `s` units. */
+  u(s: number): number;
+  /** Visible width (in start-zoom pixels) after `s` units, i.e. how far out the flight has zoomed. */
+  w(s: number): number;
+}
+
+/**
+ * The zoom-and-pan curve of Leaflet's `flyTo` (van Wijk & Nuij), with the
+ * same constants, so that the tour can know the flight before it starts.
+ * `w0`/`w1`: visible width at start/end, `u1`: distance, all in pixels at the
+ * start zoom.
+ */
+export function flightCurve(w0: number, w1: number, u1: number): FlightCurve {
+  const rho = 1.42;
+  const rho2 = rho * rho;
+  const r = (end: boolean) => {
+    const t1 = w1 * w1 - w0 * w0 + (end ? -1 : 1) * rho2 * rho2 * u1 * u1;
+    const b = t1 / (2 * (end ? w1 : w0) * rho2 * u1);
+    const sq = Math.sqrt(b * b + 1) - b;
+    return sq < 1e-9 ? -18 : Math.log(sq);
+  };
+  const r0 = r(false);
+  return {
+    length: (r(true) - r0) / rho,
+    u: (s) => (w0 * (Math.cosh(r0) * Math.tanh(r0 + rho * s) - Math.sinh(r0))) / rho2,
+    w: (s) => (w0 * Math.cosh(r0)) / Math.cosh(r0 + rho * s),
+  };
+}
+
+/**
+ * Flight duration in seconds: Leaflet's natural pace for the curve, so long
+ * legs that zoom far out take longer; between 1.5 and 8 s.
+ */
+export function flightDuration(curveLength: number): number {
+  return Math.min(8, Math.max(1.5, 0.8 * curveLength));
 }
 
 /**

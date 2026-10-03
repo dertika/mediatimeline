@@ -1,7 +1,7 @@
 {
   "name": "mediatimeline",
   "private": true,
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Öffentliche Foto-Timelines aus Immich-Alben",
   "workspaces": [
     "backend",

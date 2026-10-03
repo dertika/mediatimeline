@@ -2,6 +2,11 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.10.0] – 2026-10-04
+
+### Neu
+- Einzelne Fotos teilen: Ein Teilen-Symbol unter jedem Foto und in der Vollbild-Galerie erzeugt einen Link auf genau dieses Foto (Teilen-Menü auf dem Handy, sonst in die Zwischenablage). Der Link öffnet die Timeline direkt bei dem Foto, die Linkvorschau in Messengern zeigt das Foto mit Bildunterschrift, Datum und Ort.
+
 ## [0.9.1] – 2026-10-04
 
 ### Behoben
@@ -86,6 +91,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.10.0]: https://github.com/dertika/mediatimeline/pull/31
 [0.9.1]: https://github.com/dertika/mediatimeline/pull/30
 [0.9.0]: https://github.com/dertika/mediatimeline/pull/29
 [0.8.1]: https://github.com/dertika/mediatimeline/pull/28

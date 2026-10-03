@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { AppDeps } from "../app.js";
+import { buildCaption } from "../caption.js";
 import type { AlbumSnapshot } from "../immich/cache.js";
 import type { Share } from "../store/db.js";
 import { publicBaseUrl } from "../url.js";
@@ -25,14 +26,32 @@ function dateRange(start: string | undefined, end: string | undefined): string |
   return `${s} – ${shortDate.format(new Date(end))}`;
 }
 
-export function buildPreview(share: Share, snapshot: AlbumSnapshot, baseUrl: string): LinkPreview {
+/**
+ * Preview of a shared timeline, or of one photo of it (`?foto=<assetId>`):
+ * then that photo is the image and its caption, date and place the text.
+ */
+export function buildPreview(share: Share, snapshot: AlbumSnapshot, baseUrl: string, assetId?: string): LinkPreview {
   const { album, assets } = snapshot;
   const title = share.titleOverride ?? album.albumName;
   const url = `${baseUrl}/t/${share.token}`;
+  const imageOf = (id: string) => `${baseUrl}/api/public/timeline/${share.token}/assets/${id}/preview`;
 
   if (share.passwordHash) {
     // Only what the password page shows anyway: the title, no photo.
     return { title, description: "Passwortgeschützte Foto-Timeline", url, image: null };
+  }
+
+  const photo = assetId ? assets.find((a) => a.id === assetId) : undefined;
+  if (photo) {
+    const caption = buildCaption(photo, snapshot.comments.get(photo.id) ?? [], share.captionSource);
+    const place = [photo.city, photo.country].filter(Boolean).join(", ");
+    const when = [shortDate.format(new Date(photo.localDateTime)), place].filter(Boolean).join(", ");
+    return {
+      title,
+      description: [caption?.slice(0, 200), when].filter(Boolean).join(" · "),
+      url: `${url}?foto=${encodeURIComponent(photo.id)}`,
+      image: imageOf(photo.id),
+    };
   }
 
   const count = `${assets.length} ${assets.length === 1 ? "Foto/Video" : "Fotos & Videos"}`;
@@ -45,7 +64,7 @@ export function buildPreview(share: Share, snapshot: AlbumSnapshot, baseUrl: str
     (album.albumThumbnailAssetId && snapshot.assetIds.has(album.albumThumbnailAssetId)
       ? album.albumThumbnailAssetId
       : assets.find((a) => a.type === "image")?.id) ?? null;
-  const image = coverId ? `${baseUrl}/api/public/timeline/${share.token}/assets/${coverId}/preview` : null;
+  const image = coverId ? imageOf(coverId) : null;
 
   return { title, description, url, image };
 }
@@ -75,11 +94,11 @@ export function injectPreview(indexHtml: string, p: LinkPreview): string {
 export async function previewRoutes(app: FastifyInstance, deps: AppDeps, indexHtml: string) {
   const { store, cache, config } = deps;
 
-  async function previewFor(token: string, req: FastifyRequest): Promise<LinkPreview | null> {
+  async function previewFor(token: string, req: FastifyRequest, assetId?: string): Promise<LinkPreview | null> {
     const share = store.getByToken(token);
     if (!share || !share.enabled || isExpired(share)) return null;
     try {
-      return buildPreview(share, await cache.get(share.albumId), publicBaseUrl(config, req));
+      return buildPreview(share, await cache.get(share.albumId), publicBaseUrl(config, req), assetId);
     } catch (err) {
       // The preview is a nicety; the page itself reports Immich errors.
       req.log.warn({ err }, "link preview unavailable");
@@ -87,8 +106,9 @@ export async function previewRoutes(app: FastifyInstance, deps: AppDeps, indexHt
     }
   }
 
-  app.get<{ Params: { token: string } }>("/t/:token", async (req, reply) => {
-    const preview = await previewFor(req.params.token, req);
+  app.get<{ Params: { token: string }; Querystring: { foto?: unknown } }>("/t/:token", async (req, reply) => {
+    const foto = typeof req.query.foto === "string" ? req.query.foto : undefined;
+    const preview = await previewFor(req.params.token, req, foto);
     return reply
       .header("cache-control", "no-cache")
       .type("text/html; charset=utf-8")

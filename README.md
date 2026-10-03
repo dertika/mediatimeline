@@ -12,6 +12,8 @@ Auf einer Adminseite (geschützt durch Authelia) wählst du Immich-Alben aus und
 
 Fotos erscheinen zuerst als kleines, unscharfes Vorschaubild und werden durch die große Version ersetzt, sobald sie in die Nähe des Bildschirms kommen. Schnelles Scrollen und Sprünge laden so keine großen Bilder auf dem Weg.
 
+**Einzelne Fotos teilen:** Unter jedem Foto (und in der Galerie) erzeugt das Teilen-Symbol einen Link auf genau dieses Foto (`/t/<token>?foto=<id>`) – auf dem Handy über das Teilen-Menü, am Computer wird er kopiert. Wer den Link öffnet, landet direkt bei dem Foto; die Linkvorschau in Messengern zeigt dieses Foto (bei passwortgeschützten Links nicht).
+
 Ein Klick auf ein Bild öffnet eine **Vollbild-Galerie** (PhotoSwipe): Wischen, Pfeiltasten, Pinch-Zoom (ohne Zoom-Knopf); Tag, Ort und Bildunterschrift stehen klein in den Ecken. Die Karte passt sich dem Dark Mode an.
 
 **Tour:** Über „▶ Tour starten“ läuft eine animierte Vollbild-Führung. Sie startet in der Kartenübersicht und fliegt zum ersten Ort. Dort bleibt die Karte kurz mit dem Ortsnamen stehen (so lange wie die Wartezeit pro Foto), dann kommen die Fotos und Videos dieses Orts chronologisch. Beginnt ein neuer Reisetag, erscheint vorher eine Karte „Tag 2“ mit Datum. Fällt der Tageswechsel mit einem neuen Ort zusammen, trägt die Ortskarte das Tag-Badge. Oben links steht immer „Tag · Ort · Foto“. Die Karte lässt sich während der Tour nicht verschieben. Während des Flugs zieht der Punkt die gestrichelte Route hinter sich her. Weite Strecken dauern länger als kurze (1,5–8 s). Die Kartenkacheln entlang der ganzen Flugbahn zum nächsten Ort werden schon vorab geladen. Danach geht es weiter zum nächsten Ort, wobei die Karte nur so weit herauszoomt, wie es die Entfernung erfordert. Bedienung:

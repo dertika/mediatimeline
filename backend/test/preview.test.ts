@@ -53,6 +53,28 @@ describe("link preview", () => {
     expect(res.body).toContain("<body>app</body>");
   });
 
+  it("shows the photo a link points to (?foto=)", async () => {
+    const share = store.create("album-1", null);
+    const res = await app.inject({ url: `/t/${share.token}?foto=a1` });
+    expect(meta(res.body, "og:title")).toBe("Norwegen 2026");
+    expect(meta(res.body, "og:description")).toBe("Ankunft · 1. Juni 2026");
+    expect(meta(res.body, "og:url")).toBe(`https://timeline.example.com/t/${share.token}?foto=a1`);
+    expect(meta(res.body, "og:image")).toBe(`https://timeline.example.com/api/public/timeline/${share.token}/assets/a1/preview`);
+
+    // Unknown photos fall back to the album preview.
+    const unknown = await app.inject({ url: `/t/${share.token}?foto=nope` });
+    expect(meta(unknown.body, "og:image")).toContain("/assets/a2/preview");
+    expect(meta(unknown.body, "og:url")).toBe(`https://timeline.example.com/t/${share.token}`);
+  });
+
+  it("never reveals a photo of a password-protected link", async () => {
+    const share = store.create("album-1", null);
+    store.update(share.id, { passwordHash: "x" });
+    const res = await app.inject({ url: `/t/${share.token}?foto=a1` });
+    expect(meta(res.body, "og:image")).toBeUndefined();
+    expect(res.body).not.toContain("Ankunft");
+  });
+
   it("uses the title override and escapes HTML", async () => {
     const share = store.create("album-1", null);
     store.update(share.id, { titleOverride: `Sommer "$&" <script>` });

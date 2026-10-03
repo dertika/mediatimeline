@@ -82,30 +82,71 @@ export function sortByTakenAt(assets: TimelineAsset[]): TimelineAsset[] {
   return [...assets].sort((a, b) => a.takenAt.localeCompare(b.takenAt) || a.id.localeCompare(b.id));
 }
 
-/** In-memory TTL cache of album metadata + assets with in-flight de-duplication. */
+/** Pause before a failed background reload is tried again. */
+const RETRY_MS = 30_000;
+
+/**
+ * In-memory TTL cache of album metadata + assets with in-flight de-duplication.
+ *
+ * Stale-while-revalidate: an expired entry that is at most `maxStaleMs` old is
+ * still served right away while one reload runs in the background, so no
+ * visitor waits for Immich after the TTL. Older entries are loaded as before.
+ */
 export class AlbumCache {
-  private entries = new Map<string, { expires: number; value: Promise<AlbumSnapshot> }>();
+  private entries = new Map<
+    string,
+    { expires: number; value: Promise<AlbumSnapshot>; settled: boolean; refreshing: boolean; retryAt: number }
+  >();
 
   constructor(
     private readonly client: ImmichClient,
     private readonly ttlMs: number,
     private readonly now: () => number = Date.now,
     private readonly warn: (msg: string, err: unknown) => void = () => {},
+    private readonly maxStaleMs = 3600_000,
   ) {}
 
   get(albumId: string): Promise<AlbumSnapshot> {
     const hit = this.entries.get(albumId);
-    if (hit && hit.expires > this.now()) return hit.value;
-
-    const value = this.load(albumId);
-    this.entries.set(albumId, { expires: this.now() + this.ttlMs, value });
-    value.catch(() => this.entries.delete(albumId));
-    return value;
+    const now = this.now();
+    if (hit && hit.expires > now) return hit.value;
+    if (hit?.settled && hit.expires + this.maxStaleMs > now) {
+      if (!hit.refreshing && hit.retryAt <= now) this.refresh(albumId, hit);
+      return hit.value;
+    }
+    return this.store(albumId, this.load(albumId));
   }
 
   invalidate(albumId?: string): void {
     if (albumId) this.entries.delete(albumId);
     else this.entries.clear();
+  }
+
+  private store(albumId: string, value: Promise<AlbumSnapshot>): Promise<AlbumSnapshot> {
+    const entry = { expires: this.now() + this.ttlMs, value, settled: false, refreshing: false, retryAt: 0 };
+    this.entries.set(albumId, entry);
+    value.then(
+      () => (entry.settled = true),
+      () => this.entries.get(albumId) === entry && this.entries.delete(albumId),
+    );
+    return value;
+  }
+
+  /** Reloads in the background; the old snapshot stays if that fails. */
+  private refresh(albumId: string, stale: { refreshing: boolean; retryAt: number }): void {
+    stale.refreshing = true;
+    this.load(albumId).then(
+      (snapshot) => {
+        // Not when the entry was invalidated or replaced in the meantime.
+        if (this.entries.get(albumId) === stale) this.store(albumId, Promise.resolve(snapshot));
+      },
+      (err: unknown) => {
+        stale.refreshing = false;
+        // Don't ask an unreachable Immich again on every request.
+        stale.retryAt = this.now() + RETRY_MS;
+        this.warn("Album refresh failed, serving the previous state", err);
+      },
+    );
   }
 
   private async load(albumId: string): Promise<AlbumSnapshot> {

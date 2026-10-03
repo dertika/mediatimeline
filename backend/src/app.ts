@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import compress from "@fastify/compress";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
 import fastifyStatic from "@fastify/static";
@@ -45,6 +46,8 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
   const geocoder = opts.geocoder ?? new Geocoder(config.geocoder.url);
   const deps: AppDeps = { config, store, immich, cache, geocoder };
 
+  // JSON and HTML only in practice: images and videos are not compressible types.
+  await app.register(compress, { encodings: ["br", "gzip"], threshold: 1024 });
   await app.register(cookie, { secret: opts.sessionSecret });
   await app.register(rateLimit, { global: false });
 

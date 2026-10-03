@@ -5,6 +5,7 @@
   import TimelineMap from "./TimelineMap.svelte";
   import { dayKey, formatDay, formatRange, formatTime, placeOf } from "./format";
   import type { MediaUrl } from "./media";
+  import { preloadFull, progressive } from "./progressive";
   import { loadSeen, newAssetIds, saveSeen } from "./seenMedia";
   import { buildStops, estimateTourSeconds, remainingStops, withTrip } from "./tour";
   import { loadPosition, savePosition, type TourPosition } from "./tourProgress";
@@ -55,7 +56,17 @@
   }
 
   function scrollToAsset(id: string, behavior: ScrollBehavior = "smooth") {
-    document.getElementById(`asset-${id}`)?.scrollIntoView({ behavior, block: "center" });
+    const el = document.getElementById(`asset-${id}`);
+    if (!el) return;
+    const asset = timeline.assets.find((a) => a.id === id);
+    if (asset) preloadFull(media(asset, "preview")).catch(() => {});
+    // A long smooth scroll would start loading every photo on the way:
+    // jump to one screen before the target, then glide the rest.
+    const offset = el.getBoundingClientRect().top - window.innerHeight / 2;
+    if (behavior === "smooth" && Math.abs(offset) > 2 * window.innerHeight) {
+      window.scrollBy({ top: offset - Math.sign(offset) * window.innerHeight, behavior: "instant" });
+    }
+    el.scrollIntoView({ behavior, block: "center" });
     highlighted = id;
     setTimeout(() => (highlighted = highlighted === id ? null : highlighted), 2000);
   }
@@ -227,9 +238,10 @@
             <!-- svelte-ignore a11y_media_has_caption -->
             <video
               controls
-              preload="metadata"
+              preload="none"
               playsinline
-              poster={media(asset, "preview")}
+              poster={media(asset, "thumbnail")}
+              use:progressive={{ full: media(asset, "preview"), attr: "poster" }}
               src={media(asset, "video")}
               width={asset.width}
               height={asset.height}
@@ -239,9 +251,8 @@
             <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
             <img
               onclick={() => openFullscreen(asset)}
-              src={media(asset, "preview")}
-              srcset="{media(asset, 'thumbnail')} 250w, {media(asset, 'preview')} 1440w"
-              sizes="(max-width: 900px) 100vw, 880px"
+              src={media(asset, "thumbnail")}
+              use:progressive={{ full: media(asset, "preview") }}
               alt={asset.caption ?? ""}
               loading="lazy"
               decoding="async"
@@ -549,6 +560,17 @@
 
   img {
     cursor: zoom-in;
+  }
+
+  /* The small thumbnail shows blurred until the large version has loaded;
+     the clip keeps the blur inside the rounded corners. */
+  img {
+    clip-path: inset(0 round var(--radius));
+    transition: filter 0.3s;
+  }
+
+  img:not([data-loaded]) {
+    filter: blur(6px);
   }
 
   .fullscreen {

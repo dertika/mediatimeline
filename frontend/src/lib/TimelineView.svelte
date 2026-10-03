@@ -4,6 +4,7 @@
   import TimelineMap from "./TimelineMap.svelte";
   import { dayKey, formatDay, formatRange, formatTime, placeOf } from "./format";
   import type { MediaUrl } from "./media";
+  import { buildStops, estimateTourSeconds } from "./tour";
   import type { Timeline, TimelineAsset } from "./types";
 
   let {
@@ -19,6 +20,15 @@
 
   let highlighted = $state<string | null>(null);
   const located = $derived(timeline.assets.filter((a) => a.lat !== null));
+
+  /** "6 Orte · 3 Tage · ca. 2 Min." for the tour button. */
+  const tourSummary = $derived.by(() => {
+    const stops = buildStops(timeline.assets, timeline.tour.radiusMeters);
+    const days = new Set(timeline.assets.map((a) => dayKey(a.localDateTime))).size;
+    const minutes = Math.max(1, Math.round(estimateTourSeconds(stops, days, timeline.tour) / 60));
+    const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
+    return `${n(stops.length, "Ort", "Orte")} · ${n(days, "Tag", "Tage")} · ca. ${minutes} Min.`;
+  });
 
   function groupByDay(assets: TimelineAsset[]) {
     const groups: { day: string; label: string; assets: TimelineAsset[] }[] = [];
@@ -83,7 +93,16 @@
   </header>
 
   {#if located.length > 0}
-    <button class="primary start-tour" onclick={startTour}>▶ Tour starten</button>
+    <button class="start-tour" onclick={startTour}>
+      <span class="start-tour-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4" /></svg>
+      </span>
+      <span class="start-tour-text">
+        <span class="start-tour-title">Tour starten</span>
+        <span class="start-tour-meta">{tourSummary}</span>
+      </span>
+      <svg class="start-tour-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+    </button>
     <TimelineMap assets={timeline.assets} {media} onselect={scrollToAsset} />
   {/if}
 
@@ -135,10 +154,84 @@
 {/if}
 
 <style>
+  /* Full-width card: what the tour covers, and roughly how long it takes. */
   .start-tour {
-    margin: 0 0 12px;
-    padding: 8px 16px;
-    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    margin: 4px 0 14px;
+    padding: 14px 16px;
+    border: 0;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #0b3d30));
+    color: var(--accent-contrast);
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s;
+  }
+
+  .start-tour:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
+  .start-tour:active {
+    transform: scale(0.99);
+  }
+
+  .start-tour:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .start-tour-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 0.2);
+  }
+
+  .start-tour-icon svg {
+    width: 20px;
+    height: 20px;
+    margin-left: 3px;
+    fill: currentColor;
+  }
+
+  .start-tour-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .start-tour-title {
+    display: block;
+    font-weight: 700;
+    font-size: 1.05rem;
+  }
+
+  .start-tour-meta {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.85;
+  }
+
+  .start-tour-chevron {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .timeline {

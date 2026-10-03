@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { untrack, type Component, type Snippet } from "svelte";
+  import { onMount, tick, untrack, type Component, type Snippet } from "svelte";
   import { fly } from "svelte/transition";
   import Comments from "./Comments.svelte";
   import TimelineMap from "./TimelineMap.svelte";
@@ -7,6 +7,7 @@
   import type { MediaUrl } from "./media";
   import { preloadFull, progressive } from "./progressive";
   import { loadSeen, newAssetIds, saveSeen } from "./seenMedia";
+  import { fotoParam, photoLink, shareLink } from "./share";
   import { buildStops, estimateTourSeconds, remainingStops, withTrip } from "./tour";
   import { loadPosition, savePosition, type TourPosition } from "./tourProgress";
   import type { Timeline, TimelineAsset } from "./types";
@@ -67,6 +68,14 @@
     }
     el.scrollIntoView({ behavior, block: "center" });
   }
+
+  // A link to a single photo (?foto=<id>) opens the timeline at that photo.
+  onMount(async () => {
+    const id = fotoParam();
+    if (!id || !timeline.assets.some((a) => a.id === id)) return;
+    await tick();
+    scrollToAsset(id, "instant");
+  });
 
   /** Photos seen on this link (page path) in this browser; on the first visit all count as seen. */
   const seenId = location.pathname;
@@ -171,7 +180,7 @@
   async function openFullscreen(asset: TimelineAsset) {
     const { openGallery } = await import("./gallery");
     // Leaving the gallery jumps to the photo that was shown last.
-    await openGallery(timeline.assets, timeline.assets.indexOf(asset), media, (last) =>
+    await openGallery(timeline.assets, timeline.assets.indexOf(asset), media, timeline.title, (last) =>
       scrollToAsset(last.id, "instant"),
     );
   }
@@ -259,7 +268,13 @@
           {/if}
           <figcaption>
             {#if asset.caption}<span class="caption">{asset.caption}</span>{/if}
-            <span class="meta">{formatTime(asset.localDateTime)}{placeOf(asset) ? ` · ${placeOf(asset)}` : ""}</span>
+            <span class="meta">
+              <span>{formatTime(asset.localDateTime)}{placeOf(asset) ? ` · ${placeOf(asset)}` : ""}</span>
+              <button class="share" onclick={() => shareLink(photoLink(asset.id), timeline.title)} aria-label="Link zu diesem Foto teilen" title="Link teilen">
+                <!-- Lucide "share-2" (ISC license) -->
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><path d="m8.6 13.5 6.8 4" /><path d="m15.4 6.5-6.8 4" /></svg>
+              </button>
+            </span>
             <Comments comments={extraComments(asset)} />
           </figcaption>
         </figure>
@@ -603,8 +618,43 @@
   }
 
   .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
     color: var(--muted);
     font-size: 0.875rem;
+  }
+
+  .share {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    margin: -6px -6px -6px 0;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .share:hover,
+  .share:focus-visible {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+  }
+
+  .share svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   footer {

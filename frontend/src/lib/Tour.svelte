@@ -54,6 +54,8 @@
   let arrivalDay = $state<number | null>(null);
   /** "Tag N" card before the first medium of a new day within a place. */
   let dayCard = $state<number | null>(null);
+  /** Keeps the map dimmed between photo and day card, so it does not flash up in between. */
+  let dimmed = $state(false);
   let paused = $state(false);
   /** Last step: flying out to the overview, then the tour closes itself. */
   let ending = $state(false);
@@ -197,6 +199,7 @@
     stopVideo();
     ending = false;
     dayCard = null;
+    dimmed = false;
     const travel = s !== flownTo;
     if (travel) {
       showMedia = false;
@@ -206,21 +209,37 @@
       await flyToStop(s);
       if (my !== run) return;
     }
-    stopIdx = s;
-    itemIdx = i;
     const target = stops[s]!.assets[i]!;
     const newDay = shownDay === null || dayKey(target.localDateTime) !== shownDay;
     if (travel && arrive && i === 0) {
+      stopIdx = s;
+      itemIdx = i;
       arrivalDay = newDay ? dayOf(target) : null;
       arriving = true;
       startTimed(intervalMs, () => showItem(my));
     } else if (arrive && newDay) {
+      // The photo fades out completely before the day card fades in.
+      dimmed = true;
       showMedia = false;
+      await sleep(MEDIA_FADE_MS);
+      if (my !== run) return;
+      stopIdx = s;
+      itemIdx = i;
       dayCard = dayOf(target);
-      startTimed(intervalMs, () => showItem(my));
+      startTimed(intervalMs, () => endDayCard(my));
     } else {
+      stopIdx = s;
+      itemIdx = i;
       showItem(my);
     }
+  }
+
+  /** Fades the day card out before the next photo fades in. */
+  async function endDayCard(my: number) {
+    dayCard = null;
+    // A little longer than the fade, so that it has surely finished.
+    await sleep(MEDIA_FADE_MS + 50);
+    if (my === run) showItem(my);
   }
 
   async function showItem(my: number) {
@@ -228,6 +247,7 @@
     dayCard = null;
     shownDay = dayKey(stops[stopIdx]!.assets[itemIdx]!.localDateTime);
     showMedia = true;
+    dimmed = false;
     soundBlocked = false;
     videoProgress = 0;
     preloadNext();
@@ -282,7 +302,7 @@
       // Skip the rest of the map pause or day card.
       const my = ++run;
       cancelStep();
-      return void showItem(my);
+      return void (dayCard !== null ? endDayCard(my) : showItem(my));
     }
     if (itemIdx + 1 < stops[stopIdx]!.assets.length) return void goTo(stopIdx, itemIdx + 1);
     if (stopIdx + 1 < stops.length) return void goTo(stopIdx + 1, 0);
@@ -304,6 +324,7 @@
     showMedia = false;
     arriving = false;
     dayCard = null;
+    dimmed = false;
     ending = true;
     flownTo = -1;
     route.setLatLngs(stops.map((s) => s.center));
@@ -484,8 +505,11 @@
     </div>
   {/if}
 
-  {#if dayCard !== null && current}
+  {#if showMedia || dayCard !== null || dimmed}
     <div class="veil" transition:fade={{ duration: MEDIA_FADE_MS }}></div>
+  {/if}
+
+  {#if dayCard !== null && current}
     <div class="arrival day" transition:fade={{ duration: MEDIA_FADE_MS }}>
       <h2>Tag {dayCard}</h2>
       <span>{formatDay(current.localDateTime)}</span>
@@ -493,7 +517,6 @@
   {/if}
 
   {#if showMedia && current}
-    <div class="veil" transition:fade={{ duration: MEDIA_FADE_MS }}></div>
     {#key current.id}
       <figure class="media" transition:fade={{ duration: MEDIA_FADE_MS }}>
         {#if current.type === "video"}
@@ -523,7 +546,7 @@
 
   <div class="corner top-left">
     <strong>{timeline.title}</strong>
-    {#if current && (showMedia || dayCard !== null)}
+    {#if current && (showMedia || dayCard !== null || dimmed)}
       <span>{formatDayTime(current.localDateTime)}</span>
       <span>Tag {dayOf(current)} · Ort {stopIdx + 1}/{stops.length} · Foto {itemIdx + 1}/{stops[stopIdx]?.assets.length}</span>
     {:else if arriving && current}

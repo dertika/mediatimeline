@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStops, dayNumber, distanceMeters, flightCurve, flightDuration } from "./tour";
+import { buildStops, dayNumber, distanceMeters, estimateTourSeconds, flightCurve, flightDuration } from "./tour";
 import type { TimelineAsset } from "./types";
 
 let seq = 0;
@@ -118,5 +118,18 @@ describe("dayNumber", () => {
   });
   it("crosses month boundaries", () => {
     expect(dayNumber("2026-05-31T18:00:00.000Z", "2026-06-01T08:00:00.000Z")).toBe(2);
+  });
+});
+
+describe("estimateTourSeconds", () => {
+  const tour = { intervalSeconds: 5, radiusMeters: 1000, videoMaxSeconds: 10 };
+  it("adds overview, flights, map pauses, media and day cards", () => {
+    const stops = buildStops([asset(...BERGEN), asset(...BERGEN), { ...asset(...OSLO), type: "video" }], 1000);
+    // 2 + 2 × (4 + 5) + (5 + 5 + 10) + 1 × 5 + 3
+    expect(estimateTourSeconds(stops, 2, tour)).toBe(48);
+  });
+  it("assumes 20 s for videos played to the end", () => {
+    const stops = buildStops([{ ...asset(...BERGEN), type: "video" }], 1000);
+    expect(estimateTourSeconds(stops, 1, { ...tour, videoMaxSeconds: 0 })).toBe(2 + 9 + 20 + 3);
   });
 });

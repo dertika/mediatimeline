@@ -1,4 +1,4 @@
-import type { TimelineAsset } from "./types";
+import type { TimelineAsset, TourSettings } from "./types";
 
 export type LatLng = [number, number];
 
@@ -112,4 +112,21 @@ export function flightDuration(curveLength: number): number {
 export function dayNumber(firstLocal: string, local: string): number {
   const day = (s: string) => Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10));
   return Math.round((day(local) - day(firstLocal)) / 86_400_000) + 1;
+}
+
+/** Assumed length of a flight and of a video without a length limit, for the estimate. */
+const FLIGHT_SECONDS = 4;
+const VIDEO_SECONDS = 20;
+
+/**
+ * Rough length of a tour in seconds, shown on the start button: overview,
+ * a flight and a map pause per place, every photo and video, a card per
+ * further day and the final overview.
+ */
+export function estimateTourSeconds(stops: TourStop[], days: number, tour: TourSettings): number {
+  const media = stops
+    .flatMap((s) => s.assets)
+    .reduce((sum, a) => sum + (a.type === "video" ? tour.videoMaxSeconds || VIDEO_SECONDS : tour.intervalSeconds), 0);
+  const extraDays = Math.max(0, days - 1);
+  return 2 + stops.length * (FLIGHT_SECONDS + tour.intervalSeconds) + media + extraDays * tour.intervalSeconds + 3;
 }

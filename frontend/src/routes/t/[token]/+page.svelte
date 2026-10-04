@@ -1,6 +1,7 @@
 <script lang="ts">
   import { page } from "$app/state";
   import TimelineView from "$lib/TimelineView.svelte";
+  import { applyAccent } from "$lib/accents";
   import { apiMedia } from "$lib/media";
   import type { Timeline } from "$lib/types";
 
@@ -24,7 +25,12 @@
   async function load() {
     try {
       const res = await fetch(apiBase);
-      if (res.ok) view = { kind: "ready", timeline: await res.json() };
+      if (res.ok) {
+        const timeline: Timeline = await res.json();
+        // Before the page renders: the map reads the accent once when it is built.
+        applyAccent(timeline.accent);
+        view = { kind: "ready", timeline };
+      }
       else if (res.status === 401) view = { kind: "password", title: (await res.json()).title ?? null };
       else if (res.status === 410) view = { kind: "expired" };
       else if (res.status === 404) view = { kind: "notfound" };

@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import type { Accent } from "../accent.js";
 import type { CaptionSource } from "../caption.js";
 
 /** A place picked in the admin, e.g. the start of a trip. */
@@ -34,6 +35,8 @@ export interface Share {
   tripEndSameAsStart: boolean;
   /** Show the real route from GeoPulse instead of straight lines between the photos. */
   showRoute: boolean;
+  /** Accent colour of the shared timeline (see accent.ts). */
+  accent: Accent;
   createdAt: string;
   createdBy: string | null;
 }
@@ -56,6 +59,7 @@ interface ShareRow {
   trip_end: string | null;
   trip_end_same: number;
   show_route: number;
+  accent: string;
   created_at: string;
   created_by: string | null;
 }
@@ -83,6 +87,7 @@ const MIGRATIONS = [
    ALTER TABLE shares ADD COLUMN trip_end TEXT;
    ALTER TABLE shares ADD COLUMN trip_end_same INTEGER NOT NULL DEFAULT 0;`,
   `ALTER TABLE shares ADD COLUMN show_route INTEGER NOT NULL DEFAULT 0;`,
+  `ALTER TABLE shares ADD COLUMN accent TEXT NOT NULL DEFAULT 'gruen';`,
 ];
 
 const placeFromJson = (json: string | null): Place | null => (json ? (JSON.parse(json) as Place) : null);
@@ -106,6 +111,7 @@ function fromRow(r: ShareRow): Share {
     tripEnd: placeFromJson(r.trip_end),
     tripEndSameAsStart: r.trip_end_same === 1,
     showRoute: r.show_route === 1,
+    accent: r.accent as Accent,
     createdAt: r.created_at,
     createdBy: r.created_by,
   };
@@ -129,6 +135,7 @@ export interface ShareUpdate {
   tripEnd?: Place | null;
   tripEndSameAsStart?: boolean;
   showRoute?: boolean;
+  accent?: Accent;
 }
 
 export class ShareStore {
@@ -227,6 +234,10 @@ export class ShareStore {
     if (patch.tripEndSameAsStart !== undefined) {
       sets.push("trip_end_same = ?");
       values.push(patch.tripEndSameAsStart ? 1 : 0);
+    }
+    if (patch.accent !== undefined) {
+      sets.push("accent = ?");
+      values.push(patch.accent);
     }
     if (patch.showRoute !== undefined) {
       sets.push("show_route = ?");

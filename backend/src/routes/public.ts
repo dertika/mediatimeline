@@ -102,6 +102,7 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
       startDate: assets[0]?.localDateTime ?? null,
       endDate: assets.at(-1)?.localDateTime ?? null,
       captionSource,
+      accent: r.share.accent,
       tour: {
         intervalSeconds: r.share.tourIntervalSeconds,
         radiusMeters: r.share.tourRadiusMeters,

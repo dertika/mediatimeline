@@ -352,7 +352,7 @@
     padding: 14px 16px;
     border: 0;
     border-radius: 16px;
-    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #0b3d30));
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, black));
     color: var(--accent-contrast);
     box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 35%, transparent);
     font: inherit;
@@ -504,7 +504,7 @@
     max-width: calc(100vw - 32px);
     transform: translateX(-50%);
     border-radius: 999px;
-    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #0b3d30));
+    background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, black));
     color: var(--accent-contrast);
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.3);
   }

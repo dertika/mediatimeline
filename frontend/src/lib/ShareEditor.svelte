@@ -1,5 +1,6 @@
 <script lang="ts">
   import PlaceInput from "./PlaceInput.svelte";
+  import { ACCENTS } from "./accents";
   import { formatDateTime } from "./format";
   import type { Place, ShareDto } from "./types";
 
@@ -172,6 +173,27 @@
       />
       Alle Kommentare anzeigen (mit Namen)
     </label>
+
+    <fieldset class="accent">
+      <legend>Akzentfarbe</legend>
+      <div class="swatches" role="radiogroup" aria-label="Akzentfarbe">
+        {#each ACCENTS as accent (accent.id)}
+          <label class="swatch" title={accent.label}>
+            <input
+              type="radio"
+              name="accent-{share.id}"
+              value={accent.id}
+              checked={share.accent === accent.id}
+              disabled={busy}
+              onchange={() => patch({ accent: accent.id })}
+            />
+            <span class="dot" style="--light: {accent.light}; --dark: {accent.dark}" aria-hidden="true"></span>
+            {accent.label}
+          </label>
+        {/each}
+      </div>
+      <p class="hint muted">Farbe von Knöpfen, Route und Markierungen der geteilten Timeline (hell und dunkel).</p>
+    </fieldset>
 
     <fieldset class="tour">
       <legend>Tour</legend>
@@ -363,9 +385,62 @@
     font-size: 0.8rem;
   }
 
-  .tour legend {
+  .tour legend,
+  .accent legend {
     padding: 0 4px;
     color: var(--muted);
+  }
+
+  .accent {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px 12px;
+    margin: 0;
+  }
+
+  .swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .grid label.swatch {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .grid label.swatch:has(input:checked) {
+    border-color: var(--text);
+    box-shadow: inset 0 0 0 1px var(--text);
+  }
+
+  .grid label.swatch:has(input:focus-visible) {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+
+  .swatch input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Left half: light mode, right half: dark mode. */
+  .dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--light) 50%, var(--dark) 50%);
+    flex: none;
   }
 
   input[type="number"] {

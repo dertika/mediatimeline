@@ -247,6 +247,19 @@ describe("place search", () => {
   });
 });
 
+describe("accent colour", () => {
+  it("defaults to green, can be chosen from the curated list and reaches the timeline", async () => {
+    const { id, url } = await createShare();
+    const timeline = () => app.inject({ url: `/api/public/timeline/${tokenOf(url)}` }).then((r) => r.json());
+    expect((await timeline()).accent).toBe("gruen");
+    const ok = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { accent: "terrakotta" } });
+    expect(ok.json().accent).toBe("terrakotta");
+    expect((await timeline()).accent).toBe("terrakotta");
+    const bad = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { accent: "#ff0000" } });
+    expect(bad.statusCode).toBe(400);
+  });
+});
+
 describe("GeoPulse route", () => {
   const ROUTE = [{ mode: "CAR", points: [[48.1, 11.5, 1], [48.2, 11.6, 2]] }];
 

@@ -87,6 +87,9 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Ein Teilen-Symbol unter jedem Foto und in der Galerie. Auf dem Handy öffnet `navigator.share`, sonst wird kopiert und der Toast „Link kopiert“ erscheint.
 - `?foto=<id>` springt beim Öffnen zum Foto. Die Linkvorschau zeigt dieses Foto, außer bei Passwort-Links.
 
+### 0.11.0 – Tour nur über neue Fotos (#33)
+- Wunsch: neue Ergänzungen einer laufenden Reise als kurze Tour ansehen. Eigene Karte „Neue Fotos als Tour“ unter „Tour starten“ (nur wenn neue Fotos mit GPS existieren); Tour mit `{...timeline, assets: neu, trip: undefined}`, `dayOrigin` für die richtige Tageszahl, `onshow` markiert gezeigte Fotos als gesehen (Nutzerentscheidung); keine Fortsetzen-Position.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

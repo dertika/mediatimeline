@@ -91,12 +91,23 @@
   /** How long a new photo must be in view to count as seen, so scrolling past doesn't. */
   const SEEN_AFTER_MS = 800;
 
-  const newLabel = $derived.by(() => {
-    const items = timeline.assets.filter((a) => unseen.has(a.id));
+  /** "3 neue Fotos", "1 neues Video", "2 neue Medien". */
+  function newCount(items: TimelineAsset[]) {
     const videos = items.filter((a) => a.type === "video").length;
     if (videos === 0) return n(items.length, "neues Foto", "neue Fotos");
     if (videos === items.length) return n(items.length, "neues Video", "neue Videos");
     return n(items.length, "neues Medium", "neue Medien");
+  }
+
+  /** The new photos not seen yet, as a tour of their own. */
+  const newAssets = $derived(timeline.assets.filter((a) => unseen.has(a.id)));
+  const newLabel = $derived(newCount(newAssets));
+  const newTourStops = $derived(buildStops(newAssets, timeline.tour.radiusMeters));
+  /** "3 neue Fotos · 2 Orte · ca. 1 Min." for the tour of the new photos. */
+  const newTourSummary = $derived.by(() => {
+    const days = new Set(newAssets.map((a) => dayKey(a.localDateTime))).size;
+    const seconds = estimateTourSeconds(newTourStops, days, timeline.tour);
+    return `${newCount(newAssets)} · ${n(newTourStops.length, "Ort", "Orte")} · ${minutes(seconds)}`;
   });
 
   function markSeen(ids: string[]) {
@@ -144,6 +155,8 @@
     media: MediaUrl;
     startAt?: { stop: number; item: number } | null;
     onprogress?: (position: Omit<TourPosition, "savedAt"> | null) => void;
+    onshow?: (assetId: string) => void;
+    dayOrigin?: string;
     onclose: () => void;
   };
   let Tour = $state<Component<TourProps> | null>(null);
@@ -153,6 +166,8 @@
   /** "Ab Ort 3 von 6 · noch ca. 1 Min." for the resume button. */
   const resumeSummary = $derived(saved && `Ab ${saved.label} · noch ${minutes(tourSeconds(saved))}`);
   let startAt = $state<TourPosition | null>(null);
+  /** The tour of the new photos only: just those, without the trip's start and end, frozen at its start. */
+  let newTour = $state<Timeline | null>(null);
 
   function onTourProgress(position: Omit<TourPosition, "savedAt"> | null) {
     saved = position && { ...position, savedAt: Date.now() };
@@ -161,8 +176,9 @@
   /** Scroll position when the tour started; the page returns there afterwards. */
   let tourScrollY = 0;
 
-  async function startTour(fromBeginning = false) {
-    startAt = fromBeginning ? null : saved;
+  async function startTour(fromBeginning = false, onlyNew = false) {
+    newTour = onlyNew ? { ...timeline, assets: newAssets, trip: undefined } : null;
+    startAt = fromBeginning || onlyNew ? null : saved;
     tourScrollY = window.scrollY;
     // Request fullscreen while the click still counts as a user gesture.
     await document.documentElement.requestFullscreen?.().catch(() => {});
@@ -171,6 +187,7 @@
 
   function closeTour() {
     Tour = null;
+    newTour = null;
     // Leaving fullscreen can move the page; stay where the tour was started.
     const restore = () => window.scrollTo({ top: tourScrollY, behavior: "instant" });
     requestAnimationFrame(restore);
@@ -230,6 +247,18 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
         </button>
       </div>
+    {/if}
+    {#if newTourStops.length > 0}
+      <button class="start-tour" onclick={() => startTour(true, true)}>
+        <span class="start-tour-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4" /></svg>
+        </span>
+        <span class="start-tour-text">
+          <span class="start-tour-title">Neue Fotos als Tour</span>
+          <span class="start-tour-meta">{newTourSummary}</span>
+        </span>
+        <svg class="start-tour-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+      </button>
     {/if}
     <TimelineMap assets={timeline.assets} trip={timeline.trip} route={timeline.route} {media} onselect={scrollToAsset} />
   {/if}
@@ -298,7 +327,18 @@
   </div>
 {/if}
 {#if Tour}
-  <Tour {timeline} {media} {startAt} onprogress={onTourProgress} onclose={closeTour} />
+  {#if newTour}
+    <!-- Seen as soon as shown; days still count from the trip's first day; no resume position. -->
+    <Tour
+      timeline={newTour}
+      {media}
+      dayOrigin={timeline.assets[0]?.localDateTime}
+      onshow={(id) => markSeen([id])}
+      onclose={closeTour}
+    />
+  {:else}
+    <Tour {timeline} {media} {startAt} onprogress={onTourProgress} onclose={closeTour} />
+  {/if}
 {/if}
 
 <style>

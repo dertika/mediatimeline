@@ -15,6 +15,8 @@
     media,
     startAt = null,
     onprogress,
+    onshow,
+    dayOrigin,
     onclose,
   }: {
     timeline: Timeline;
@@ -23,6 +25,10 @@
     startAt?: { stop: number; item: number } | null;
     /** Reports where the tour is, or null once it has been watched to the end. */
     onprogress?: (position: { stop: number; item: number; label: string } | null) => void;
+    /** Called with each photo or video as it is shown. */
+    onshow?: (assetId: string) => void;
+    /** Local date-time of the trip's first medium, when the tour covers only part of it: days count from there. */
+    dayOrigin?: string;
     /** Called when the tour ends or is closed. */
     onclose: () => void;
   } = $props();
@@ -128,7 +134,7 @@
   );
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
   // The first stop may be the start of the trip, which has no photos.
-  const firstLocal = stops.find((s) => s.assets.length > 0)?.assets[0]?.localDateTime ?? "";
+  const firstLocal = untrack(() => dayOrigin) ?? stops.find((s) => s.assets.length > 0)?.assets[0]?.localDateTime ?? "";
   const dayOf = (a: TimelineAsset) => dayNumber(firstLocal, a.localDateTime);
 
   // Remember the position for resuming after the page was reloaded or the tour closed.
@@ -315,6 +321,7 @@
     dayCard = null;
     shownDay = dayKey(stops[stopIdx]!.assets[itemIdx]!.localDateTime);
     showMedia = true;
+    onshow?.(stops[stopIdx]!.assets[itemIdx]!.id);
     dimmed = false;
     soundBlocked = false;
     videoProgress = 0;

@@ -8,7 +8,7 @@ Auf einer Adminseite (geschützt durch Authelia) wählst du Immich-Alben aus und
 2. eine **Karte** mit den Aufnahmeorten (Leaflet/OpenStreetMap, Route in zeitlicher Reihenfolge),
 3. alle **Fotos und Videos aufsteigend nach Aufnahmezeit**, nach Tagen gruppiert, mit der Immich-Beschreibung als Bildunterschrift.
 
-**Neue Fotos:** Kommen nach einem Besuch Fotos oder Videos dazu, auch mitten in der Timeline, zeigt die Seite beim nächsten Öffnen unten einen Hinweis wie „3 neue Fotos · Zum nächsten ↓“. Jedes Tippen springt zum nächsten neuen Foto, neue Fotos tragen ein „Neu“-Badge. Als gesehen gilt ein Foto, sobald es kurz im Bild war. Der Hinweis lässt sich mit ✕ ausblenden. Gemerkt wird das im Browser (localStorage), beim ersten Besuch gilt alles als gesehen.
+**Neue Fotos:** Kommen nach einem Besuch Fotos oder Videos dazu, auch mitten in der Timeline, zeigt die Seite beim nächsten Öffnen unten einen Hinweis wie „3 neue Fotos · Zum nächsten ↓“. Jedes Tippen springt zum nächsten neuen Foto, neue Fotos tragen ein „Neu“-Badge. Als gesehen gilt ein Foto, sobald es kurz im Bild war. Der Hinweis lässt sich mit ✕ ausblenden. Gemerkt wird das im Browser (localStorage), beim ersten Besuch gilt alles als gesehen. Gibt es neue Fotos mit Standort, startet „Neue Fotos als Tour“ unter „Tour starten“ eine kurze Tour nur über diese (Tageszählung wie in der ganzen Reise); gezeigte Fotos gelten danach als gesehen.
 
 Fotos erscheinen zuerst als kleines, unscharfes Vorschaubild und werden durch die große Version ersetzt, sobald sie in die Nähe des Bildschirms kommen. Schnelles Scrollen und Sprünge laden so keine großen Bilder auf dem Weg.
 

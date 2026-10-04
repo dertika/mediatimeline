@@ -1,5 +1,6 @@
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
+import { ACCENTS } from "../accent.js";
 import { createAdminGuard } from "../auth/adminGuard.js";
 import { hashPassword } from "../auth/unlock.js";
 import { CAPTION_SOURCES } from "../caption.js";
@@ -37,6 +38,7 @@ const UpdateShareBody = z.object({
   tripEnd: PlaceBody.nullable().optional(),
   tripEndSameAsStart: z.boolean().optional(),
   showRoute: z.boolean().optional(),
+  accent: z.enum(ACCENTS).optional(),
 });
 
 const GeocodeQuery = z.object({ q: z.string().trim().min(2).max(100) });
@@ -71,6 +73,7 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     tripEnd: share.tripEnd,
     tripEndSameAsStart: share.tripEndSameAsStart,
     showRoute: share.showRoute,
+    accent: share.accent,
     createdAt: share.createdAt,
     createdBy: share.createdBy,
   });

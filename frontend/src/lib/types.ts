@@ -44,6 +44,8 @@ export interface Timeline {
   tour: TourSettings;
   /** Missing in timelines from older servers (and the demo before it had one). */
   trip?: Trip;
+  /** Accent colour id (lib/accents.ts); missing from older servers. */
+  accent?: string;
   /** The real route from GeoPulse, when switched on for the link. */
   route?: RouteLeg[] | null;
   assets: TimelineAsset[];
@@ -81,6 +83,7 @@ export interface ShareDto {
   tripEnd: Place | null;
   tripEndSameAsStart: boolean;
   showRoute: boolean;
+  accent: string;
   createdAt: string;
   createdBy: string | null;
 }

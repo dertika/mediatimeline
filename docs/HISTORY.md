@@ -90,6 +90,12 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 ### 0.11.0 – Tour nur über neue Fotos (#33)
 - Wunsch: neue Ergänzungen einer laufenden Reise als kurze Tour ansehen. Eigene Karte „Neue Fotos als Tour“ unter „Tour starten“ (nur wenn neue Fotos mit GPS existieren); Tour mit `{...timeline, assets: neu, trip: undefined}`, `dayOrigin` für die richtige Tageszahl, `onshow` markiert gezeigte Fotos als gesehen (Nutzerentscheidung); keine Fortsetzen-Position.
 
+### 0.12.0 – Akzentfarbe pro Link (#34)
+- Der Nutzer fragte, warum Grün. Ich hatte es selbst gewählt (ruhig, „Natur/Reise“). Fünf Varianten wurden als Screenshots verglichen (hell, dunkel, Tour), dann der Wunsch: im Admin wählbar aus einer kuratierten Liste.
+- Spalte `accent` (Migration 6, Standard `gruen`), zod-Enum in der Admin-API, Feld `accent` im Timeline-JSON. Das Frontend setzt per `applyAccent` ein `<style id="mt-accent">` mit hell/dunkel-Variante, **bevor** die Timeline rendert, denn die Karte liest `--accent` nur beim Aufbau (`accentColor`).
+- Verläufe der Tour-Karten mischen jetzt mit `black` statt einem grünlichen Dunkel, damit andere Farben keinen Grünstich bekommen.
+- Die Verkehrsmittel-Farben der GeoPulse-Legende bleiben fest; Ozeanblau ähnelt dem Auto-Blau, ist aber dunkler.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

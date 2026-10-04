@@ -2,6 +2,11 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.12.0] – 2026-10-04
+
+### Neu
+- Akzentfarbe pro Link: In der Adminseite lässt sich für jede geteilte Timeline eine Farbe aus einer kuratierten Liste wählen (Waldgrün, Ozeanblau, Fjordtürkis, Terrakotta, Aubergine). Sie färbt Knöpfe, Karte, Route und Tour, jeweils mit passender Variante für den Dunkelmodus. Standard bleibt Waldgrün.
+
 ## [0.11.0] – 2026-10-04
 
 ### Neu
@@ -96,6 +101,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.12.0]: https://github.com/dertika/mediatimeline/pull/34
 [0.11.0]: https://github.com/dertika/mediatimeline/pull/33
 [0.10.0]: https://github.com/dertika/mediatimeline/pull/31
 [0.9.1]: https://github.com/dertika/mediatimeline/pull/30

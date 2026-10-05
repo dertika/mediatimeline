@@ -63,6 +63,7 @@ npm run build   # Frontend + Backend
 
 - Beim Springen zu einem Foto **kein grüner Rahmen** (0.8.1).
 - Akzentfarbe pro Link nur aus der **kuratierten Liste** (`backend/src/accent.ts` und `frontend/src/lib/accents.ts`, gleiche IDs, Test prüft Gleichstand und Kontrast), keine freie Farbwahl. Standard Waldgrün, die Adminseite bleibt grün. Neue Farben nur ans Ende anhängen.
+- Tour ab Foto (Option pro Link): startet direkt beim Foto; beim Verlassen zum zuletzt gezeigten Foto, nach komplettem Durchlauf an den Seitenanfang. Galerie dann über ⛶.
 - „Tour starten“ beginnt immer von vorn. **Fortsetzen** ist eine eigene Karte darunter, mit Restzeit, gilt 6 h, mit ✕ entfernbar.
 - Wach-halten: Wake Lock überall. Das unsichtbare Video **nur** bei Opera (`OPR/`) oder fehlender bzw. abgelehnter API, **nie** in WebKit/iOS.
 - Statt Push-Benachrichtigungen: Hinweis-Pille „N neue Fotos · Zum nächsten“. Beim ersten Besuch gilt alles als gesehen.

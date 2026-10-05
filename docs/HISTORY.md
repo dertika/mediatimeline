@@ -101,6 +101,9 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Nutzerentscheidungen: Einstieg **direkt beim Foto** (Tour-Prop `direct`: Karte sofort per `setView` am Ort, `goTo(..., { arrive: false })`, keine Übersicht, kein Flug, keine Orts-/Tageskarte), danach normal weiter bis zum Ende; Abbrechen speichert „Fortsetzen“ wie gewohnt. Die Galerie bleibt über einen ⛶-Knopf am Foto erreichbar (wie bei Videos). Videos bleiben unverändert (Klick spielt ab).
 - `findInStops` (tour.ts) sucht Ort und Position des Fotos; Fotos ohne GPS hängen am vorigen Ort und starten dort.
 
+### 0.13.1 – Tour ab Foto: Position beim Verlassen (#36)
+- Wunsch: Nach einer per Foto gestarteten Tour soll die Seite beim zuletzt gezeigten Foto stehen, nach komplettem Durchlauf oben. `onshow` merkt `lastShown`, `onprogress(null)` bei offener Tour heißt „durchgelaufen“ (das ✕ der Fortsetzen-Karte ruft es ohne offene Tour). Andere Touren kehren weiter zur Startposition zurück.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

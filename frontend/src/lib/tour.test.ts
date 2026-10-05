@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStops, dayNumber, distanceMeters, estimateTourSeconds, flightCurve, flightDuration, remainingStops, withTrip } from "./tour";
+import { buildStops, dayNumber, distanceMeters, estimateTourSeconds, findInStops, flightCurve, flightDuration, remainingStops, withTrip } from "./tour";
 import type { TimelineAsset } from "./types";
 
 let seq = 0;
@@ -158,5 +158,17 @@ describe("withTrip", () => {
   it("leaves the stops alone without a trip", () => {
     expect(withTrip(stops, undefined)).toEqual(stops);
     expect(withTrip(stops, { start: null, end: null })).toEqual(stops);
+  });
+});
+
+describe("findInStops", () => {
+  it("finds an asset's stop and position, counting the trip's start", () => {
+    const stops = withTrip(
+      buildStops([asset(60, 5, "x1"), asset(null, null, "x2"), asset(61, 6, "x3")], 1000),
+      { start: { name: "Zuhause", lat: 59, lng: 4 }, end: null },
+    );
+    expect(findInStops(stops, "x2")).toEqual({ stop: 1, item: 1 });
+    expect(findInStops(stops, "x3")).toEqual({ stop: 2, item: 0 });
+    expect(findInStops(stops, "nope")).toBeNull();
   });
 });

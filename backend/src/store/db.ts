@@ -37,6 +37,8 @@ export interface Share {
   showRoute: boolean;
   /** Accent colour of the shared timeline (see accent.ts). */
   accent: Accent;
+  /** A click on a photo of the timeline starts the tour there instead of the gallery. */
+  photoClickTour: boolean;
   createdAt: string;
   createdBy: string | null;
 }
@@ -60,6 +62,7 @@ interface ShareRow {
   trip_end_same: number;
   show_route: number;
   accent: string;
+  photo_click_tour: number;
   created_at: string;
   created_by: string | null;
 }
@@ -88,6 +91,7 @@ const MIGRATIONS = [
    ALTER TABLE shares ADD COLUMN trip_end_same INTEGER NOT NULL DEFAULT 0;`,
   `ALTER TABLE shares ADD COLUMN show_route INTEGER NOT NULL DEFAULT 0;`,
   `ALTER TABLE shares ADD COLUMN accent TEXT NOT NULL DEFAULT 'gruen';`,
+  `ALTER TABLE shares ADD COLUMN photo_click_tour INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 const placeFromJson = (json: string | null): Place | null => (json ? (JSON.parse(json) as Place) : null);
@@ -112,6 +116,7 @@ function fromRow(r: ShareRow): Share {
     tripEndSameAsStart: r.trip_end_same === 1,
     showRoute: r.show_route === 1,
     accent: r.accent as Accent,
+    photoClickTour: r.photo_click_tour === 1,
     createdAt: r.created_at,
     createdBy: r.created_by,
   };
@@ -136,6 +141,7 @@ export interface ShareUpdate {
   tripEndSameAsStart?: boolean;
   showRoute?: boolean;
   accent?: Accent;
+  photoClickTour?: boolean;
 }
 
 export class ShareStore {
@@ -238,6 +244,10 @@ export class ShareStore {
     if (patch.accent !== undefined) {
       sets.push("accent = ?");
       values.push(patch.accent);
+    }
+    if (patch.photoClickTour !== undefined) {
+      sets.push("photo_click_tour = ?");
+      values.push(patch.photoClickTour ? 1 : 0);
     }
     if (patch.showRoute !== undefined) {
       sets.push("show_route = ?");

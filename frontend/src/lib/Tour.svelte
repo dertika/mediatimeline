@@ -14,6 +14,7 @@
     timeline,
     media,
     startAt = null,
+    direct = false,
     onprogress,
     onshow,
     dayOrigin,
@@ -23,6 +24,8 @@
     media: MediaUrl;
     /** Continue a tour that was left off here instead of starting from the beginning. */
     startAt?: { stop: number; item: number } | null;
+    /** Open right at `startAt`'s photo: no overview, no flight, no place or day card first. */
+    direct?: boolean;
     /** Reports where the tour is, or null once it has been watched to the end. */
     onprogress?: (position: { stop: number; item: number; label: string } | null) => void;
     /** Called with each photo or video as it is shown. */
@@ -550,11 +553,23 @@
       addBackgroundLayer(L, map, map.getZoom());
       prefetchFlight(startAt && stops[startAt.stop] ? startAt.stop : 0);
 
+      const resume = startAt && stops[startAt.stop] ? startAt : null;
+      const item = resume && Math.min(resume.item, Math.max(0, stops[resume.stop]!.assets.length - 1));
+      if (resume && direct) {
+        // Started from a photo of the timeline: already there, show it at once.
+        const { center, zoom } = stopView(resume.stop);
+        map.setView(center, zoom, { animate: false });
+        flownTo = resume.stop;
+        route.setLatLngs(trailTo(resume.stop));
+        here.setLatLng(center);
+        prefetchFlight(resume.stop + 1);
+        goTo(resume.stop, item!, { arrive: false });
+        return;
+      }
       const my = ++run;
       await sleep(OVERVIEW_MS);
       if (my !== run) return;
-      const resume = startAt && stops[startAt.stop] ? startAt : null;
-      if (resume) goTo(resume.stop, Math.min(resume.item, Math.max(0, stops[resume.stop]!.assets.length - 1)));
+      if (resume) goTo(resume.stop, item!);
       else goTo(0, 0);
     })();
 

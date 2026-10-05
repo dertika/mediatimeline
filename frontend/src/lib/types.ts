@@ -63,6 +63,8 @@ export interface TourSettings {
   radiusMeters: number;
   /** 0 = play videos to the end. */
   videoMaxSeconds: number;
+  /** A click on a photo starts the tour there instead of the gallery; missing from older servers. */
+  fromPhoto?: boolean;
 }
 
 export interface ShareDto {
@@ -84,6 +86,7 @@ export interface ShareDto {
   tripEndSameAsStart: boolean;
   showRoute: boolean;
   accent: string;
+  photoClickTour: boolean;
   createdAt: string;
   createdBy: string | null;
 }

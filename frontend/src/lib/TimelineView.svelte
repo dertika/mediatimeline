@@ -8,7 +8,7 @@
   import { preloadFull, progressive } from "./progressive";
   import { loadSeen, newAssetIds, saveSeen } from "./seenMedia";
   import { fotoParam, photoLink, shareLink } from "./share";
-  import { buildStops, estimateTourSeconds, remainingStops, withTrip } from "./tour";
+  import { buildStops, estimateTourSeconds, findInStops, remainingStops, withTrip } from "./tour";
   import { loadPosition, savePosition, type TourPosition } from "./tourProgress";
   import type { Timeline, TimelineAsset } from "./types";
   import { CHANGELOG_URL, VERSION } from "./version";
@@ -27,6 +27,8 @@
   const located = $derived(timeline.assets.filter((a) => a.lat !== null));
 
   const tourStops = $derived(withTrip(buildStops(timeline.assets, timeline.tour.radiusMeters), timeline.trip));
+  /** Set per link: a click on a photo starts the tour there; the gallery moves to the ⛶ button. */
+  const photoTour = $derived(!!timeline.tour.fromPhoto && located.length > 0);
   const n = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
   /** "ca. 2 Min." with non-breaking spaces, so it never wraps apart. */
   const minutes = (seconds: number) => `ca.\u00a0${Math.max(1, Math.round(seconds / 60))}\u00a0Min.`;
@@ -154,6 +156,7 @@
     timeline: Timeline;
     media: MediaUrl;
     startAt?: { stop: number; item: number } | null;
+    direct?: boolean;
     onprogress?: (position: Omit<TourPosition, "savedAt"> | null) => void;
     onshow?: (assetId: string) => void;
     dayOrigin?: string;
@@ -165,7 +168,9 @@
   let saved = $state(loadPosition(progressId));
   /** "Ab Ort 3 von 6 · noch ca. 1 Min." for the resume button. */
   const resumeSummary = $derived(saved && `Ab ${saved.label} · noch ${minutes(tourSeconds(saved))}`);
-  let startAt = $state<TourPosition | null>(null);
+  let startAt = $state<{ stop: number; item: number } | null>(null);
+  /** Started from a photo: the tour opens right at it. */
+  let direct = $state(false);
   /** The tour of the new photos only: just those, without the trip's start and end, frozen at its start. */
   let newTour = $state<Timeline | null>(null);
 
@@ -176,9 +181,10 @@
   /** Scroll position when the tour started; the page returns there afterwards. */
   let tourScrollY = 0;
 
-  async function startTour(fromBeginning = false, onlyNew = false) {
+  async function startTour(fromBeginning = false, onlyNew = false, at: { stop: number; item: number } | null = null) {
     newTour = onlyNew ? { ...timeline, assets: newAssets, trip: undefined } : null;
-    startAt = fromBeginning || onlyNew ? null : saved;
+    startAt = at ?? (fromBeginning || onlyNew ? null : saved);
+    direct = at !== null;
     tourScrollY = window.scrollY;
     // Request fullscreen while the click still counts as a user gesture.
     await document.documentElement.requestFullscreen?.().catch(() => {});
@@ -192,6 +198,12 @@
     const restore = () => window.scrollTo({ top: tourScrollY, behavior: "instant" });
     requestAnimationFrame(restore);
     setTimeout(restore, 300);
+  }
+
+  function onPhotoClick(asset: TimelineAsset) {
+    const at = photoTour ? findInStops(tourStops, asset.id) : null;
+    if (at) startTour(false, false, at);
+    else openFullscreen(asset);
   }
 
   async function openFullscreen(asset: TimelineAsset) {
@@ -285,7 +297,8 @@
           {:else}
             <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
             <img
-              onclick={() => openFullscreen(asset)}
+              class:tour-click={photoTour}
+              onclick={() => onPhotoClick(asset)}
               src={media(asset, "thumbnail")}
               use:progressive={{ full: media(asset, "preview") }}
               alt={asset.caption ?? ""}
@@ -294,6 +307,9 @@
               width={asset.width}
               height={asset.height}
             />
+            {#if photoTour}
+              <button class="fullscreen" onclick={() => openFullscreen(asset)} aria-label="Im Vollbild öffnen">⛶</button>
+            {/if}
           {/if}
           <figcaption>
             {#if asset.caption}<span class="caption">{asset.caption}</span>{/if}
@@ -337,7 +353,7 @@
       onclose={closeTour}
     />
   {:else}
-    <Tour {timeline} {media} {startAt} onprogress={onTourProgress} onclose={closeTour} />
+    <Tour {timeline} {media} {startAt} {direct} onprogress={onTourProgress} onclose={closeTour} />
   {/if}
 {/if}
 
@@ -611,6 +627,10 @@
 
   img {
     cursor: zoom-in;
+  }
+
+  img.tour-click {
+    cursor: pointer;
   }
 
   /* The small thumbnail shows blurred until the large version has loaded;

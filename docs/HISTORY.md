@@ -96,6 +96,11 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Verläufe der Tour-Karten mischen jetzt mit `black` statt einem grünlichen Dunkel, damit andere Farben keinen Grünstich bekommen.
 - Die Verkehrsmittel-Farben der GeoPulse-Legende bleiben fest; Ozeanblau ähnelt dem Auto-Blau, ist aber dunkler.
 
+### 0.13.0 – Tour ab Foto (#35)
+- Wunsch: Klick auf ein Foto startet die Tour dort statt der Galerie, im Admin pro Link schaltbar (Spalte `photo_click_tour`, Migration 7; im Timeline-JSON `tour.fromPhoto`).
+- Nutzerentscheidungen: Einstieg **direkt beim Foto** (Tour-Prop `direct`: Karte sofort per `setView` am Ort, `goTo(..., { arrive: false })`, keine Übersicht, kein Flug, keine Orts-/Tageskarte), danach normal weiter bis zum Ende; Abbrechen speichert „Fortsetzen“ wie gewohnt. Die Galerie bleibt über einen ⛶-Knopf am Foto erreichbar (wie bei Videos). Videos bleiben unverändert (Klick spielt ab).
+- `findInStops` (tour.ts) sucht Ort und Position des Fotos; Fotos ohne GPS hängen am vorigen Ort und starten dort.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

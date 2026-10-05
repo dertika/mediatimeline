@@ -152,3 +152,12 @@ export function withTrip(stops: TourStop[], trip: Trip | undefined): TourStop[] 
     ...(trip?.end ? [waypoint(trip.end, "end")] : []),
   ];
 }
+
+/** Stop and position within it of an asset, to start the tour right there. */
+export function findInStops(stops: TourStop[], assetId: string): { stop: number; item: number } | null {
+  for (const [stop, s] of stops.entries()) {
+    const item = s.assets.findIndex((a) => a.id === assetId);
+    if (item >= 0) return { stop, item };
+  }
+  return null;
+}

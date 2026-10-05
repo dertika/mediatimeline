@@ -231,6 +231,16 @@
           {/each}
         </select>
       </label>
+      <label class="check">
+        <input
+          type="checkbox"
+          checked={share.photoClickTour}
+          disabled={busy}
+          onchange={(e) => patch({ photoClickTour: e.currentTarget.checked })}
+        />
+        Klick auf ein Foto startet die Tour dort
+      </label>
+      <p class="hint muted">Statt der Vollbild-Galerie beginnt die Tour direkt bei dem Foto. Die Galerie bleibt über ⛶ am Foto erreichbar.</p>
     </fieldset>
 
     <fieldset class="trip">

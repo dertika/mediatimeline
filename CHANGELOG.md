@@ -2,6 +2,11 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.13.1] – 2026-10-05
+
+### Geändert
+- Tour ab Foto: Beim Verlassen steht die Seite beim Foto, das die Tour zuletzt gezeigt hat. Ist die Tour ganz durchgelaufen, geht es an den Seitenanfang.
+
 ## [0.13.0] – 2026-10-05
 
 ### Neu
@@ -106,6 +111,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.13.1]: https://github.com/dertika/mediatimeline/pull/36
 [0.13.0]: https://github.com/dertika/mediatimeline/pull/35
 [0.12.0]: https://github.com/dertika/mediatimeline/pull/34
 [0.11.0]: https://github.com/dertika/mediatimeline/pull/33

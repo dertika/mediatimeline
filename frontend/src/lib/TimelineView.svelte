@@ -171,10 +171,15 @@
   let startAt = $state<{ stop: number; item: number } | null>(null);
   /** Started from a photo: the tour opens right at it. */
   let direct = $state(false);
+  /** The photo or video the tour showed last, and whether it ran to the end. */
+  let lastShown: string | null = null;
+  let finished = false;
   /** The tour of the new photos only: just those, without the trip's start and end, frozen at its start. */
   let newTour = $state<Timeline | null>(null);
 
   function onTourProgress(position: Omit<TourPosition, "savedAt"> | null) {
+    // null from a running tour means it was watched to the end (the ✕ of the resume card has no tour open).
+    if (!position && Tour) finished = true;
     saved = position && { ...position, savedAt: Date.now() };
     savePosition(progressId, saved);
   }
@@ -185,6 +190,8 @@
     newTour = onlyNew ? { ...timeline, assets: newAssets, trip: undefined } : null;
     startAt = at ?? (fromBeginning || onlyNew ? null : saved);
     direct = at !== null;
+    lastShown = null;
+    finished = false;
     tourScrollY = window.scrollY;
     // Request fullscreen while the click still counts as a user gesture.
     await document.documentElement.requestFullscreen?.().catch(() => {});
@@ -195,7 +202,10 @@
     Tour = null;
     newTour = null;
     // Leaving fullscreen can move the page; stay where the tour was started.
-    const restore = () => window.scrollTo({ top: tourScrollY, behavior: "instant" });
+    // A tour started from a photo leaves at the last photo shown, or at the top once watched to the end.
+    const last = direct && !finished ? lastShown : null;
+    const top = direct && finished ? 0 : tourScrollY;
+    const restore = () => (last ? scrollToAsset(last, "instant") : window.scrollTo({ top, behavior: "instant" }));
     requestAnimationFrame(restore);
     setTimeout(restore, 300);
   }
@@ -353,7 +363,7 @@
       onclose={closeTour}
     />
   {:else}
-    <Tour {timeline} {media} {startAt} {direct} onprogress={onTourProgress} onclose={closeTour} />
+    <Tour {timeline} {media} {startAt} {direct} onprogress={onTourProgress} onshow={(id) => (lastShown = id)} onclose={closeTour} />
   {/if}
 {/if}
 

@@ -14,6 +14,8 @@ export interface TimelineAsset {
   height: number | null;
   city: string | null;
   country: string | null;
+  /** Liked in the shared album or a favorite of the owner: part of the highlights tour. */
+  liked: boolean;
 }
 
 export interface TimelineComment {
@@ -61,6 +63,7 @@ export function toTimelineAsset(asset: ImmichAsset): TimelineAsset | null {
     height,
     city: exif.city ?? null,
     country: exif.country ?? null,
+    liked: asset.isFavorite === true,
   };
 }
 
@@ -76,6 +79,11 @@ export function groupComments(activities: ImmichActivity[]): Map<string, Timelin
     groups.set(key, list);
   }
   return groups;
+}
+
+/** Assets with at least one like in the shared album. */
+export function likedAssetIds(activities: ImmichActivity[]): Set<string> {
+  return new Set(activities.filter((a) => a.type === "like" && a.assetId).map((a) => a.assetId!));
 }
 
 export function sortByTakenAt(assets: TimelineAsset[]): TimelineAsset[] {
@@ -150,25 +158,30 @@ export class AlbumCache {
   }
 
   private async load(albumId: string): Promise<AlbumSnapshot> {
-    const [album, rawAssets, comments] = await Promise.all([
+    const [album, rawAssets, activities] = await Promise.all([
       this.client.getAlbum(albumId),
       this.client.getAlbumAssets(albumId),
-      this.loadComments(albumId),
+      this.loadActivities(albumId),
     ]);
+    const likes = likedAssetIds(activities);
     const assets = sortByTakenAt(
-      rawAssets.map(toTimelineAsset).filter((a): a is TimelineAsset => a !== null),
+      rawAssets
+        .map(toTimelineAsset)
+        .filter((a): a is TimelineAsset => a !== null)
+        .map((a) => (likes.has(a.id) ? { ...a, liked: true } : a)),
     );
+    const comments = groupComments(activities);
     return { album, assets, assetIds: new Set(assets.map((a) => a.id)), comments };
   }
 
-  /** Comments are optional: without the activity.read permission the timeline still works. */
-  private async loadComments(albumId: string): Promise<Map<string, TimelineComment[]>> {
+  /** Comments and likes are optional: without the activity.read permission the timeline still works. */
+  private async loadActivities(albumId: string): Promise<ImmichActivity[]> {
     try {
-      return groupComments(await this.client.getAlbumComments(albumId));
+      return await this.client.getAlbumActivities(albumId);
     } catch (err) {
       if (err instanceof ImmichError) {
         this.warn("Immich comments not readable (API key without activity.read?)", err);
-        return new Map();
+        return [];
       }
       throw err;
     }

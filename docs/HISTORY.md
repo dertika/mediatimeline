@@ -104,6 +104,11 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 ### 0.13.1 – Tour ab Foto: Position beim Verlassen (#36)
 - Wunsch: Nach einer per Foto gestarteten Tour soll die Seite beim zuletzt gezeigten Foto stehen, nach komplettem Durchlauf oben. `onshow` merkt `lastShown`, `onprogress(null)` bei offener Tour heißt „durchgelaufen“ (das ✕ der Fortsetzen-Karte ruft es ohne offene Tour). Andere Touren kehren weiter zur Startposition zurück.
 
+### 0.14.0 – Highlights als Tour (#37)
+- Wunsch: eine kürzere Tour nur mit den besten Fotos, Knopf erst ab einer Mindestzahl Likes.
+- Nutzerentscheidungen: Highlight = Like im geteilten Album (Immich-Aktivität `type: like`) **oder** Favorit des Besitzers (`isFavorite` aus `search/metadata`). Mindestzahl = Anzahl solcher Fotos, pro Link (`highlight_min_likes`, Migration 8, Standard 5, 0 = aus).
+- Aktivitäten werden jetzt ohne `type`-Filter geholt (ein Aufruf für Kommentare und Likes), `TimelineAsset.liked` im Backend. Die Tour nutzt denselben Teil-Tour-Weg wie „Neue Fotos als Tour“ (`newTour`), aber mit Start und Ziel der Reise; gezeigte Fotos gelten als gesehen.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

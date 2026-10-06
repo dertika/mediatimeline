@@ -112,6 +112,22 @@
     return `${newCount(newAssets)} · ${n(newTourStops.length, "Ort", "Orte")} · ${minutes(seconds)}`;
   });
 
+  /** Liked or favorite photos: a short tour of the best ones, once there are enough of them. */
+  const likedAssets = $derived(timeline.assets.filter((a) => a.liked));
+  const highlightStops = $derived(withTrip(buildStops(likedAssets, timeline.tour.radiusMeters), timeline.trip));
+  const showHighlights = $derived(
+    (timeline.tour.highlightMin ?? 0) > 0 &&
+      likedAssets.length >= timeline.tour.highlightMin! &&
+      likedAssets.some((a) => a.lat !== null),
+  );
+  /** "8 Fotos · 4 Orte · ca. 1 Min." for the highlights tour. */
+  const highlightSummary = $derived.by(() => {
+    const days = new Set(likedAssets.map((a) => dayKey(a.localDateTime))).size;
+    const seconds = estimateTourSeconds(highlightStops, days, timeline.tour);
+    const places = highlightStops.filter((s) => !s.waypoint).length;
+    return `${n(likedAssets.length, "Foto", "Fotos")} · ${n(places, "Ort", "Orte")} · ${minutes(seconds)}`;
+  });
+
   function markSeen(ids: string[]) {
     const fresh = ids.filter((id) => unseen.has(id));
     if (fresh.length === 0) return;
@@ -174,7 +190,7 @@
   /** The photo or video the tour showed last, and whether it ran to the end. */
   let lastShown: string | null = null;
   let finished = false;
-  /** The tour of the new photos only: just those, without the trip's start and end, frozen at its start. */
+  /** A tour of part of the photos (the new ones or the highlights), frozen at its start. */
   let newTour = $state<Timeline | null>(null);
 
   function onTourProgress(position: Omit<TourPosition, "savedAt"> | null) {
@@ -186,9 +202,19 @@
   /** Scroll position when the tour started; the page returns there afterwards. */
   let tourScrollY = 0;
 
-  async function startTour(fromBeginning = false, onlyNew = false, at: { stop: number; item: number } | null = null) {
-    newTour = onlyNew ? { ...timeline, assets: newAssets, trip: undefined } : null;
-    startAt = at ?? (fromBeginning || onlyNew ? null : saved);
+  async function startTour(
+    fromBeginning = false,
+    part: "new" | "highlights" | null = null,
+    at: { stop: number; item: number } | null = null,
+  ) {
+    // The new photos without the trip's start and end; the highlights as a short version of the whole trip.
+    newTour =
+      part === "new"
+        ? { ...timeline, assets: newAssets, trip: undefined }
+        : part === "highlights"
+          ? { ...timeline, assets: likedAssets }
+          : null;
+    startAt = at ?? (fromBeginning || part ? null : saved);
     direct = at !== null;
     lastShown = null;
     finished = false;
@@ -212,7 +238,7 @@
 
   function onPhotoClick(asset: TimelineAsset) {
     const at = photoTour ? findInStops(tourStops, asset.id) : null;
-    if (at) startTour(false, false, at);
+    if (at) startTour(false, null, at);
     else openFullscreen(asset);
   }
 
@@ -271,13 +297,26 @@
       </div>
     {/if}
     {#if newTourStops.length > 0}
-      <button class="start-tour" onclick={() => startTour(true, true)}>
+      <button class="start-tour" onclick={() => startTour(true, "new")}>
         <span class="start-tour-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4" /></svg>
         </span>
         <span class="start-tour-text">
           <span class="start-tour-title">Neue Fotos als Tour</span>
           <span class="start-tour-meta">{newTourSummary}</span>
+        </span>
+        <svg class="start-tour-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+      </button>
+    {/if}
+    {#if showHighlights}
+      <button class="start-tour" onclick={() => startTour(true, "highlights")}>
+        <span class="start-tour-icon" aria-hidden="true">
+          <!-- Lucide "heart" (ISC license) -->
+          <svg class="heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></svg>
+        </span>
+        <span class="start-tour-text">
+          <span class="start-tour-title">Highlights als Tour</span>
+          <span class="start-tour-meta">{highlightSummary}</span>
         </span>
         <svg class="start-tour-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
       </button>
@@ -354,7 +393,7 @@
 {/if}
 {#if Tour}
   {#if newTour}
-    <!-- Seen as soon as shown; days still count from the trip's first day; no resume position. -->
+    <!-- New photos or highlights: seen as soon as shown; days count from the trip's first day; no resume position. -->
     <Tour
       timeline={newTour}
       {media}
@@ -418,6 +457,11 @@
     height: 20px;
     margin-left: 3px;
     fill: currentColor;
+  }
+
+  /* The play triangle sits a little right of center to look centered; the heart does not. */
+  .start-tour-icon svg.heart {
+    margin-left: 0;
   }
 
   .start-tour-text {

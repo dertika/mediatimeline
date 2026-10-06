@@ -62,7 +62,7 @@
 
   /** Saves a whole-number setting; out-of-range input resets the field. */
   async function setNumber(
-    field: "tourIntervalSeconds" | "tourVideoMaxSeconds",
+    field: "tourIntervalSeconds" | "tourVideoMaxSeconds" | "highlightMinLikes",
     min: number,
     max: number,
     event: Event,
@@ -230,6 +230,17 @@
             <option value={m}>{formatRadius(m)}</option>
           {/each}
         </select>
+      </label>
+      <label>
+        Highlight-Tour ab gelikten Fotos (0 = aus)
+        <input
+          type="number"
+          min="0"
+          max="1000"
+          value={share.highlightMinLikes}
+          disabled={busy}
+          onchange={(e) => setNumber("highlightMinLikes", 0, 1000, e)}
+        />
       </label>
       <label class="check">
         <input

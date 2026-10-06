@@ -108,6 +108,7 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
         radiusMeters: r.share.tourRadiusMeters,
         videoMaxSeconds: r.share.tourVideoMaxSeconds,
         fromPhoto: r.share.photoClickTour,
+        highlightMin: r.share.highlightMinLikes,
       },
       trip: {
         start: r.share.tripStart,

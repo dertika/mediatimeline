@@ -16,7 +16,7 @@ function setup() {
   const client = {
     getAlbum,
     getAlbumAssets: async () => [],
-    getAlbumComments: async () => [],
+    getAlbumActivities: async () => [],
   } as unknown as ImmichClient;
   const warn = vi.fn();
   const cache = new AlbumCache(client, TTL, () => now, warn);

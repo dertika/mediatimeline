@@ -19,6 +19,8 @@ export interface TimelineAsset {
   height: number | null;
   city: string | null;
   country: string | null;
+  /** Liked in Immich or a favorite of the owner; missing from older servers. */
+  liked?: boolean;
 }
 
 /** A place picked in the admin, e.g. the start of a trip. */
@@ -65,6 +67,8 @@ export interface TourSettings {
   videoMaxSeconds: number;
   /** A click on a photo starts the tour there instead of the gallery; missing from older servers. */
   fromPhoto?: boolean;
+  /** Liked photos needed for the highlights tour, 0 = off; missing from older servers. */
+  highlightMin?: number;
 }
 
 export interface ShareDto {
@@ -87,6 +91,7 @@ export interface ShareDto {
   showRoute: boolean;
   accent: string;
   photoClickTour: boolean;
+  highlightMinLikes: number;
   createdAt: string;
   createdBy: string | null;
 }

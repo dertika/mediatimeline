@@ -151,7 +151,7 @@ describe("tour settings", () => {
     const shares = (await app.inject({ url: "/api/admin/shares", headers: ADMIN })).json();
     expect(shares[0]).toMatchObject({ tourIntervalSeconds: 5, tourRadiusMeters: 1000, tourVideoMaxSeconds: 30 });
     const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
-    expect(body.tour).toEqual({ intervalSeconds: 5, radiusMeters: 1000, videoMaxSeconds: 30, fromPhoto: false });
+    expect(body.tour).toEqual({ intervalSeconds: 5, radiusMeters: 1000, videoMaxSeconds: 30, fromPhoto: false, highlightMin: 5 });
   });
 
   it("can be changed by the admin", async () => {
@@ -160,7 +160,7 @@ describe("tour settings", () => {
     const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: settings });
     expect(res.json()).toMatchObject(settings);
     const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
-    expect(body.tour).toEqual({ intervalSeconds: 8, radiusMeters: 2000, videoMaxSeconds: 0, fromPhoto: false });
+    expect(body.tour).toEqual({ intervalSeconds: 8, radiusMeters: 2000, videoMaxSeconds: 0, fromPhoto: false, highlightMin: 5 });
   });
 
   it.each([
@@ -268,6 +268,25 @@ describe("tour from a photo", () => {
     const ok = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { photoClickTour: true } });
     expect(ok.json().photoClickTour).toBe(true);
     expect((await timeline()).tour.fromPhoto).toBe(true);
+  });
+});
+
+describe("highlights", () => {
+  it("marks photos liked in the album or favorited by the owner", async () => {
+    const { url } = await createShare();
+    const body = await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` }).then((r) => r.json());
+    const liked = Object.fromEntries(body.assets.map((a: { id: string; liked: boolean }) => [a.id, a.liked]));
+    expect(liked).toEqual({ a1: true, a2: false, a3: true });
+  });
+
+  it("has an adjustable minimum, 0 switches it off", async () => {
+    const { id, url } = await createShare();
+    const ok = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { highlightMinLikes: 0 } });
+    expect(ok.json().highlightMinLikes).toBe(0);
+    const body = await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` }).then((r) => r.json());
+    expect(body.tour.highlightMin).toBe(0);
+    const bad = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { highlightMinLikes: -1 } });
+    expect(bad.statusCode).toBe(400);
   });
 });
 

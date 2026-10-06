@@ -19,6 +19,8 @@ export interface ImmichAsset {
   localDateTime: string;
   duration?: string | null;
   isTrashed?: boolean;
+  /** The album owner's (API key's) favorite heart. */
+  isFavorite?: boolean;
   width?: number | null;
   height?: number | null;
   exifInfo?: ImmichExifInfo | null;
@@ -124,11 +126,9 @@ export class ImmichClient {
     }
   }
 
-  /** All comments of an album (on the album itself and on its assets). */
-  getAlbumComments(albumId: string): Promise<ImmichActivity[]> {
-    return this.json<ImmichActivity[]>(
-      `/activities?albumId=${encodeURIComponent(albumId)}&type=comment`,
-    );
+  /** All comments and likes of an album (on the album itself and on its assets). */
+  getAlbumActivities(albumId: string): Promise<ImmichActivity[]> {
+    return this.json<ImmichActivity[]>(`/activities?albumId=${encodeURIComponent(albumId)}`);
   }
 
   /**

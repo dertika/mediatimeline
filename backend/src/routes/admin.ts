@@ -40,6 +40,7 @@ const UpdateShareBody = z.object({
   showRoute: z.boolean().optional(),
   accent: z.enum(ACCENTS).optional(),
   photoClickTour: z.boolean().optional(),
+  highlightMinLikes: z.number().int().min(0).max(1000).optional(),
 });
 
 const GeocodeQuery = z.object({ q: z.string().trim().min(2).max(100) });
@@ -76,6 +77,7 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     showRoute: share.showRoute,
     accent: share.accent,
     photoClickTour: share.photoClickTour,
+    highlightMinLikes: share.highlightMinLikes,
     createdAt: share.createdAt,
     createdBy: share.createdBy,
   });

@@ -26,7 +26,7 @@ export const albums: (ImmichAlbum & { assets: ImmichAsset[] })[] = [
     startDate: "2026-06-01T08:00:00Z",
     endDate: "2026-06-03T18:00:00Z",
     assets: [
-      asset("a3", "IMAGE", "2026-06-03T18:00:00Z", { description: "Abschied", latitude: 59.9, longitude: 10.7 }),
+      { ...asset("a3", "IMAGE", "2026-06-03T18:00:00Z", { description: "Abschied", latitude: 59.9, longitude: 10.7 }), isFavorite: true },
       asset("a1", "IMAGE", "2026-06-01T08:00:00Z", { description: "  Ankunft  ", latitude: 60.4, longitude: 5.3 }),
       asset("a2", "VIDEO", "2026-06-02T12:00:00Z", { orientation: "6" }),
       { ...asset("a4", "IMAGE", "2026-06-02T13:00:00Z"), isTrashed: true },

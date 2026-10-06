@@ -2,6 +2,11 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.14.0] – 2026-10-06
+
+### Neu
+- Highlights als Tour: Fotos, die im geteilten Immich-Album geliked oder vom Besitzer als Favorit markiert wurden, lassen sich als kurze eigene Tour abspielen (mit Start und Ziel der Reise). Die Karte „Highlights als Tour“ erscheint erst ab einer Mindestzahl solcher Fotos, pro Link in der Adminseite einstellbar (Standard 5, 0 = aus).
+
 ## [0.13.1] – 2026-10-05
 
 ### Geändert
@@ -111,6 +116,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.14.0]: https://github.com/dertika/mediatimeline/pull/37
 [0.13.1]: https://github.com/dertika/mediatimeline/pull/36
 [0.13.0]: https://github.com/dertika/mediatimeline/pull/35
 [0.12.0]: https://github.com/dertika/mediatimeline/pull/34

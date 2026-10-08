@@ -122,7 +122,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
-[0.15.0]: https://github.com/dertika/mediatimeline/pull/39
+[0.15.0]: https://github.com/dertika/mediatimeline/pull/49
 [0.14.0]: https://github.com/dertika/mediatimeline/pull/37
 [0.13.1]: https://github.com/dertika/mediatimeline/pull/36
 [0.13.0]: https://github.com/dertika/mediatimeline/pull/35

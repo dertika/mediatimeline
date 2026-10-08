@@ -1,4 +1,4 @@
-# Build: podman build -f deploy/Containerfile -t mediatimeline:latest .
+# Build: podman build -f deploy/Dockerfile -t mediatimeline:latest .
 
 FROM docker.io/library/node:22-alpine AS build
 WORKDIR /src

@@ -1,0 +1,81 @@
+name: iOS
+
+# Builds the iOS app (ios/) and runs its tests on a macOS runner: the Swift
+# package's unit tests and UI tests in the simulator against the real backend
+# with an Immich mock (ios/e2e). Screenshots are uploaded as an artifact.
+on:
+  push:
+    branches: [main]
+    paths: ["ios/**", "backend/src/**", ".github/workflows/ios.yml"]
+  pull_request:
+    paths: ["ios/**", "backend/src/**", ".github/workflows/ios.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: xcodebuild -version && swift --version
+
+      - name: Unit tests (MediaTimelineKit)
+        run: swift test --package-path ios/MediaTimelineKit
+
+      - name: Start backend with Immich mock
+        run: |
+          npm ci
+          npm run build -w backend
+          ios/e2e/start.sh >> "$GITHUB_ENV"
+
+      - name: Pick a simulator
+        run: |
+          udid="$(xcrun simctl list devices available -j | node -e '
+            const devices = JSON.parse(require("fs").readFileSync(0, "utf8")).devices;
+            const runtimes = Object.keys(devices).filter((k) => k.includes("iOS"))
+              .sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+            for (const r of runtimes) {
+              const phone = devices[r].find((d) => /^iPhone \d+( Pro)?$/.test(d.name));
+              if (phone) { console.error(r, phone.name); console.log(phone.udid); break; }
+            }')"
+          echo "SIMULATOR=$udid" >> "$GITHUB_ENV"
+
+      - name: Build and run UI tests
+        run: |
+          xcodebuild test \
+            -project ios/MediaTimeline.xcodeproj \
+            -scheme MediaTimeline \
+            -destination "id=$SIMULATOR" \
+            -resultBundlePath "$RUNNER_TEMP/MediaTimeline.xcresult" \
+            CODE_SIGNING_ALLOWED=NO
+        env:
+          TEST_RUNNER_PUBLIC_LINK: ${{ env.PUBLIC_LINK }}
+          TEST_RUNNER_PASSWORD_LINK: ${{ env.PASSWORD_LINK }}
+          TEST_RUNNER_SCREENSHOT_DIR: ${{ runner.temp }}/screenshots
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-screenshots
+          path: ${{ runner.temp }}/screenshots
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: ios-test-results
+          path: |
+            ${{ runner.temp }}/MediaTimeline.xcresult
+            ${{ env.E2E_LOGS }}
+          if-no-files-found: ignore

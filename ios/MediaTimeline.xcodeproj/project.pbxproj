@@ -1,0 +1,405 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		3C7C4A011C538F0BFC1CBA7B /* MediaTimelineKit in Frameworks */ = {isa = PBXBuildFile; productRef = 19FB22CB99C77EAC1051B55B /* MediaTimelineKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E69E6446E892E3922E76C82E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DD7512F5E0289CDDCE66B0F8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0BDBB2C325525E986D55EF50;
+			remoteInfo = MediaTimeline;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		5141EFFF35ACD6C51F274E4D /* MediaTimeline.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MediaTimeline.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1E775F3141CFC5D980E45961 /* MediaTimelineUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MediaTimelineUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		EBD7D41D33224AA9D96E9E09 /* MediaTimeline */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MediaTimeline;
+			sourceTree = "<group>";
+		};
+		3B59B78538836B61EBCA9BA2 /* MediaTimelineUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = MediaTimelineUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D559DD42EEC179AF0A55B8E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3C7C4A011C538F0BFC1CBA7B /* MediaTimelineKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DE30A0F4B27A6B03FBB67970 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		186495F7DA296BF880DF3A22 = {
+			isa = PBXGroup;
+			children = (
+				EBD7D41D33224AA9D96E9E09 /* MediaTimeline */,
+				3B59B78538836B61EBCA9BA2 /* MediaTimelineUITests */,
+				D71BD8A0B6A6AA54EDBA6454 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D71BD8A0B6A6AA54EDBA6454 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				5141EFFF35ACD6C51F274E4D /* MediaTimeline.app */,
+				1E775F3141CFC5D980E45961 /* MediaTimelineUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0BDBB2C325525E986D55EF50 /* MediaTimeline */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3310DDD30EFB4A8C6AB9C189 /* Build configuration list for PBXNativeTarget "MediaTimeline" */;
+			buildPhases = (
+				C5459B89CEFDD994ADAF9BE2 /* Sources */,
+				8D559DD42EEC179AF0A55B8E /* Frameworks */,
+				F631AA1EB59CA78A63BB2E35 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				EBD7D41D33224AA9D96E9E09 /* MediaTimeline */,
+			);
+			name = MediaTimeline;
+			packageProductDependencies = (
+				19FB22CB99C77EAC1051B55B /* MediaTimelineKit */,
+			);
+			productName = MediaTimeline;
+			productReference = 5141EFFF35ACD6C51F274E4D /* MediaTimeline.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3D44624A0E5D3B1C548E90E0 /* MediaTimelineUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FBCFEB368D62B30C0B493830 /* Build configuration list for PBXNativeTarget "MediaTimelineUITests" */;
+			buildPhases = (
+				6F7E65E3C7E11A0F8587D003 /* Sources */,
+				DE30A0F4B27A6B03FBB67970 /* Frameworks */,
+				38A8FD81B5BE1FD0A917F98D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A72EC9C8E41B0DCD5B470268 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				3B59B78538836B61EBCA9BA2 /* MediaTimelineUITests */,
+			);
+			name = MediaTimelineUITests;
+			productName = MediaTimelineUITests;
+			productReference = 1E775F3141CFC5D980E45961 /* MediaTimelineUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DD7512F5E0289CDDCE66B0F8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					0BDBB2C325525E986D55EF50 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+					3D44624A0E5D3B1C548E90E0 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = 0BDBB2C325525E986D55EF50;
+					};
+				};
+			};
+			buildConfigurationList = B9EACD5B950CEA3A53B1A8E9 /* Build configuration list for PBXProject "MediaTimeline" */;
+			developmentRegion = de;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				de,
+				Base,
+			);
+			mainGroup = 186495F7DA296BF880DF3A22;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				FF339D2D42E713AE3F90E7B6 /* XCLocalSwiftPackageReference "MediaTimelineKit" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = D71BD8A0B6A6AA54EDBA6454 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0BDBB2C325525E986D55EF50 /* MediaTimeline */,
+				3D44624A0E5D3B1C548E90E0 /* MediaTimelineUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		F631AA1EB59CA78A63BB2E35 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		38A8FD81B5BE1FD0A917F98D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C5459B89CEFDD994ADAF9BE2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6F7E65E3C7E11A0F8587D003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A72EC9C8E41B0DCD5B470268 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0BDBB2C325525E986D55EF50 /* MediaTimeline */;
+			targetProxy = E69E6446E892E3922E76C82E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		ADF824CAEF0CEF6B0E0F81DF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		0FE75A5189C2EA3F123621D0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E182EBBC166D73366E798681 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = mediatimeline;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.dertika.mediatimeline;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5B61A1B298A0D06EFA6933A9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = mediatimeline;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 0.15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.dertika.mediatimeline;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		0567D71E18493993A98DD6C4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.dertika.mediatimeline.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = MediaTimeline;
+			};
+			name = Debug;
+		};
+		1F72410DEECD85B61B1C8FFC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 0.15.0;
+				PRODUCT_BUNDLE_IDENTIFIER = io.github.dertika.mediatimeline.uitests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = MediaTimeline;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B9EACD5B950CEA3A53B1A8E9 /* Build configuration list for PBXProject "MediaTimeline" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ADF824CAEF0CEF6B0E0F81DF /* Debug */,
+				0FE75A5189C2EA3F123621D0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3310DDD30EFB4A8C6AB9C189 /* Build configuration list for PBXNativeTarget "MediaTimeline" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E182EBBC166D73366E798681 /* Debug */,
+				5B61A1B298A0D06EFA6933A9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FBCFEB368D62B30C0B493830 /* Build configuration list for PBXNativeTarget "MediaTimelineUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0567D71E18493993A98DD6C4 /* Debug */,
+				1F72410DEECD85B61B1C8FFC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		FF339D2D42E713AE3F90E7B6 /* XCLocalSwiftPackageReference "MediaTimelineKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = MediaTimelineKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		19FB22CB99C77EAC1051B55B /* MediaTimelineKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FF339D2D42E713AE3F90E7B6 /* XCLocalSwiftPackageReference "MediaTimelineKit" */;
+			productName = MediaTimelineKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = DD7512F5E0289CDDCE66B0F8 /* Project object */;
+}

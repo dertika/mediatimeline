@@ -1,0 +1,6 @@
+xcuserdata/
+*.xcuserstate
+MediaTimelineKit/.build/
+MediaTimelineKit/.swiftpm/
+DerivedData/
+*.xcresult

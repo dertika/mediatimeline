@@ -1,6 +1,6 @@
 # Build: podman build -f deploy/Dockerfile -t mediatimeline:latest .
 
-FROM docker.io/library/node:22-alpine AS build
+FROM docker.io/library/node:26-alpine AS build
 WORKDIR /src
 COPY package.json package-lock.json ./
 COPY backend/package.json backend/
@@ -10,7 +10,7 @@ COPY backend backend
 COPY frontend frontend
 RUN npm run build
 
-FROM docker.io/library/node:22-alpine
+FROM docker.io/library/node:26-alpine
 ENV NODE_ENV=production \
     MEDIATIMELINE_CONFIG=/config/config.yaml \
     MEDIATIMELINE_DATA_DIR=/data

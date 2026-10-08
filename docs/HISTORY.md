@@ -109,6 +109,10 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Nutzerentscheidungen: Highlight = Like im geteilten Album (Immich-Aktivität `type: like`) **oder** Favorit des Besitzers (`isFavorite` aus `search/metadata`). Mindestzahl = Anzahl solcher Fotos, pro Link (`highlight_min_likes`, Migration 8, Standard 5, 0 = aus).
 - Aktivitäten werden jetzt ohne `type`-Filter geholt (ein Aufruf für Kommentare und Likes), `TimelineAsset.liked` im Backend. Die Tour nutzt denselben Teil-Tour-Weg wie „Neue Fotos als Tour“ (`newTour`), aber mit Start und Ziel der Reise; gezeigte Fotos gelten als gesehen.
 
+### Dependabot (kein Release, PR #38)
+- `.github/dependabot.yml`: wöchentlich npm (backend, frontend), GitHub Actions und das Basis-Image. Minor/Patch je Ökosystem gebündelt.
+- `deploy/Containerfile` heißt jetzt `deploy/Dockerfile`, weil Dependabot nur nach diesem Namen sucht. Podman baut sie unverändert (`podman build -f deploy/Dockerfile`).
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

@@ -5,7 +5,7 @@ services:
     # `podman-compose build` builds the image locally instead
     build:
       context: ..
-      dockerfile: deploy/Containerfile
+      dockerfile: deploy/Dockerfile
     container_name: mediatimeline
     restart: unless-stopped
     ports:

@@ -46,7 +46,7 @@ Der Immich-API-Key verlässt nie das Backend: alle Bilder und Videos werden übe
 # 1. Image holen (wird von GitHub Actions gebaut, siehe unten)
 podman pull ghcr.io/dertika/mediatimeline:latest
 #    oder lokal bauen:
-#    podman build -f deploy/Containerfile -t mediatimeline:latest .
+#    podman build -f deploy/Dockerfile -t mediatimeline:latest .
 
 # 2. Konfiguration anlegen
 mkdir -p ~/.config/mediatimeline
@@ -160,7 +160,7 @@ backend/   Fastify-Server (TypeScript)
 frontend/  SvelteKit (statisch, SPA)
   src/routes/admin/       Adminseite
   src/routes/t/[token]/   öffentliche Timeline
-deploy/    Containerfile, Quadlet, Compose, nginx
+deploy/    Dockerfile, Quadlet, Compose, nginx
 ```
 
 Daten liegen in `/data/mediatimeline.db` (SQLite) und `/data/session-secret`.

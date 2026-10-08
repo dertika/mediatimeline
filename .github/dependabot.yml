@@ -1,0 +1,37 @@
+# Weekly check for new versions. Minor and patch updates of one ecosystem
+# arrive as a single pull request, major updates one by one.
+version: 2
+updates:
+  # backend and frontend are npm workspaces with one lockfile in the root.
+  - package-ecosystem: npm
+    directories:
+      - /backend
+      - /frontend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
+
+  # The base image (node:22-alpine) in deploy/Dockerfile.
+  - package-ecosystem: docker
+    directory: /deploy
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [dependencies]

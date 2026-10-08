@@ -90,8 +90,11 @@ final class MediaTimelineUITests: XCTestCase {
         let url = try link("PUBLIC_LINK")
         app.launch()
         open("Schau mal: \(url)?foto=p4")
-        waitForTimeline()
-        XCTAssertTrue(app.buttons["asset-p4"].firstMatch.isHittable)
+        // Scrolled down to the photo: the title at the top is not on screen.
+        let photo = app.buttons["asset-p4"].firstMatch
+        XCTAssertTrue(photo.waitForExistence(timeout: 30))
+        sleep(2)
+        XCTAssertTrue(photo.isHittable)
         screenshot("08-photo-link")
     }
 

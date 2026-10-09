@@ -15,6 +15,20 @@ updates:
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
+    # Big jumps are done by hand on purpose:
+    # - @types/node has to follow the Node version in deploy/Dockerfile.
+    # - TypeScript 7 needs one shared lockfile change for backend and frontend.
+    # - adapter-static 4 needs SvelteKit 3, which is only a prerelease.
+    # - cookie 2 is a major rewrite that has to be checked first.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@sveltejs/adapter-static"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: cookie
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
@@ -27,7 +41,8 @@ updates:
       actions-minor-patch:
         update-types: [minor, patch]
 
-  # The base image (node:22-alpine) in deploy/Dockerfile.
+  # The base image (node:22-alpine) in deploy/Dockerfile. A new Node major
+  # is switched by hand after the app has run on it (node:sqlite, argon2).
   - package-ecosystem: docker
     directory: /deploy
     schedule:
@@ -35,3 +50,8 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     labels: [dependencies]
+    ignore:
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+      - dependency-name: library/node
+        update-types: ["version-update:semver-major"]

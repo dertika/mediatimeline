@@ -116,6 +116,7 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 ### Dependabot: Major-Updates ignoriert (kein Release)
 - Der erste Lauf öffnete neun PRs. Grün waren nur die Pages-Aktionen (#42–#44) und das Image mit Node 26 (#39, aber die CI startet das Image nicht und testet auf Node 22). Rot: TypeScript 7 (Lock-Datei von backend und frontend getrennt aktualisiert, `npm ci` bricht ab), `@types/node` 26, `cookie` 2, `adapter-static` 4 (braucht SvelteKit 3, nur als Vorabversion).
 - Entscheidung: große Sprünge dieser Pakete (und der Node-Version im Image) per `ignore` stummschalten, kleine Updates laufen weiter. Ein Node-Wechsel braucht einen Start des Containers (`node:sqlite`, argon2) und ein gleichzeitiges Anheben von `@types/node`.
+- Nachtrag: Die ersten npm-PRs änderten nur die `package.json` des Workspace-Pakets, nicht die Lock-Datei im Wurzelordner, und scheiterten an `npm ci`. Der npm-Eintrag beobachtet jetzt den Wurzelordner (`directory: /`). Zusätzlich wird der Major von `@sveltejs/kit` ignoriert, weil SvelteKit 3 und `adapter-static` 4 zusammen von Hand gewechselt werden.
 
 ## Test-Setup in der Cloud-Sitzung
 

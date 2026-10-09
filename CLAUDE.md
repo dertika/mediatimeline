@@ -57,7 +57,7 @@ npm run build   # Frontend + Backend
 
 - Jede Änderung: neuer Eintrag oben in `CHANGELOG.md` (Keep a Changelog, deutsch, mit PR-Link unten). Dazu die gleiche Version in den drei `package.json` (Root, backend, frontend), danach `npm install --package-lock-only`. `frontend/src/lib/version.test.ts` erzwingt den Gleichstand.
 - Die Version steht in der Fußzeile (Admin, Timeline, Demo) und kommt per Vite `__APP_VERSION__` aus `frontend/package.json`.
-- Dependabot (`.github/dependabot.yml`, wöchentlich: npm, GitHub Actions, Basis-Image in `deploy/Dockerfile`) öffnet PRs für neue Versionen. Die bekommen keinen eigenen Changelog-Eintrag oder Versionssprung; beim nächsten Release kommt ein Sammel-Eintrag.
+- Dependabot (`.github/dependabot.yml`, wöchentlich: npm, GitHub Actions, Basis-Image in `deploy/Dockerfile`) öffnet PRs für neue Versionen. Die bekommen keinen eigenen Changelog-Eintrag oder Versionssprung; beim nächsten Release kommt ein Sammel-Eintrag. Major-Updates von Node (Image), `@types/node`, TypeScript, `cookie` und `adapter-static` ignoriert Dependabot bewusst: Die macht man von Hand und mit Test (`@types/node` folgt der Node-Version im Dockerfile).
 - **Keine Git-Tags pushen:** Der Sitzungs-Proxy erlaubt nur den Arbeitsbranch. Der Nutzer braucht keine Tags, er betreibt `latest` mit `podman auto-update`.
 
 ## Bewusste Entscheidungen (nicht ohne Rückfrage ändern)

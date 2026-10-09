@@ -41,7 +41,7 @@ jobs:
           SITE_URL: ${{ steps.pages.outputs.base_url || 'https://dertika.github.io/mediatimeline' }}
           # Google Chrome (preinstalled on the runner) plays H.264, Playwright's Chromium does not.
           PLAYWRIGHT_CHANNEL: chrome
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 

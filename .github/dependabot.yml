@@ -2,11 +2,11 @@
 # arrive as a single pull request, major updates one by one.
 version: 2
 updates:
-  # backend and frontend are npm workspaces with one lockfile in the root.
+  # backend and frontend are npm workspaces with one lockfile in the root, so
+  # Dependabot has to look at the root: only there it updates the lockfile too
+  # (per workspace folder its pull requests left npm ci failing).
   - package-ecosystem: npm
-    directories:
-      - /backend
-      - /frontend
+    directory: /
     schedule:
       interval: weekly
       day: monday
@@ -18,7 +18,7 @@ updates:
     # Big jumps are done by hand on purpose:
     # - @types/node has to follow the Node version in deploy/Dockerfile.
     # - TypeScript 7 needs one shared lockfile change for backend and frontend.
-    # - adapter-static 4 needs SvelteKit 3, which is only a prerelease.
+    # - SvelteKit 3 and adapter-static 4 belong together and are switched together.
     # - cookie 2 is a major rewrite that has to be checked first.
     ignore:
       - dependency-name: "@types/node"
@@ -26,6 +26,8 @@ updates:
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
       - dependency-name: "@sveltejs/adapter-static"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@sveltejs/kit"
         update-types: ["version-update:semver-major"]
       - dependency-name: cookie
         update-types: ["version-update:semver-major"]

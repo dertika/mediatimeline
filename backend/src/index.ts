@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildApp } from "./app.js";
 import { loadConfig } from "./config.js";
+import { dataDirProblem } from "./dataDir.js";
 import { ShareStore } from "./store/db.js";
 
 /** Uses server.sessionSecret, or creates a persistent random secret in the data dir. */
@@ -18,6 +19,12 @@ function sessionSecret(configured: string | undefined, dataDir: string): string 
 
 const config = loadConfig();
 config.server.staticDir ??= resolve(fileURLToPath(import.meta.url), "../../public");
+
+const problem = dataDirProblem(config.server.dataDir);
+if (problem) {
+  console.error(problem);
+  process.exit(1);
+}
 
 const store = new ShareStore(join(config.server.dataDir, "mediatimeline.db"));
 const app = await buildApp({

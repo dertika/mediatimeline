@@ -67,6 +67,31 @@ podman run -d --name mediatimeline -p 127.0.0.1:8080:8080 \
 
 Alternativ: `podman-compose -f deploy/compose.yaml up -d` (erwartet `config.yaml` im Repo-Root).
 
+### Docker und Bind Mounts: Rechte für `/data`
+
+Der Container läuft als Nutzer `node` mit **uid/gid 1000** und muss in `/data` schreiben dürfen (SQLite-Datenbank, `session-secret`). Podman regelt das mit der Volume-Option `:U` selbst. **Docker kennt `:U` nicht.** Ein Bind Mount auf einen Ordner, der root gehört (z. B. mit `sudo mkdir` angelegt), ist dann nicht beschreibbar. Der Dienst bricht beim Start ab und nennt im Log die uid und beide Lösungen:
+
+**A – Ordner dem Container-Nutzer geben (empfohlen):**
+
+```sh
+sudo mkdir -p /srv/mediatimeline/data
+sudo chown -R 1000:1000 /srv/mediatimeline/data
+```
+
+```yaml
+    volumes:
+      - ./config.yaml:/config/config.yaml:ro
+      - /srv/mediatimeline/data:/data
+```
+
+**B – Container als Besitzer des Ordners starten:** `user:` auf uid und gid des Ordners setzen (`stat -c '%u:%g' /srv/mediatimeline/data` zeigt sie). Das geht auch mit `"0:0"`, also root. Dann läuft der Dienst im Container aber mit Root-Rechten, deshalb lieber A oder einen eigenen Nutzer.
+
+```yaml
+    user: "1001:1001"   # uid:gid des Datenordners, notfalls "0:0" (root)
+```
+
+Ein Docker-managed Volume (wie in `deploy/compose.yaml`) braucht nichts davon: Docker übernimmt beim ersten Start den Besitzer aus dem Image.
+
 Die Quadlet-Unit setzt `AutoUpdate=registry`; mit `podman auto-update` (oder dem Timer `podman-auto-update.timer`) wird ein neues `latest`-Image automatisch geholt und der Dienst neu gestartet.
 
 ### Container-Image (GitHub Actions)
@@ -167,4 +192,4 @@ frontend/  SvelteKit (statisch, SPA)
 deploy/    Dockerfile, Quadlet, Compose, nginx
 ```
 
-Daten liegen in `/data/mediatimeline.db` (SQLite) und `/data/session-secret`.
+Daten liegen in `/data/mediatimeline.db` (SQLite) und `/data/session-secret`. `/data` muss für den Container-Nutzer (uid 1000) beschreibbar sein, siehe „Docker und Bind Mounts“.

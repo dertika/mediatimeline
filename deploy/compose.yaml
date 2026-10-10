@@ -12,6 +12,10 @@ services:
       - "127.0.0.1:8080:8080"
     volumes:
       - ../config.yaml:/config/config.yaml:ro,Z
+      # :U (Podman only) gives the volume to the container user (uid 1000).
+      # Docker ignores it: with a bind mount instead of the named volume, run
+      # `sudo chown -R 1000:1000 <dir>` or set `user:` to the dir's uid:gid
+      # (see README, "Docker und Bind Mounts").
       - mediatimeline-data:/data:U,Z
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/healthz || exit 1"]

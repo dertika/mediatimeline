@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.15.1] – 2026-10-10
+
+### Geändert
+- Ist das Datenverzeichnis `/data` nicht beschreibbar, bricht der Dienst mit einer verständlichen Meldung ab: Er nennt die uid, unter der er läuft, und die beiden Lösungen (Ordner per `chown` übergeben oder den Container mit `user:` als Besitzer des Ordners starten). Bisher kam nur „unable to open database file“ von SQLite.
+
+### Dokumentation
+- README: Abschnitt „Docker und Bind Mounts“. Der Container läuft als uid 1000; die Volume-Option `:U` gibt es nur bei Podman. Beschrieben sind beide Wege, `chown` auf 1000 oder `user:` auf den Besitzer des Ordners (auch root). Dazu ein Hinweis in `deploy/compose.yaml`.
+
 ## [0.15.0] – 2026-10-08
 
 ### Neu
@@ -122,6 +130,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.15.1]: https://github.com/dertika/mediatimeline/pull/PRNUM
 [0.15.0]: https://github.com/dertika/mediatimeline/pull/49
 [0.14.0]: https://github.com/dertika/mediatimeline/pull/37
 [0.13.1]: https://github.com/dertika/mediatimeline/pull/36

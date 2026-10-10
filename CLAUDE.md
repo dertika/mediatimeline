@@ -28,6 +28,7 @@ frontend/src/lib/
   share.ts             Foto-Links ?foto=<id>, navigator.share / Zwischenablage, Toast
   tourProgress.ts      Tour-Position zum Fortsetzen (6 h)
 site/                  GitHub-Pages-Projektseite mit Demo (Commons-Fotos) und Tour-Videos
+ios/                   iPhone-App (SwiftUI, iOS 17+): MediaTimelineKit (Logik + Tests), App, UI-Tests, e2e/ (Immich-Mock)
 deploy/                Dockerfile, Quadlet, Compose, nginx-Beispiel (mit optionalem Bild-Cache)
 ```
 
@@ -37,6 +38,8 @@ deploy/                Dockerfile, Quadlet, Compose, nginx-Beispiel (mit optiona
 npm run check   # svelte-check + tsc
 npm test        # Vitest Backend + Frontend
 npm run build   # Frontend + Backend
+# iOS: kein Swift in der Sitzung. Build + Tests nur über .github/workflows/ios.yml (macOS),
+# Screenshots landen verkleinert auf dem Branch ci/ios-screenshots (git fetch).
 ```
 
 ## Arbeitsweise mit dem Nutzer
@@ -56,6 +59,7 @@ npm run build   # Frontend + Backend
 ## Versionierung
 
 - Jede Änderung: neuer Eintrag oben in `CHANGELOG.md` (Keep a Changelog, deutsch, mit PR-Link unten). Dazu die gleiche Version in den drei `package.json` (Root, backend, frontend), danach `npm install --package-lock-only`. `frontend/src/lib/version.test.ts` erzwingt den Gleichstand.
+- Die iOS-App hat dieselbe Version (`MARKETING_VERSION` in `ios/MediaTimeline.xcodeproj/project.pbxproj`, beide Configs), ebenfalls vom Versionstest geprüft.
 - Die Version steht in der Fußzeile (Admin, Timeline, Demo) und kommt per Vite `__APP_VERSION__` aus `frontend/package.json`.
 - Dependabot (`.github/dependabot.yml`, wöchentlich: npm, GitHub Actions, Basis-Image in `deploy/Dockerfile`) öffnet PRs für neue Versionen. Die bekommen keinen eigenen Changelog-Eintrag oder Versionssprung; beim nächsten Release kommt ein Sammel-Eintrag. Major-Updates von Node (Image), `@types/node`, TypeScript, `cookie`, `@sveltejs/kit` und `adapter-static` ignoriert Dependabot bewusst: Die macht man von Hand und mit Test (`@types/node` folgt der Node-Version im Dockerfile).
 - **Keine Git-Tags pushen:** Der Sitzungs-Proxy erlaubt nur den Arbeitsbranch. Der Nutzer braucht keine Tags, er betreibt `latest` mit `podman auto-update`.

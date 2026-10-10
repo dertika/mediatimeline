@@ -21,6 +21,9 @@ concurrency:
 jobs:
   test:
     runs-on: macos-15
+    permissions:
+      # Only to publish the screenshots to the ci/ios-screenshots branch (pull requests).
+      contents: write
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7
@@ -63,6 +66,29 @@ jobs:
           TEST_RUNNER_PUBLIC_LINK: ${{ env.PUBLIC_LINK }}
           TEST_RUNNER_PASSWORD_LINK: ${{ env.PASSWORD_LINK }}
           TEST_RUNNER_SCREENSHOT_DIR: ${{ runner.temp }}/screenshots
+
+      # Small JPEGs on a separate branch (overwritten on every run), so the
+      # screenshots can be looked at without downloading the artifact.
+      - name: Publish screenshots to ci/ios-screenshots
+        if: always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          TOKEN: ${{ github.token }}
+        run: |
+          shots="$RUNNER_TEMP/screenshots"
+          [ -d "$shots" ] || exit 0
+          out="$RUNNER_TEMP/shots-branch"
+          mkdir -p "$out"
+          for f in "$shots"/*.png; do
+            sips -Z 1000 -s format jpeg -s formatOptions 70 "$f" --out "$out/$(basename "${f%.png}").jpg" >/dev/null
+          done
+          cd "$out"
+          printf 'Screenshots of the iOS UI tests for %s (PR #%s).\n' "$HEAD_SHA" "$PR_NUMBER" > README.md
+          git init -q -b ci/ios-screenshots
+          git add -A
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "iOS screenshots for $HEAD_SHA"
+          git push -qf "https://x-access-token:$TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:ci/ios-screenshots
 
       - uses: actions/upload-artifact@v4
         if: always()

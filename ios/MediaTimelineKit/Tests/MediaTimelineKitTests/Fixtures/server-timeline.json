@@ -1,0 +1,129 @@
+{
+  "title": "Norwegen 2026",
+  "description": "Mit dem Auto und dem Schiff durch die Fjorde.",
+  "startDate": "2026-06-01T09:00:00.000Z",
+  "endDate": "2026-06-03T18:30:00.000Z",
+  "captionSource": "descriptionOrFirstComment",
+  "accent": "ozean",
+  "tour": {
+    "intervalSeconds": 5,
+    "radiusMeters": 1000,
+    "videoMaxSeconds": 30,
+    "fromPhoto": false,
+    "highlightMin": 5
+  },
+  "trip": {
+    "start": {
+      "name": "Hamburg",
+      "lat": 53.55,
+      "lng": 9.99
+    },
+    "end": null
+  },
+  "route": null,
+  "albumComments": [
+    {
+      "author": "Anna",
+      "text": "Was f\u00fcr eine Reise!",
+      "createdAt": "2026-06-04T10:00:00.000Z"
+    }
+  ],
+  "assets": [
+    {
+      "id": "p1",
+      "type": "image",
+      "takenAt": "2026-06-01T09:00:00.000Z",
+      "localDateTime": "2026-06-01T09:00:00.000Z",
+      "lat": 60.3975,
+      "lng": 5.3242,
+      "width": 1600,
+      "height": 1200,
+      "city": "Bergen",
+      "country": "Norwegen",
+      "liked": true,
+      "caption": "Bryggen am Morgen",
+      "comments": []
+    },
+    {
+      "id": "p1b",
+      "type": "image",
+      "takenAt": "2026-06-01T10:30:00.000Z",
+      "localDateTime": "2026-06-01T10:30:00.000Z",
+      "lat": 60.3925,
+      "lng": 5.3221,
+      "width": 1200,
+      "height": 1600,
+      "city": "Bergen",
+      "country": "Norwegen",
+      "liked": false,
+      "caption": null,
+      "comments": []
+    },
+    {
+      "id": "nx",
+      "type": "image",
+      "takenAt": "2026-06-02T08:00:00.000Z",
+      "localDateTime": "2026-06-02T08:00:00.000Z",
+      "lat": null,
+      "lng": null,
+      "width": 1600,
+      "height": 1200,
+      "city": null,
+      "country": null,
+      "liked": false,
+      "caption": null,
+      "comments": []
+    },
+    {
+      "id": "p2",
+      "type": "image",
+      "takenAt": "2026-06-02T14:00:00.000Z",
+      "localDateTime": "2026-06-02T14:00:00.000Z",
+      "lat": 62.1015,
+      "lng": 7.2059,
+      "width": 1600,
+      "height": 1200,
+      "city": "Geiranger",
+      "country": "Norwegen",
+      "liked": true,
+      "caption": "Geirangerfjord",
+      "comments": [
+        {
+          "author": "Ben",
+          "text": "Da will ich auch hin.",
+          "createdAt": "2026-06-04T11:00:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "p3",
+      "type": "image",
+      "takenAt": "2026-06-02T15:00:00.000Z",
+      "localDateTime": "2026-06-02T15:00:00.000Z",
+      "lat": 62.1049,
+      "lng": 7.0941,
+      "width": 1600,
+      "height": 1200,
+      "city": "Geiranger",
+      "country": "Norwegen",
+      "liked": false,
+      "caption": null,
+      "comments": []
+    },
+    {
+      "id": "p4",
+      "type": "image",
+      "takenAt": "2026-06-03T18:30:00.000Z",
+      "localDateTime": "2026-06-03T18:30:00.000Z",
+      "lat": 59.9139,
+      "lng": 10.7522,
+      "width": 1600,
+      "height": 1200,
+      "city": "Oslo",
+      "country": "Norwegen",
+      "liked": false,
+      "caption": "Oper von Oslo",
+      "comments": []
+    }
+  ]
+}

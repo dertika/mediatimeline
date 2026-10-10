@@ -118,6 +118,16 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Entscheidung: große Sprünge dieser Pakete (und der Node-Version im Image) per `ignore` stummschalten, kleine Updates laufen weiter. Ein Node-Wechsel braucht einen Start des Containers (`node:sqlite`, argon2) und ein gleichzeitiges Anheben von `@types/node`.
 - Nachtrag: Die ersten npm-PRs änderten nur die `package.json` des Workspace-Pakets, nicht die Lock-Datei im Wurzelordner, und scheiterten an `npm ci`. Der npm-Eintrag beobachtet jetzt den Wurzelordner (`directory: /`). Zusätzlich wird der Major von `@sveltejs/kit` ignoriert, weil SvelteKit 3 und `adapter-static` 4 zusammen von Hand gewechselt werden.
 
+### 0.15.0 – iPhone-App (#49)
+- Wunsch: native SwiftUI-App. Nutzerentscheidungen: nur Betrachter (Tour später), Installation per Xcode aufs eigene iPhone (Mac vorhanden), Code unter `ios/` im selben Repo.
+- Aufbau: `MediaTimelineKit` (Swift-Paket ohne UI: Modelle, API, Link-Erkennung, Tage/Orte wie `buildStops`, „neue Fotos“, gespeicherte Links), App mit synchronisierten Ordnern (Xcode 16, `objectVersion 77`, von Hand geschriebenes pbxproj), iOS 17 (MapKit für SwiftUI, Swift 5 Sprachmodus).
+- Passwort-Links: Das Unlock-Cookie liegt im gemeinsamen `HTTPCookieStorage`; AVPlayer bekommt es explizit über `AVURLAssetHTTPCookiesKey`.
+- http nur im lokalen Netz (`NSAllowsLocalNetworking`), deshalb laufen die UI-Tests gegen `http://localhost:8080`.
+- In der Sitzung gibt es kein Swift (Download gesperrt). Gebaut und getestet wird nur im Workflow `ios.yml` auf `macos-15`: `swift test`, dann echtes Backend + `ios/e2e/immich-mock.mjs` (PNG-Verläufe), UI-Tests im Simulator (öffentlicher Link, Foto-Link, Passwort, Demo).
+- Artefakt-Downloads (Azure-Blob) sind über den Sitzungs-Proxy gesperrt. Auf Nutzerwunsch legt der Workflow die Screenshots verkleinert auf den Branch `ci/ios-screenshots` (Force-Push bei jedem Lauf).
+- Stolperfalle: Nach dem Sprung zu `?foto=` ist der Titel aus dem LazyVStack entladen, der Test wartet deshalb auf das Foto.
+- Nur im Simulator getestet, nicht auf einem echten iPhone.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

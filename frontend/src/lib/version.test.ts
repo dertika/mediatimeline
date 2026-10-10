@@ -12,6 +12,12 @@ describe("version", () => {
     expect(versionOf("../../../backend/package.json")).toBe(VERSION);
   });
 
+  it("is the version of the iOS app", () => {
+    const versions = read("../../../ios/MediaTimeline.xcodeproj/project.pbxproj").match(/MARKETING_VERSION = [^;]+;/g);
+    expect(versions?.length).toBeGreaterThan(0);
+    expect(new Set(versions)).toEqual(new Set([`MARKETING_VERSION = ${VERSION};`]));
+  });
+
   it("has an entry at the top of the changelog", () => {
     const first = read("../../../CHANGELOG.md").match(/^## \[(\d+\.\d+\.\d+)\]/m)?.[1];
     expect(first).toBe(VERSION);

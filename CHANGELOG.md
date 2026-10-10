@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.15.0] – 2026-10-08
+
+### Neu
+- iPhone-App (SwiftUI, iOS 17+) unter `ios/` zum Ansehen geteilter Links: Link einfügen oder aus einer Nachricht übernehmen, zuletzt geöffnete Timelines mit Cover, Timeline nach Tagen mit Bildunterschriften und Kommentaren, Karte mit MapKit (Orte mit Foto, Start/Ziel, GeoPulse-Route mit Legende), Vollbild-Galerie mit Zoom und Videos, Foto-Links teilen und öffnen, Passwort-Links, Hinweis auf neue Fotos, Akzentfarbe und Dunkelmodus, dazu die Demo der Projektseite. Die Tour fehlt noch. Installation über Xcode, siehe `ios/README.md`.
+- GitHub Actions baut die App auf macOS und testet sie im Simulator gegen das echte Backend (mit Immich-Mock), inklusive Screenshots.
+
 ## [0.14.0] – 2026-10-06
 
 ### Neu
@@ -116,6 +122,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.15.0]: https://github.com/dertika/mediatimeline/pull/49
 [0.14.0]: https://github.com/dertika/mediatimeline/pull/37
 [0.13.1]: https://github.com/dertika/mediatimeline/pull/36
 [0.13.0]: https://github.com/dertika/mediatimeline/pull/35

@@ -1,0 +1,11 @@
+# Backend config for the iOS UI tests (see start.sh).
+immich:
+  url: http://127.0.0.1:9999
+  apiKey: dev
+server:
+  port: 8080
+  host: 0.0.0.0
+  trustedProxies: ["loopback"]
+  sessionSecret: "ios-ui-tests-session-secret-0123456789abcdef"
+cache:
+  albumTtlSeconds: 300

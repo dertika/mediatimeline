@@ -128,6 +128,14 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Stolperfalle: Nach dem Sprung zu `?foto=` ist der Titel aus dem LazyVStack entladen, der Test wartet deshalb auf das Foto.
 - Nur im Simulator getestet, nicht auf einem echten iPhone.
 
+### 0.16.0 – OpenID Connect für die Adminseite (#57)
+- Wunsch: OIDC zusätzlich zum Authelia-Header, gedacht für andere Umgebungen. Beim Nutzer bleibt der Header-Weg, OIDC ist dort aus.
+- Nutzerentscheidungen: Zugriff über `admin.allowedGroups` (Gruppen aus dem Token), Bibliothek `openid-client` (v6), keine zweite nginx-Datei, dafür ein README-Abschnitt.
+- `backend/src/auth/oidc.ts`: Login mit PKCE (S256), `state` und `nonce` in einem kurzlebigen signierten Cookie (`mt_oidc`), Sitzung als zustandsloses signiertes Cookie (`mt_admin`, mit dem vorhandenen `sessionSecret`). Der Anbieter wird erst beim ersten Login abgefragt (falscher Issuer lässt den Dienst nicht abstürzen). Gruppen kommen aus dem ID-Token, sonst vom Userinfo-Endpunkt, denn Authelia legt Claims standardmäßig nur dort ab.
+- `adminGuard.ts`: Header zuerst, sonst Sitzung. Bei Sitzung und Änderungen (POST/PATCH/DELETE) wird ein fremder `Origin` abgewiesen. `/api/admin/me` meldet `via: "header" | "oidc"`, die 401-Antwort `login`, wenn OIDC an ist.
+- Getestet nur gegen eine Test-Attrappe (`backend/test/mockOidc.ts`, mit `jose`), nicht gegen einen echten Anbieter. `http` für den Issuer ist nur für localhost erlaubt (so läuft die Attrappe).
+- Nicht enthalten: Liste erlaubter Benutzer, Abmeldung beim Anbieter, mehrere Anbieter.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

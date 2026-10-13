@@ -10,6 +10,7 @@ import { Geocoder } from "./geocoder.js";
 import { GeoPulseClient } from "./geopulse.js";
 import { AlbumCache } from "./immich/cache.js";
 import { ImmichClient, ImmichError } from "./immich/client.js";
+import { OidcProvider, oidcRoutes } from "./auth/oidc.js";
 import { adminRoutes } from "./routes/admin.js";
 import { previewRoutes } from "./routes/preview.js";
 import { publicRoutes } from "./routes/public.js";
@@ -79,6 +80,10 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
     return reply.code(immichOk ? 200 : 503).send({ ok: immichOk, immich: immichOk });
   });
 
+  if (config.admin.oidc) {
+    const oidc = new OidcProvider(config.admin.oidc);
+    await app.register(async (scope) => oidcRoutes(scope, config, oidc));
+  }
   await app.register(async (scope) => publicRoutes(scope, deps));
   await app.register(async (scope) => adminRoutes(scope, deps));
 

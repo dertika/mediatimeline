@@ -32,6 +32,18 @@ admin:
   groupsHeader: Remote-Groups
   # Nur diese Authelia-Gruppen dürfen die Adminseite nutzen (leer = jeder angemeldete Benutzer)
   allowedGroups: ["admins"]
+  # Optional zweiter Weg: Anmeldung über OpenID Connect (Keycloak, Authentik, Authelia als
+  # OIDC-Anbieter, …), wenn kein nginx mit Authelia-Header vorgeschaltet ist.
+  # Braucht server.publicBaseUrl. Rücksprungadresse beim Anbieter:
+  # <publicBaseUrl>/api/auth/callback
+  # oidc:
+  #   issuer: https://id.example.com
+  #   clientId: mediatimeline
+  #   clientSecret: ""        # oder MEDIATIMELINE_OIDC_CLIENT_SECRET(_FILE); leer = öffentlicher Client mit PKCE
+  #   scopes: ["openid", "profile", "email", "groups"]
+  #   usernameClaim: preferred_username
+  #   groupsClaim: groups      # gegen allowedGroups geprüft
+  #   sessionHours: 12
 
 cache:
   # Wie lange Albuminhalte aus Immich zwischengespeichert werden (Sekunden).

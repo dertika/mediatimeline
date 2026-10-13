@@ -73,7 +73,7 @@ describe("admin guard", () => {
 
   it("returns the current user", async () => {
     const res = await app.inject({ url: "/api/admin/me", headers: ADMIN });
-    expect(res.json()).toEqual({ name: "alice", groups: ["users", "admins"], geopulse: false });
+    expect(res.json()).toEqual({ name: "alice", groups: ["users", "admins"], geopulse: false, via: "header" });
   });
 });
 

@@ -36,4 +36,47 @@ describe("config", () => {
     });
     expect(withGeoPulse.geopulse).toEqual({ url: "http://geopulse:8080", apiKey: "from-secret", privacyRadiusMeters: 1000 });
   });
+
+  describe("OpenID Connect", () => {
+    const base = { immich: { url: "https://i.example", apiKey: "k" }, server: { publicBaseUrl: "https://t.example" } };
+    const oidc = { issuer: "https://id.example/", clientId: "mt", clientSecret: "s" };
+
+    it("is off by default and has defaults when it is set", () => {
+      expect(parseConfig(base).admin.oidc).toBeUndefined();
+      const config = parseConfig({ ...base, admin: { oidc } });
+      expect(config.admin.oidc).toEqual({
+        issuer: "https://id.example",
+        clientId: "mt",
+        clientSecret: "s",
+        scopes: ["openid", "profile", "email", "groups"],
+        usernameClaim: "preferred_username",
+        groupsClaim: "groups",
+        sessionHours: 12,
+      });
+    });
+
+    it("needs server.publicBaseUrl for the return address", () => {
+      expect(() => parseConfig({ immich: base.immich, admin: { oidc } })).toThrow(/publicBaseUrl/);
+    });
+
+    it("accepts http only for a provider on this machine", () => {
+      expect(() => parseConfig({ ...base, admin: { oidc: { ...oidc, issuer: "http://id.example" } } })).toThrow(/admin\.oidc\.issuer/);
+      expect(parseConfig({ ...base, admin: { oidc: { ...oidc, issuer: "http://127.0.0.1:9000" } } }).admin.oidc?.issuer).toBe(
+        "http://127.0.0.1:9000",
+      );
+    });
+
+    it("reads the client secret from the environment or a file", () => {
+      const dir = mkdtempSync(join(tmpdir(), "mt-"));
+      const path = join(dir, "config.yaml");
+      writeFileSync(
+        path,
+        "immich:\n  url: https://a.example\n  apiKey: k\nserver:\n  publicBaseUrl: https://t.example\nadmin:\n  oidc:\n    issuer: https://id.example\n    clientId: mt\n",
+      );
+      writeFileSync(join(dir, "secret"), "from-file\n");
+      expect(loadConfig({ MEDIATIMELINE_CONFIG: path }).admin.oidc?.clientSecret).toBeUndefined();
+      expect(loadConfig({ MEDIATIMELINE_CONFIG: path, MEDIATIMELINE_OIDC_CLIENT_SECRET_FILE: join(dir, "secret") }).admin.oidc?.clientSecret).toBe("from-file");
+      expect(loadConfig({ MEDIATIMELINE_CONFIG: path, MEDIATIMELINE_OIDC_CLIENT_SECRET: "from-env" }).admin.oidc?.clientSecret).toBe("from-env");
+    });
+  });
 });

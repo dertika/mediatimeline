@@ -5,8 +5,12 @@
   import { CHANGELOG_URL, VERSION } from "$lib/version";
 
   let albums = $state<AdminAlbum[]>([]);
-  let user = $state<{ name: string; geopulse?: boolean } | null>(null);
+  let user = $state<{ name: string; geopulse?: boolean; via?: "header" | "oidc" } | null>(null);
   let status = $state<"loading" | "ready" | "unauthorized" | "error">("loading");
+  /** Set by the server when the admin page can also sign in with OpenID Connect. */
+  let loginUrl = $state<string | null>(null);
+  /** Result of a sign-in that went wrong, from ?login=… of the return address. */
+  const loginResult = new URLSearchParams(location.search).get("login");
   let query = $state("");
   let onlyShared = $state(false);
   let creating = $state<string | null>(null);
@@ -16,6 +20,8 @@
     try {
       const [meRes, albumsRes] = await Promise.all([fetch("/api/admin/me"), fetch("/api/admin/immich/albums")]);
       if (meRes.status === 401 || meRes.status === 403) {
+        const body = await meRes.json().catch(() => null);
+        loginUrl = typeof body?.login === "string" ? body.login : null;
         status = "unauthorized";
         return;
       }
@@ -26,6 +32,11 @@
     } catch {
       status = "error";
     }
+  }
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    location.assign("/admin");
   }
 
   async function createShare(album: AdminAlbum) {
@@ -73,11 +84,28 @@
       <h1>mediatimeline</h1>
       <p class="muted">Alben aus Immich auswählen und als öffentliche Timeline teilen.</p>
     </div>
-    {#if user}<span class="muted">Angemeldet als <strong>{user.name}</strong></span>{/if}
+    {#if user}
+      <span class="muted who">
+        Angemeldet als <strong>{user.name}</strong>
+        {#if user.via === "oidc"}<button onclick={logout}>Abmelden</button>{/if}
+      </span>
+    {/if}
   </header>
 
   {#if status === "loading"}
     <p class="muted">Lade Alben …</p>
+  {:else if status === "unauthorized" && loginUrl}
+    <section class="login">
+      <h2>Anmelden</h2>
+      {#if loginResult === "forbidden"}
+        <p class="error">Dieses Konto darf die Verwaltung nicht nutzen.</p>
+      {:else if loginResult === "failed"}
+        <p class="error">Die Anmeldung hat nicht geklappt. Bitte noch einmal versuchen.</p>
+      {:else}
+        <p class="muted">Die Verwaltung ist nur für angemeldete Administratoren.</p>
+      {/if}
+      <a class="button primary" href="{loginUrl}?return=/admin">Mit OpenID Connect anmelden</a>
+    </section>
   {:else if status === "unauthorized"}
     <p class="error">Kein Zugriff. Bitte über Authelia anmelden.</p>
     <button onclick={() => location.reload()}>Neu laden</button>
@@ -154,6 +182,40 @@
 
   header p {
     margin: 4px 0 0;
+  }
+
+  .who {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .login {
+    max-width: 420px;
+    margin: 32px auto;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .login h2,
+  .login p {
+    margin: 0;
+  }
+
+  .login .button {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-weight: 600;
   }
 
   .toolbar {

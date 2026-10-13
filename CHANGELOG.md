@@ -2,6 +2,14 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.17.0] – 2026-10-14
+
+### Geändert
+- Der Radius für „das ist ein Ort“ ist in der Adminseite jetzt ein Zahlenfeld in Metern (100 bis 50000) statt einer Auswahl. Bestehende Einstellungen bleiben unverändert und erscheinen mit ihrem Wert.
+
+### Performance
+- Die Tour lädt die nächsten zwei Fotos oder Videos schon vor, bevor sie dran sind: Bilder werden geladen und dekodiert, bei Videos das Vorschaubild und der Anfang des Videos. Das Laden beginnt früh, schon während der Ortskarte, der Tageskarte und des Flugs. Ein Foto blendet erst ein, wenn es bereit ist (höchstens 2,5 Sekunden Wartezeit), damit kein leerer Rahmen erscheint.
+
 ## [0.16.0] – 2026-10-13
 
 ### Neu
@@ -135,6 +143,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.17.0]: https://github.com/dertika/mediatimeline/pull/58
 [0.16.0]: https://github.com/dertika/mediatimeline/pull/57
 [0.15.1]: https://github.com/dertika/mediatimeline/pull/56
 [0.15.0]: https://github.com/dertika/mediatimeline/pull/49

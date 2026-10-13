@@ -57,12 +57,9 @@
     setTimeout(() => (copied = false), 1500);
   }
 
-  const RADIUS_OPTIONS = [250, 500, 1000, 2000, 5000, 10000];
-  const formatRadius = (m: number) => (m >= 1000 ? `${m / 1000} km` : `${m} m`);
-
   /** Saves a whole-number setting; out-of-range input resets the field. */
   async function setNumber(
-    field: "tourIntervalSeconds" | "tourVideoMaxSeconds" | "highlightMinLikes",
+    field: "tourIntervalSeconds" | "tourVideoMaxSeconds" | "tourRadiusMeters" | "highlightMinLikes",
     min: number,
     max: number,
     event: Event,
@@ -220,16 +217,16 @@
         />
       </label>
       <label>
-        Radius für einen Ort
-        <select
+        Radius für einen Ort (m)
+        <input
+          type="number"
+          min="100"
+          max="50000"
+          step="50"
           value={share.tourRadiusMeters}
           disabled={busy}
-          onchange={(e) => patch({ tourRadiusMeters: Number(e.currentTarget.value) })}
-        >
-          {#each RADIUS_OPTIONS.includes(share.tourRadiusMeters) ? RADIUS_OPTIONS : [...RADIUS_OPTIONS, share.tourRadiusMeters].sort((a, b) => a - b) as m (m)}
-            <option value={m}>{formatRadius(m)}</option>
-          {/each}
-        </select>
+          onchange={(e) => setNumber("tourRadiusMeters", 100, 50000, e)}
+        />
       </label>
       <label>
         Highlight-Tour ab gelikten Fotos (0 = aus)
@@ -251,6 +248,10 @@
         />
         Klick auf ein Foto startet die Tour dort
       </label>
+      <p class="hint muted">
+        Radius: Fotos, die höchstens so weit vom Mittelpunkt eines Orts entfernt sind, zählen in der Tour als derselbe Ort
+        (100 bis 50000 Meter).
+      </p>
       <p class="hint muted">Statt der Vollbild-Galerie beginnt die Tour direkt bei dem Foto. Die Galerie bleibt über ⛶ am Foto erreichbar.</p>
     </fieldset>
 

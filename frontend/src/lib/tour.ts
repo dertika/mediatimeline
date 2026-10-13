@@ -140,6 +140,16 @@ export function remainingStops(stops: TourStop[], from: { stop: number; item: nu
   return stops.slice(from.stop).map((s, i) => (i === 0 ? { ...s, assets: s.assets.slice(from.item) } : s));
 }
 
+/** The first `count` photos and videos from a stop and item on, in tour order, across places; start and end stops have none. */
+export function assetsFrom(stops: TourStop[], stop: number, item: number, count: number): TimelineAsset[] {
+  const found: TimelineAsset[] = [];
+  for (let s = stop; s < stops.length && found.length < count; s++) {
+    const assets = stops[s]!.assets;
+    for (let i = s === stop ? item : 0; i < assets.length && found.length < count; i++) found.push(assets[i]!);
+  }
+  return found;
+}
+
 /** Adds the start and end of the trip (if set) as stops without photos. */
 export function withTrip(stops: TourStop[], trip: Trip | undefined): TourStop[] {
   const waypoint = (place: Place, kind: "start" | "end"): TourStop => {

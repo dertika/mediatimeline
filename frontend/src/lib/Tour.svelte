@@ -7,7 +7,8 @@
   import { accentColor, addBackgroundLayer, createBaseMap, flightPath, prefetchTiles, type L as LeafletNS } from "./map";
   import type { MediaUrl } from "./media";
   import { nearestAhead, stopLegs } from "./route";
-  import { buildStops, dayNumber, flightDuration, withTrip, type TourStop } from "./tour";
+  import { assetsFrom, buildStops, dayNumber, flightDuration, withTrip, type TourStop } from "./tour";
+  import { MediaPreloader } from "./tourPreload";
   import type { Timeline, TimelineAsset } from "./types";
 
   let {
@@ -40,6 +41,10 @@
   /** Final overview of the whole route before the tour closes itself. */
   const END_OVERVIEW_MS = 3000;
   const MEDIA_FADE_MS = 350;
+  /** How long a photo may take to load before it fades in anyway. */
+  const READY_WAIT_MS = 2500;
+  /** How many media ahead are loaded. */
+  const PRELOAD_AHEAD = 2;
   const CONTROLS_HIDE_MS = 3000;
   const RING_CIRCUMFERENCE = 2 * Math.PI * 27;
 
@@ -136,6 +141,9 @@
     ending || (!showMedia && !arriving && dayCard === null) ? "none" : showMedia && current?.type === "video" ? "video" : "timed",
   );
   const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  const preloader = new MediaPreloader((asset, kind) => untrack(() => media)(asset, kind));
+  /** Loads the media from this position on, early enough that they are ready when they are due. */
+  const preloadFrom = (stop: number, item: number) => preloader.loadAll(assetsFrom(stops, stop, item, PRELOAD_AHEAD));
   // The first stop may be the start of the trip, which has no photos.
   const firstLocal = untrack(() => dayOrigin) ?? stops.find((s) => s.assets.length > 0)?.assets[0]?.localDateTime ?? "";
   const dayOf = (a: TimelineAsset) => dayNumber(firstLocal, a.localDateTime);
@@ -261,6 +269,8 @@
    */
   async function goTo(s: number, i: number, { arrive = true } = {}) {
     const my = ++run;
+    // The map pause, the day card and the flight give the target time to load.
+    preloadFrom(s, i);
     cancelStep();
     stopVideo();
     ending = false;
@@ -322,13 +332,17 @@
   async function showItem(my: number) {
     arriving = false;
     dayCard = null;
-    shownDay = dayKey(stops[stopIdx]!.assets[itemIdx]!.localDateTime);
+    const target = stops[stopIdx]!.assets[itemIdx]!;
+    // Fade in a photo that is ready, but never hold the tour up for a slow one.
+    await Promise.race([preloader.load(target), sleep(READY_WAIT_MS)]);
+    if (my !== run) return;
+    shownDay = dayKey(target.localDateTime);
     showMedia = true;
-    onshow?.(stops[stopIdx]!.assets[itemIdx]!.id);
+    onshow?.(target.id);
     dimmed = false;
     soundBlocked = false;
     videoProgress = 0;
-    preloadNext();
+    preloadFrom(stopIdx, itemIdx + 1);
     await tick();
     if (my === run) startCurrent();
   }
@@ -365,12 +379,6 @@
   function unmute() {
     if (videoEl) videoEl.muted = false;
     soundBlocked = false;
-  }
-
-  function preloadNext() {
-    const s = stops[stopIdx];
-    const nextAsset = s?.assets[itemIdx + 1] ?? stops[stopIdx + 1]?.assets[0];
-    if (nextAsset && nextAsset.type === "image") new Image().src = media(nextAsset, "preview");
   }
 
   /** On to the next stop, or the end of the tour after the last one. */
@@ -555,6 +563,8 @@
 
       const resume = startAt && stops[startAt.stop] ? startAt : null;
       const item = resume && Math.min(resume.item, Math.max(0, stops[resume.stop]!.assets.length - 1));
+      // The overview pause is time enough to fetch the first media.
+      preloadFrom(resume?.stop ?? 0, item ?? 0);
       if (resume && direct) {
         // Started from a photo of the timeline: already there, show it at once.
         const { center, zoom } = stopView(resume.stop);
@@ -581,6 +591,7 @@
       document.removeEventListener("fullscreenchange", onFullscreen);
       document.removeEventListener("visibilitychange", onVisibility);
       releaseScreen();
+      preloader.clear();
       document.body.style.overflow = overflow;
       map?.remove();
     };

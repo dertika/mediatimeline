@@ -21,7 +21,7 @@ backend/src/
   store/db.ts          Freigaben in SQLite, Migrationen über PRAGMA user_version (MIGRATIONS-Array, nur anhängen)
 frontend/src/lib/
   TimelineView.svelte  Timeline-Seite: Tour-Karten, Karte, Tage/Fotos, Hinweis auf neue Fotos, Teilen, Deep-Link
-  Tour.svelte          Vollbild-Tour (Leaflet flyTo, Tages-/Ortskarten, Pause, Wake Lock, Fortsetzen)
+  Tour.svelte          Vollbild-Tour (Leaflet flyTo, Tages-/Ortskarten, Pause, Wake Lock, Fortsetzen); tourPreload.ts lädt die nächsten 2 Medien vor
   TimelineMap.svelte   Übersichtskarte (Cluster, Start/Ziel, GeoPulse-Route mit Legende)
   tour.ts / route.ts   Stops, Flugkurve (van Wijk), Dauer-Schätzung / Routen-Legs für die Tour
   progressive.ts       erst Thumbnail, dann Preview (Verweilzeit 150 ms)

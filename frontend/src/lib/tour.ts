@@ -124,15 +124,17 @@ const VIDEO_SECONDS = 20;
 
 /**
  * Rough length of a tour in seconds, shown on the start button: overview,
- * a flight and a map pause per place, every photo and video, a card per
+ * a flight and a map pause (place card) per place, every photo and video, a card per
  * further day and the final overview.
  */
 export function estimateTourSeconds(stops: TourStop[], days: number, tour: TourSettings): number {
+  // Without place cards only start and end of the trip keep their map pause.
+  const pauses = tour.placeCards === false ? stops.filter((s) => s.waypoint).length : stops.length;
   const media = stops
     .flatMap((s) => s.assets)
     .reduce((sum, a) => sum + (a.type === "video" ? tour.videoMaxSeconds || VIDEO_SECONDS : tour.intervalSeconds), 0);
   const extraDays = Math.max(0, days - 1);
-  return 2 + stops.length * (FLIGHT_SECONDS + tour.intervalSeconds) + media + extraDays * tour.intervalSeconds + 3;
+  return 2 + stops.length * FLIGHT_SECONDS + pauses * tour.intervalSeconds + media + extraDays * tour.intervalSeconds + 3;
 }
 
 /** The part of a tour still ahead when resuming at a stop and item. */

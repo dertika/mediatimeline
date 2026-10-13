@@ -128,6 +128,14 @@ describe("estimateTourSeconds", () => {
     // 2 + 2 × (4 + 5) + (5 + 5 + 10) + 1 × 5 + 3
     expect(estimateTourSeconds(stops, 2, tour)).toBe(48);
   });
+  it("drops the map pause of places with photos when place cards are off, but keeps start and end", () => {
+    const photos = buildStops([asset(...BERGEN), asset(...BERGEN), { ...asset(...OSLO), type: "video" }], 1000);
+    // 2 + 2 × 4 + (5 + 5 + 10) + 1 × 5 + 3
+    expect(estimateTourSeconds(photos, 2, { ...tour, placeCards: false })).toBe(38);
+    const trip = withTrip(photos, { start: { name: "Hamburg", lat: 53.55, lng: 10 }, end: { name: "Oslo", lat: 59.9, lng: 10.7 } });
+    // two waypoints add a flight and a pause each: 38 + 2 × (4 + 5)
+    expect(estimateTourSeconds(trip, 2, { ...tour, placeCards: false })).toBe(56);
+  });
   it("assumes 20 s for videos played to the end", () => {
     const stops = buildStops([{ ...asset(...BERGEN), type: "video" }], 1000);
     expect(estimateTourSeconds(stops, 1, { ...tour, videoMaxSeconds: 0 })).toBe(2 + 9 + 20 + 3);

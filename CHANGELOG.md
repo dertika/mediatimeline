@@ -4,8 +4,11 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 
 ## [0.17.0] – 2026-10-14
 
+### Neu
+- Pro Link lässt sich die **Ortskarte** der Tour abschalten („Ortskarte beim Ortswechsel anzeigen“, Standard an, bestehende Links ändern sich nicht). Aus: Beim Ortswechsel fliegt die Karte weiter, aber es gibt keine Ortskarte und keine Kartenpause, das erste Foto blendet direkt ein. Das verkürzt die Tour, besonders bei kleinem Radius. Der Ortsname am Foto bleibt, ebenso die Tageskarte bei einem neuen Tag sowie Start und Ziel der Reise. Die Dauer auf dem Startknopf rechnet das mit.
+
 ### Geändert
-- Der Radius für „das ist ein Ort“ ist in der Adminseite jetzt ein Zahlenfeld in Metern (100 bis 50000) statt einer Auswahl. Bestehende Einstellungen bleiben unverändert und erscheinen mit ihrem Wert.
+- Der Radius für „das ist ein Ort“ ist in der Adminseite jetzt ein Zahlenfeld in Metern (10 bis 50000) statt einer Auswahl. Bestehende Einstellungen bleiben unverändert und erscheinen mit ihrem Wert.
 
 ### Performance
 - Die Tour lädt die nächsten zwei Fotos oder Videos schon vor, bevor sie dran sind: Bilder werden geladen und dekodiert, bei Videos das Vorschaubild und der Anfang des Videos. Das Laden beginnt früh, schon während der Ortskarte, der Tageskarte und des Flugs. Ein Foto blendet erst ein, wenn es bereit ist (höchstens 2,5 Sekunden Wartezeit), damit kein leerer Rahmen erscheint.

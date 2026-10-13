@@ -49,10 +49,11 @@
   const RING_CIRCUMFERENCE = 2 * Math.PI * 27;
 
   // The timeline does not change while the tour is open, so a snapshot is enough.
-  const { stops, intervalMs, videoMaxSeconds, totalItems } = untrack(() => ({
+  const { stops, intervalMs, videoMaxSeconds, placeCards, totalItems } = untrack(() => ({
     stops: withTrip(buildStops(timeline.assets, timeline.tour.radiusMeters), timeline.trip),
     intervalMs: timeline.tour.intervalSeconds * 1000,
     videoMaxSeconds: timeline.tour.videoMaxSeconds,
+    placeCards: timeline.tour.placeCards !== false,
     totalItems: timeline.assets.length,
   }));
   /** The recorded way to each stop (GeoPulse), or null where it is drawn as a straight line. */
@@ -296,7 +297,8 @@
     }
     const target = stops[s]!.assets[i]!;
     const newDay = shownDay === null || dayKey(target.localDateTime) !== shownDay;
-    if (travel && arrive && i === 0) {
+    // Without place cards the flight leads straight to the photo; a new day still gets its day card.
+    if (travel && arrive && i === 0 && placeCards) {
       stopIdx = s;
       itemIdx = i;
       arrivalDay = newDay ? dayOf(target) : null;

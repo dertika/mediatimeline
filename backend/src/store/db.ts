@@ -41,6 +41,8 @@ export interface Share {
   photoClickTour: boolean;
   /** Liked photos needed before the highlights tour is offered; 0 = off. */
   highlightMinLikes: number;
+  /** Tour shows a place card (map pause) when the place changes. */
+  tourPlaceCards: boolean;
   createdAt: string;
   createdBy: string | null;
 }
@@ -66,6 +68,7 @@ interface ShareRow {
   accent: string;
   photo_click_tour: number;
   highlight_min_likes: number;
+  tour_place_cards: number;
   created_at: string;
   created_by: string | null;
 }
@@ -96,6 +99,7 @@ const MIGRATIONS = [
   `ALTER TABLE shares ADD COLUMN accent TEXT NOT NULL DEFAULT 'gruen';`,
   `ALTER TABLE shares ADD COLUMN photo_click_tour INTEGER NOT NULL DEFAULT 0;`,
   `ALTER TABLE shares ADD COLUMN highlight_min_likes INTEGER NOT NULL DEFAULT 5;`,
+  `ALTER TABLE shares ADD COLUMN tour_place_cards INTEGER NOT NULL DEFAULT 1;`,
 ];
 
 const placeFromJson = (json: string | null): Place | null => (json ? (JSON.parse(json) as Place) : null);
@@ -122,6 +126,7 @@ function fromRow(r: ShareRow): Share {
     accent: r.accent as Accent,
     photoClickTour: r.photo_click_tour === 1,
     highlightMinLikes: r.highlight_min_likes,
+    tourPlaceCards: r.tour_place_cards === 1,
     createdAt: r.created_at,
     createdBy: r.created_by,
   };
@@ -148,6 +153,7 @@ export interface ShareUpdate {
   accent?: Accent;
   photoClickTour?: boolean;
   highlightMinLikes?: number;
+  tourPlaceCards?: boolean;
 }
 
 export class ShareStore {
@@ -254,6 +260,10 @@ export class ShareStore {
     if (patch.highlightMinLikes !== undefined) {
       sets.push("highlight_min_likes = ?");
       values.push(patch.highlightMinLikes);
+    }
+    if (patch.tourPlaceCards !== undefined) {
+      sets.push("tour_place_cards = ?");
+      values.push(patch.tourPlaceCards ? 1 : 0);
     }
     if (patch.photoClickTour !== undefined) {
       sets.push("photo_click_tour = ?");

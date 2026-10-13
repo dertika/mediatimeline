@@ -220,12 +220,12 @@
         Radius für einen Ort (m)
         <input
           type="number"
-          min="100"
+          min="10"
           max="50000"
-          step="50"
+          step="1"
           value={share.tourRadiusMeters}
           disabled={busy}
-          onchange={(e) => setNumber("tourRadiusMeters", 100, 50000, e)}
+          onchange={(e) => setNumber("tourRadiusMeters", 10, 50000, e)}
         />
       </label>
       <label>
@@ -248,10 +248,20 @@
         />
         Klick auf ein Foto startet die Tour dort
       </label>
+      <label class="check">
+        <input
+          type="checkbox"
+          checked={share.tourPlaceCards}
+          disabled={busy}
+          onchange={(e) => patch({ tourPlaceCards: e.currentTarget.checked })}
+        />
+        Ortskarte beim Ortswechsel anzeigen
+      </label>
       <p class="hint muted">
         Radius: Fotos, die höchstens so weit vom Mittelpunkt eines Orts entfernt sind, zählen in der Tour als derselbe Ort
-        (100 bis 50000 Meter).
+        (10 bis 50000 Meter).
       </p>
+      <p class="hint muted">Ortskarte aus: kürzere Tour, der Ort steht weiter am Foto. Start und Ziel der Reise behalten ihre Karte.</p>
       <p class="hint muted">Statt der Vollbild-Galerie beginnt die Tour direkt bei dem Foto. Die Galerie bleibt über ⛶ am Foto erreichbar.</p>
     </fieldset>
 

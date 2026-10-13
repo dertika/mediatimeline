@@ -69,6 +69,7 @@ npm run build   # Frontend + Backend
 ## Bewusste Entscheidungen (nicht ohne Rückfrage ändern)
 
 - Beim Springen zu einem Foto **kein grüner Rahmen** (0.8.1).
+- Ortskarte der Tour (Karte mit Kartenpause beim Ortswechsel) ist pro Link abschaltbar, Standard an. Der Ortsname am Foto bleibt immer; Tageskarten sowie Start und Ziel der Reise behalten ihre Karten.
 - Akzentfarbe pro Link nur aus der **kuratierten Liste** (`backend/src/accent.ts` und `frontend/src/lib/accents.ts`, gleiche IDs, Test prüft Gleichstand und Kontrast), keine freie Farbwahl. Standard Waldgrün, die Adminseite bleibt grün. Neue Farben nur ans Ende anhängen.
 - Adminseite: Der **Authelia-Header bleibt der Standardweg**. OpenID Connect (`admin.oidc`) ist optional, standardmäßig aus und für andere Umgebungen gedacht; Gruppen wie bei Authelia (`allowedGroups`). Nur gegen eine Attrappe getestet, nicht gegen einen echten Anbieter.
 - Tour ab Foto (Option pro Link): startet direkt beim Foto; beim Verlassen zum zuletzt gezeigten Foto, nach komplettem Durchlauf an den Seitenanfang. Galerie dann über ⛶.

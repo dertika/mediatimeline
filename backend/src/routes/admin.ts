@@ -6,6 +6,7 @@ import { hashPassword } from "../auth/unlock.js";
 import { CAPTION_SOURCES } from "../caption.js";
 import type { Share } from "../store/db.js";
 import type { AppDeps } from "../app.js";
+import { readSession } from "../auth/oidc.js";
 import { publicBaseUrl } from "../url.js";
 import { forwardableHeaders, pipeUpstream } from "./proxy.js";
 import { isExpired } from "./public.js";
@@ -50,9 +51,20 @@ const IdParams = z.object({ id: z.coerce.number().int().positive() });
 export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
   const { store, immich, cache, config, geocoder } = deps;
 
+  const { userHeader, groupsHeader, allowedGroups, oidc } = config.admin;
   app.addHook(
     "onRequest",
-    createAdminGuard({ trustedProxies: config.server.trustedProxies, ...config.admin }),
+    createAdminGuard({
+      trustedProxies: config.server.trustedProxies,
+      userHeader,
+      groupsHeader,
+      allowedGroups,
+      oidc: oidc && {
+        readSession,
+        origin: new URL(config.server.publicBaseUrl!).origin,
+        loginPath: "/api/auth/login",
+      },
+    }),
   );
 
   const baseUrl = (req: FastifyRequest) => publicBaseUrl(config, req);

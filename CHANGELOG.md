@@ -2,6 +2,11 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.16.0] – 2026-10-13
+
+### Neu
+- Anmeldung über OpenID Connect als zweiter Weg zur Adminseite (optional, standardmäßig aus). Mit `admin.oidc` in der Konfiguration zeigt die Adminseite ohne Anmeldung den Knopf „Mit OpenID Connect anmelden“, danach steht oben „Angemeldet als …“ mit „Abmelden“. Zugriff wie beim Authelia-Weg über `admin.allowedGroups` (Gruppen aus dem Token). Der Authelia-Header-Weg bleibt unverändert und hat Vorrang. Siehe README, Abschnitt „OpenID Connect“.
+
 ## [0.15.1] – 2026-10-10
 
 ### Geändert
@@ -130,6 +135,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.16.0]: https://github.com/dertika/mediatimeline/pull/57
 [0.15.1]: https://github.com/dertika/mediatimeline/pull/56
 [0.15.0]: https://github.com/dertika/mediatimeline/pull/49
 [0.14.0]: https://github.com/dertika/mediatimeline/pull/37

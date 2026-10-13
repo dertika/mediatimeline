@@ -142,11 +142,33 @@ In Immich unter *Kontoeinstellungen → API-Schlüssel* einen Key mit den Rechte
 
 Zusätzlich akzeptiert das Backend `Remote-User` nur von Adressen in `server.trustedProxies`. Welche Adresse der Container für nginx sieht, hängt vom Podman-Netzwerk ab (rootless mit pasta/slirp4netns oft `10.0.2.2` bzw. die Host-IP). Bei einem 401 auf der Adminseite steht die tatsächliche Adresse im Log (`podman logs mediatimeline`, Feld `remoteAddress`) und gehört dann in `trustedProxies`. Mit `admin.allowedGroups` lässt sich der Zugriff auf Authelia-Gruppen einschränken.
 
+### OpenID Connect (optional)
+
+Neben den Authelia-Headern kann die Adminseite eine Anmeldung über OpenID Connect anbieten, zum Beispiel für Umgebungen ohne nginx-Forward-Auth. Standardmäßig ist sie aus, der Header-Weg bleibt unverändert.
+
+```yaml
+server:
+  publicBaseUrl: https://timeline.example.com   # Pflicht, daraus entsteht die Rücksprungadresse
+admin:
+  allowedGroups: ["admins"]                     # wie beim Header-Weg; leer = jeder, den der Anbieter anmeldet
+  oidc:
+    issuer: https://id.example.com
+    clientId: mediatimeline
+    clientSecret: …                             # oder MEDIATIMELINE_OIDC_CLIENT_SECRET(_FILE)
+```
+
+- Beim Anbieter einen Client mit dem Ablauf „Authorization Code“ anlegen. Rücksprungadresse: `https://timeline.example.com/api/auth/callback`.
+- Die Gruppen kommen aus dem Claim `groups` (einstellbar mit `groupsClaim`), aus dem ID-Token oder, falls dort nicht enthalten, vom Userinfo-Endpunkt. Der Benutzername kommt aus `preferred_username`, sonst aus der E-Mail-Adresse.
+- Ohne `oidc` ändert sich nichts. Mit `oidc` zeigt die Adminseite ohne Anmeldung den Knopf „Mit OpenID Connect anmelden“. Kommen Header von einem vertrauten Proxy an, gelten sie weiterhin zuerst.
+- nginx darf für `/admin` und `/api/admin/` dann **kein** `auth_request` erzwingen und muss die Header `Remote-User`/`Remote-Groups` leeren, sonst blockiert nginx die Seite, bevor sie den OIDC-Knopf zeigen kann.
+- Die Sitzung ist ein signiertes Cookie (`sessionHours`, Standard 12). Änderungen der Gruppen beim Anbieter gelten erst nach einer neuen Anmeldung. Wer alle Sitzungen sofort beenden will, ändert `server.sessionSecret` (oder löscht `session-secret` im Datenverzeichnis); dabei verfallen auch die Passwort-Freischaltungen der Links.
+- Der Anbieter wird erst beim ersten Login abgefragt: Ein falscher `issuer` verhindert den Start nicht, sondern zeigt auf der Adminseite „Die Anmeldung hat nicht geklappt“ (Details im Log). `issuer` muss `https` nutzen, `http` geht nur für `localhost`.
+
 ## Endpunkte
 
 | Pfad | Zweck |
 | --- | --- |
-| `/admin` | Adminseite (Authelia) |
+| `/admin` | Adminseite (Authelia oder OpenID Connect) |
 | `/t/<token>` | öffentliche Timeline |
 | `/api/admin/*` | Admin-API (Alben, Freigaben, Cache leeren) |
 | `/api/public/timeline/<token>` | Timeline-Daten; `/unlock` für Passwort; `/assets/<id>/{thumbnail,preview,video}` Medien-Proxy |

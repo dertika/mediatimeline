@@ -15,7 +15,9 @@ backend/src/
   geocoder.ts          Photon-Ortssuche für die Adminseite
   routes/public.ts     /api/public/timeline/:token (+ Medien-Proxy, Passwort, route)
   routes/preview.ts    Linkvorschau (og:*) für /t/:token, auch ?foto=<id>
-  routes/admin.ts      Admin-API, /api/admin/me meldet {geopulse}
+  routes/admin.ts      Admin-API, /api/admin/me meldet {geopulse, via}
+  auth/adminGuard.ts   Admin-Zugang: Header von Authelia (Standard) oder OIDC-Sitzung
+  auth/oidc.ts         optionaler OpenID-Connect-Login (/api/auth/login, /callback, /logout)
   store/db.ts          Freigaben in SQLite, Migrationen über PRAGMA user_version (MIGRATIONS-Array, nur anhängen)
 frontend/src/lib/
   TimelineView.svelte  Timeline-Seite: Tour-Karten, Karte, Tage/Fotos, Hinweis auf neue Fotos, Teilen, Deep-Link
@@ -58,7 +60,7 @@ npm run build   # Frontend + Backend
 
 ## Versionierung
 
-- Jede Änderung: neuer Eintrag oben in `CHANGELOG.md` (Keep a Changelog, deutsch, mit PR-Link unten). Dazu die gleiche Version in den drei `package.json` (Root, backend, frontend), danach `npm install --package-lock-only`. `frontend/src/lib/version.test.ts` erzwingt den Gleichstand.
+- Jede Änderung: neuer Eintrag oben in `CHANGELOG.md` (Keep a Changelog, deutsch, mit PR-Link unten). Dazu die gleiche Version in den drei `package.json` (Root, backend, frontend) und als `MARKETING_VERSION` in `ios/MediaTimeline.xcodeproj/project.pbxproj` (4 Stellen), danach `npm install --package-lock-only`. `frontend/src/lib/version.test.ts` erzwingt den Gleichstand.
 - Die iOS-App hat dieselbe Version (`MARKETING_VERSION` in `ios/MediaTimeline.xcodeproj/project.pbxproj`, beide Configs), ebenfalls vom Versionstest geprüft.
 - Die Version steht in der Fußzeile (Admin, Timeline, Demo) und kommt per Vite `__APP_VERSION__` aus `frontend/package.json`.
 - Dependabot (`.github/dependabot.yml`, wöchentlich: npm, GitHub Actions, Basis-Image in `deploy/Dockerfile`) öffnet PRs für neue Versionen. Die bekommen keinen eigenen Changelog-Eintrag oder Versionssprung; beim nächsten Release kommt ein Sammel-Eintrag. Major-Updates von Node (Image), `@types/node`, TypeScript, `cookie`, `@sveltejs/kit` und `adapter-static` ignoriert Dependabot bewusst: Die macht man von Hand und mit Test (`@types/node` folgt der Node-Version im Dockerfile).
@@ -68,6 +70,7 @@ npm run build   # Frontend + Backend
 
 - Beim Springen zu einem Foto **kein grüner Rahmen** (0.8.1).
 - Akzentfarbe pro Link nur aus der **kuratierten Liste** (`backend/src/accent.ts` und `frontend/src/lib/accents.ts`, gleiche IDs, Test prüft Gleichstand und Kontrast), keine freie Farbwahl. Standard Waldgrün, die Adminseite bleibt grün. Neue Farben nur ans Ende anhängen.
+- Adminseite: Der **Authelia-Header bleibt der Standardweg**. OpenID Connect (`admin.oidc`) ist optional, standardmäßig aus und für andere Umgebungen gedacht; Gruppen wie bei Authelia (`allowedGroups`). Nur gegen eine Attrappe getestet, nicht gegen einen echten Anbieter.
 - Tour ab Foto (Option pro Link): startet direkt beim Foto; beim Verlassen zum zuletzt gezeigten Foto, nach komplettem Durchlauf an den Seitenanfang. Galerie dann über ⛶.
 - Highlights als Tour: Like im geteilten Album **oder** Favorit des Besitzers; Karte erst ab Mindestzahl solcher Fotos (pro Link, Standard 5, 0 = aus).
 - „Tour starten“ beginnt immer von vorn. **Fortsetzen** ist eine eigene Karte darunter, mit Restzeit, gilt 6 h, mit ✕ entfernbar.

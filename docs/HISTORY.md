@@ -136,6 +136,12 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Getestet nur gegen eine Test-Attrappe (`backend/test/mockOidc.ts`, mit `jose`), nicht gegen einen echten Anbieter. `http` für den Issuer ist nur für localhost erlaubt (so läuft die Attrappe).
 - Nicht enthalten: Liste erlaubter Benutzer, Abmeldung beim Anbieter, mehrere Anbieter.
 
+### 0.17.0 – Ortsradius als Zahl, Vorladen in der Tour (#58)
+- Wunsch: Radius als Freitextfeld statt Dropdown (bestehende Werte bleiben, daher keine Migration, das Backend nahm schon 100–50000 m an) und die Tour soll das folgende Bild oder Video vorladen.
+- Vorher lud `Tour.svelte` nur das nächste **Bild** (`new Image().src`) und erst, wenn das aktuelle schon gezeigt wurde. Jetzt `MediaPreloader` (`tourPreload.ts`): die nächsten 2 Medien (`assetsFrom` in `tour.ts`) werden geladen und dekodiert, bei Videos das Poster und ein verstecktes `<video preload="auto">` (höchstens 2 gehalten, danach `src` entfernt). Angestoßen schon in `goTo` (Ortskarte, Tageskarte, Flug) und beim Start (Übersicht). `showItem` wartet höchstens `READY_WAIT_MS` (2,5 s) auf das Bild, bevor es einblendet.
+- Messung nur gegen den Mock mit künstlicher Verzögerung (3 s je Vorschau, 2 s Wartezeit, alle Fotos an einem Ort): vorher ca. 0,6 s leerer Rahmen pro Foto, nachher 0. Bei Fotos an verschiedenen Orten reichte schon das alte Vorladen (ein Schritt dauert dort ca. 7 s). Wichtig beim Testen mit Playwright: Request-Interception (`route`) schaltet den Browser-Cache ab, dann sieht man keinen Vorlade-Effekt.
+- Nachtrag (gleiche Version): Radius ab **10 m** (Backend `min(10)`, Feld `step=1`). Neuer Schalter `tour_place_cards` (Migration 9, Standard 1, API `tourPlaceCards`, öffentlich `tour.placeCards`): Aus entfällt in `Tour.svelte#goTo` nur der Zweig der Ortskarte (`travel && arrive && i === 0`); Flug, Ortsname am Foto, Tageskarte bei neuem Tag und die Karten von Start/Ziel bleiben. Auslöser war die Tourdauer: bei kleinem Radius kam die Karte sonst zwischen fast jedem Bild. `estimateTourSeconds` zählt die Kartenpause dann nur noch für Start/Ziel.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

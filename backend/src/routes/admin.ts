@@ -33,7 +33,7 @@ const UpdateShareBody = z.object({
   captionSource: z.enum(CAPTION_SOURCES).optional(),
   showComments: z.boolean().optional(),
   tourIntervalSeconds: z.number().int().min(2).max(60).optional(),
-  tourRadiusMeters: z.number().int().min(100).max(50_000).optional(),
+  tourRadiusMeters: z.number().int().min(10).max(50_000).optional(),
   tourVideoMaxSeconds: z.number().int().min(0).max(600).optional(),
   tripStart: PlaceBody.nullable().optional(),
   tripEnd: PlaceBody.nullable().optional(),
@@ -42,6 +42,7 @@ const UpdateShareBody = z.object({
   accent: z.enum(ACCENTS).optional(),
   photoClickTour: z.boolean().optional(),
   highlightMinLikes: z.number().int().min(0).max(1000).optional(),
+  tourPlaceCards: z.boolean().optional(),
 });
 
 const GeocodeQuery = z.object({ q: z.string().trim().min(2).max(100) });
@@ -90,6 +91,7 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     accent: share.accent,
     photoClickTour: share.photoClickTour,
     highlightMinLikes: share.highlightMinLikes,
+    tourPlaceCards: share.tourPlaceCards,
     createdAt: share.createdAt,
     createdBy: share.createdBy,
   });

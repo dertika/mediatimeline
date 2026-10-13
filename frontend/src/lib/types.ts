@@ -69,6 +69,8 @@ export interface TourSettings {
   fromPhoto?: boolean;
   /** Liked photos needed for the highlights tour, 0 = off; missing from older servers. */
   highlightMin?: number;
+  /** Place card with a map pause when the place changes; missing from older servers = on. */
+  placeCards?: boolean;
 }
 
 export interface ShareDto {
@@ -92,6 +94,7 @@ export interface ShareDto {
   accent: string;
   photoClickTour: boolean;
   highlightMinLikes: number;
+  tourPlaceCards: boolean;
   createdAt: string;
   createdBy: string | null;
 }

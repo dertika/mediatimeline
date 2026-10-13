@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStops, dayNumber, distanceMeters, estimateTourSeconds, findInStops, flightCurve, flightDuration, remainingStops, withTrip } from "./tour";
+import { buildStops, dayNumber, distanceMeters, assetsFrom, estimateTourSeconds, findInStops, flightCurve, flightDuration, remainingStops, withTrip } from "./tour";
 import type { TimelineAsset } from "./types";
 
 let seq = 0;
@@ -128,6 +128,14 @@ describe("estimateTourSeconds", () => {
     // 2 + 2 × (4 + 5) + (5 + 5 + 10) + 1 × 5 + 3
     expect(estimateTourSeconds(stops, 2, tour)).toBe(48);
   });
+  it("drops the map pause of places with photos when place cards are off, but keeps start and end", () => {
+    const photos = buildStops([asset(...BERGEN), asset(...BERGEN), { ...asset(...OSLO), type: "video" }], 1000);
+    // 2 + 2 × 4 + (5 + 5 + 10) + 1 × 5 + 3
+    expect(estimateTourSeconds(photos, 2, { ...tour, placeCards: false })).toBe(38);
+    const trip = withTrip(photos, { start: { name: "Hamburg", lat: 53.55, lng: 10 }, end: { name: "Oslo", lat: 59.9, lng: 10.7 } });
+    // two waypoints add a flight and a pause each: 38 + 2 × (4 + 5)
+    expect(estimateTourSeconds(trip, 2, { ...tour, placeCards: false })).toBe(56);
+  });
   it("assumes 20 s for videos played to the end", () => {
     const stops = buildStops([{ ...asset(...BERGEN), type: "video" }], 1000);
     expect(estimateTourSeconds(stops, 1, { ...tour, videoMaxSeconds: 0 })).toBe(2 + 9 + 20 + 3);
@@ -170,5 +178,35 @@ describe("findInStops", () => {
     expect(findInStops(stops, "x2")).toEqual({ stop: 1, item: 1 });
     expect(findInStops(stops, "x3")).toEqual({ stop: 2, item: 0 });
     expect(findInStops(stops, "nope")).toBeNull();
+  });
+});
+
+describe("assetsFrom", () => {
+  const stops = withTrip(buildStops([asset(60, 5, "m1"), asset(60, 5, "m2"), asset(61, 6, "m3"), asset(null, null, "m4"), asset(62, 7, "m5")], 1000), {
+    start: { name: "Zuhause", lat: 59, lng: 4 },
+    end: { name: "Zuhause", lat: 59, lng: 4 },
+  });
+  const ids = (from: number, item: number, count: number) => assetsFrom(stops, from, item, count).map((a) => a.id);
+
+  it("starts at the given item and goes on across places", () => {
+    // stops: 0 = start, 1 = m1 m2, 2 = m3 m4, 3 = m5, 4 = end
+    expect(ids(1, 0, 3)).toEqual(["m1", "m2", "m3"]);
+    expect(ids(1, 1, 2)).toEqual(["m2", "m3"]);
+    expect(ids(2, 1, 2)).toEqual(["m4", "m5"]);
+  });
+
+  it("skips the start and end of the trip, which have no photos", () => {
+    expect(ids(0, 0, 1)).toEqual(["m1"]);
+    expect(ids(3, 0, 2)).toEqual(["m5"]);
+  });
+
+  it("starts at the next place when the item is past the end of its stop", () => {
+    expect(ids(1, 2, 2)).toEqual(["m3", "m4"]);
+  });
+
+  it("gives what is left when there is less than asked for, and nothing at the end", () => {
+    expect(ids(3, 0, 5)).toEqual(["m5"]);
+    expect(ids(3, 1, 2)).toEqual([]);
+    expect(ids(1, 0, 0)).toEqual([]);
   });
 });

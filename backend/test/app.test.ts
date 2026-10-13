@@ -151,7 +151,7 @@ describe("tour settings", () => {
     const shares = (await app.inject({ url: "/api/admin/shares", headers: ADMIN })).json();
     expect(shares[0]).toMatchObject({ tourIntervalSeconds: 5, tourRadiusMeters: 1000, tourVideoMaxSeconds: 30 });
     const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
-    expect(body.tour).toEqual({ intervalSeconds: 5, radiusMeters: 1000, videoMaxSeconds: 30, fromPhoto: false, highlightMin: 5 });
+    expect(body.tour).toEqual({ intervalSeconds: 5, radiusMeters: 1000, videoMaxSeconds: 30, fromPhoto: false, highlightMin: 5, placeCards: true });
   });
 
   it("can be changed by the admin", async () => {
@@ -160,14 +160,14 @@ describe("tour settings", () => {
     const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: settings });
     expect(res.json()).toMatchObject(settings);
     const body = (await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` })).json();
-    expect(body.tour).toEqual({ intervalSeconds: 8, radiusMeters: 2000, videoMaxSeconds: 0, fromPhoto: false, highlightMin: 5 });
+    expect(body.tour).toEqual({ intervalSeconds: 8, radiusMeters: 2000, videoMaxSeconds: 0, fromPhoto: false, highlightMin: 5, placeCards: true });
   });
 
   it.each([
     { tourIntervalSeconds: 1 },
     { tourIntervalSeconds: 61 },
     { tourIntervalSeconds: 2.5 },
-    { tourRadiusMeters: 50 },
+    { tourRadiusMeters: 5 },
     { tourRadiusMeters: 60_000 },
     { tourVideoMaxSeconds: -1 },
     { tourVideoMaxSeconds: 601 },
@@ -287,6 +287,21 @@ describe("highlights", () => {
     expect(body.tour.highlightMin).toBe(0);
     const bad = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { highlightMinLikes: -1 } });
     expect(bad.statusCode).toBe(400);
+  });
+
+  it("accepts a place radius down to 10 m", async () => {
+    const { id } = await createShare();
+    const res = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { tourRadiusMeters: 10 } });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().tourRadiusMeters).toBe(10);
+  });
+
+  it("shows place cards by default and can switch them off", async () => {
+    const { id, url } = await createShare();
+    const off = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { tourPlaceCards: false } });
+    expect(off.json().tourPlaceCards).toBe(false);
+    const body = await app.inject({ url: `/api/public/timeline/${tokenOf(url)}` }).then((r) => r.json());
+    expect(body.tour.placeCards).toBe(false);
   });
 });
 

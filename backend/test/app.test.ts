@@ -347,6 +347,32 @@ describe("GeoPulse route", () => {
     expect(opts).toEqual({ privacyRadiusMeters: 500, privacyPoints: [home, home] });
   });
 
+  it("widens the range for the outward journey and the way back, never narrows it", async () => {
+    const calls = await appWithGeoPulse(async () => ROUTE);
+    const { id, url } = await createShare();
+    const timeline = () => app.inject({ url: `/api/public/timeline/${tokenOf(url)}` }).then((r) => r.json());
+    const patch = (payload: object) =>
+      app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload }).then((r) => r.json());
+    const dto = await patch({ showRoute: true, routeFrom: "2000-01-01T08:00:00+02:00", routeTo: "2100-01-01T00:00:00Z" });
+    expect(dto).toMatchObject({ routeFrom: "2000-01-01T06:00:00.000Z", routeTo: "2100-01-01T00:00:00.000Z" });
+    const body = await timeline();
+    const [from, to] = calls.at(-1) as [string, string];
+    expect(from).toBe("2000-01-01T06:00:00.000Z");
+    expect(to).toBe("2100-01-01T00:00:00.000Z");
+    expect(body.route).toEqual(ROUTE);
+
+    // a start time inside the photos (or after them) does not cut the route
+    await patch({ routeFrom: "2100-01-01T00:00:00Z", routeTo: "2000-01-01T00:00:00Z" });
+    await timeline();
+    const [from2, to2] = calls.at(-1) as [string, string];
+    expect(from2).toBe(body.assets[0].takenAt);
+    expect(to2).toBe(body.assets.at(-1).takenAt);
+
+    expect(await patch({ routeFrom: null, routeTo: null })).toMatchObject({ routeFrom: null, routeTo: null });
+    const bad = await app.inject({ method: "PATCH", url: `/api/admin/shares/${id}`, headers: ADMIN, payload: { routeFrom: "gestern" } });
+    expect(bad.statusCode).toBe(400);
+  });
+
   it("keeps the timeline working when GeoPulse fails", async () => {
     await appWithGeoPulse(async () => {
       throw new Error("down");

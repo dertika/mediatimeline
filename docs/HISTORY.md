@@ -147,6 +147,12 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Jetzt `geocoder.timeoutSeconds` (Standard 15, 1 bis 60), keine automatische Wiederholung (verdoppelt nur die Wartezeit). `PlaceInput.svelte` zeigt nach 2 s „Suche dauert länger …“. Ein abgebrochener älterer Suchlauf darf den Ladezustand des neueren nicht zurücksetzen (Vergleich mit dem aktuellen `AbortController`).
 - Nur gegen eine verzögerte Attrappe getestet.
 
+### 0.18.0 – Hin- und Rückreise aus GeoPulse
+- Wunsch: Die Hinreise vom Startort auch aus GeoPulse holen, begrenzt durch eine Startzeit, nur für GeoPulse. Dazu auf Nachfrage auch eine Endzeit (Rückreise) und die Tour soll die Wege abfahren.
+- Vorher holte `routeFor` (`routes/public.ts`) nur `erstes Foto … letztes Foto`. Jetzt `routeFrom`/`routeTo` pro Link (Migration 10, ISO-Strings in UTC, null = wie bisher); der Bereich wird nur erweitert (`min`/`max` mit erstem/letztem Foto), damit die Route die Fotos immer abdeckt. Zu früh gewählt holt GeoPulse auch fremde Fahrten, das steht im Hinweis der Adminseite.
+- `stopLegs` (`route.ts`): Der Weg zum ersten Ort ist alles Aufgezeichnete vor seinem ersten Foto, der Weg zum Ziel alles nach dem letzten Foto. Ohne Zeiten sind das keine Punkte, also bleibt es geradlinig wie vorher.
+- Getestet nur gegen den GeoPulse-Mock (Flug Hamburg–Bergen vor dem ersten Foto, Zug Oslo–Hamburg danach, eine fremde Fahrt im Mai, die ohne passende Zeit draußen bleibt). Der Mock fährt gerade Linien, die Form der Strecke in der Tour ist also nicht sichtbar belegt, nur dass der Weg verwendet wird.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

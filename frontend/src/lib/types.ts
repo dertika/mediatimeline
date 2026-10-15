@@ -95,6 +95,9 @@ export interface ShareDto {
   photoClickTour: boolean;
   highlightMinLikes: number;
   tourPlaceCards: boolean;
+  /** GeoPulse route range beyond the photos (ISO), null = first / last photo. */
+  routeFrom: string | null;
+  routeTo: string | null;
   createdAt: string;
   createdBy: string | null;
 }

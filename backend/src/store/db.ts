@@ -43,6 +43,10 @@ export interface Share {
   highlightMinLikes: number;
   /** Tour shows a place card (map pause) when the place changes. */
   tourPlaceCards: boolean;
+  /** GeoPulse route from this moment on (ISO), e.g. the outward journey; null = from the first photo. */
+  routeFrom: string | null;
+  /** GeoPulse route up to this moment (ISO), e.g. the way back; null = up to the last photo. */
+  routeTo: string | null;
   createdAt: string;
   createdBy: string | null;
 }
@@ -69,6 +73,8 @@ interface ShareRow {
   photo_click_tour: number;
   highlight_min_likes: number;
   tour_place_cards: number;
+  route_from: string | null;
+  route_to: string | null;
   created_at: string;
   created_by: string | null;
 }
@@ -100,6 +106,8 @@ const MIGRATIONS = [
   `ALTER TABLE shares ADD COLUMN photo_click_tour INTEGER NOT NULL DEFAULT 0;`,
   `ALTER TABLE shares ADD COLUMN highlight_min_likes INTEGER NOT NULL DEFAULT 5;`,
   `ALTER TABLE shares ADD COLUMN tour_place_cards INTEGER NOT NULL DEFAULT 1;`,
+  `ALTER TABLE shares ADD COLUMN route_from TEXT;
+   ALTER TABLE shares ADD COLUMN route_to TEXT;`,
 ];
 
 const placeFromJson = (json: string | null): Place | null => (json ? (JSON.parse(json) as Place) : null);
@@ -127,6 +135,8 @@ function fromRow(r: ShareRow): Share {
     photoClickTour: r.photo_click_tour === 1,
     highlightMinLikes: r.highlight_min_likes,
     tourPlaceCards: r.tour_place_cards === 1,
+    routeFrom: r.route_from,
+    routeTo: r.route_to,
     createdAt: r.created_at,
     createdBy: r.created_by,
   };
@@ -154,6 +164,8 @@ export interface ShareUpdate {
   photoClickTour?: boolean;
   highlightMinLikes?: number;
   tourPlaceCards?: boolean;
+  routeFrom?: string | null;
+  routeTo?: string | null;
 }
 
 export class ShareStore {
@@ -264,6 +276,14 @@ export class ShareStore {
     if (patch.tourPlaceCards !== undefined) {
       sets.push("tour_place_cards = ?");
       values.push(patch.tourPlaceCards ? 1 : 0);
+    }
+    if (patch.routeFrom !== undefined) {
+      sets.push("route_from = ?");
+      values.push(patch.routeFrom);
+    }
+    if (patch.routeTo !== undefined) {
+      sets.push("route_to = ?");
+      values.push(patch.routeTo);
     }
     if (patch.photoClickTour !== undefined) {
       sets.push("photo_click_tour = ?");

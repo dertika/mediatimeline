@@ -29,6 +29,8 @@ const UpdateShareBody = z.object({
     .optional()
     .transform((v) => (v === "" ? null : v)),
   expiresAt: z.iso.datetime({ offset: true }).nullable().optional(),
+  routeFrom: z.iso.datetime({ offset: true }).nullable().optional(),
+  routeTo: z.iso.datetime({ offset: true }).nullable().optional(),
   password: z.string().min(1).max(200).nullable().optional(),
   captionSource: z.enum(CAPTION_SOURCES).optional(),
   showComments: z.boolean().optional(),
@@ -92,6 +94,8 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     photoClickTour: share.photoClickTour,
     highlightMinLikes: share.highlightMinLikes,
     tourPlaceCards: share.tourPlaceCards,
+    routeFrom: share.routeFrom,
+    routeTo: share.routeTo,
     createdAt: share.createdAt,
     createdBy: share.createdBy,
   });
@@ -155,6 +159,8 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
     const updated = store.update(params.data.id, {
       ...rest,
       expiresAt: rest.expiresAt === undefined ? undefined : rest.expiresAt && new Date(rest.expiresAt).toISOString(),
+      routeFrom: rest.routeFrom === undefined ? undefined : rest.routeFrom && new Date(rest.routeFrom).toISOString(),
+      routeTo: rest.routeTo === undefined ? undefined : rest.routeTo && new Date(rest.routeTo).toISOString(),
       passwordHash: password === undefined ? undefined : password && (await hashPassword(password)),
     });
     if (!updated) return reply.code(404).send({ error: "not_found" });

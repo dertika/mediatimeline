@@ -31,17 +31,35 @@ describe("route", () => {
     ]);
   });
 
-  it("finds the way between consecutive stops with photos only", () => {
-    const stops = [stop([], "start"), stop([9, 10]), stop([13, 15.5]), stop([], "end")];
+  it("finds the way between consecutive stops with photos", () => {
+    const stops = [stop([], "start"), stop([12, 12.5]), stop([13, 15.5])];
     const legs = stopLegs(stops, route);
     expect(legs[0]).toBeNull();
-    expect(legs[1]).toBeNull();
-    expect(legs[2]).toEqual([
+    // starts at the first recorded point, the route before the first photo
+    expect(legs[1]).toEqual([
       [60, 5],
       [60.5, 5.5],
     ]);
-    expect(legs[3]).toBeNull();
+    expect(legs[2]).toBeNull();
     expect(stopLegs(stops, null).every((l) => l === null)).toBe(true);
+  });
+
+  it("takes the whole recorded way to the end of the trip after the last photo", () => {
+    const stops = [stop([9, 10]), stop([13, 14.5]), stop([], "end")];
+    const legs = stopLegs(stops, route);
+    expect(legs[1]).toEqual([
+      [60, 5],
+      [60.5, 5.5],
+    ]);
+    expect(legs[2]).toEqual([
+      [61.5, 6.5],
+      [62, 7],
+      [62.1, 7.1],
+    ]);
+  });
+
+  it("has no way to the first place when nothing was recorded before its first photo", () => {
+    expect(stopLegs([stop([], "start"), stop([9, 10])], route)[1]).toBeNull();
   });
 
   it("follows the path forwards to the point nearest to the map center", () => {

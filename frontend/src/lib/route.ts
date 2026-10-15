@@ -42,15 +42,21 @@ const seconds = (iso: string) => Date.parse(iso) / 1000;
 
 /**
  * For each stop, the recorded way there from the previous stop with photos:
- * the route between the last photo there and the first photo here. Null
- * where nothing was recorded or a stop has no photos (start and end of the trip).
+ * the route between the last photo there and the first photo here. The way
+ * from the start of the trip to the first place is everything recorded before
+ * its first photo, and the way to the end of the trip everything after the last
+ * photo (the server only sends that far when the link asks for it). Null where
+ * nothing was recorded.
  */
 export function stopLegs(stops: TourStop[], route: RouteLeg[] | null | undefined): (LatLng[] | null)[] {
   return stops.map((stop, i) => {
     const prev = stops[i - 1];
-    if (!route?.length || !prev?.assets.length || !stop.assets.length) return null;
-    const from = Math.max(...prev.assets.map((a) => seconds(a.takenAt)));
-    const to = Math.min(...stop.assets.map((a) => seconds(a.takenAt)));
+    if (!route?.length || !prev || stop.waypoint === "start") return null;
+    // Before the first photo / after the last one there are no moments to measure from.
+    if (!prev.assets.length && prev.waypoint !== "start") return null;
+    if (!stop.assets.length && stop.waypoint !== "end") return null;
+    const from = prev.assets.length ? Math.max(...prev.assets.map((a) => seconds(a.takenAt))) : -Infinity;
+    const to = stop.assets.length ? Math.min(...stop.assets.map((a) => seconds(a.takenAt))) : Infinity;
     const points = routeBetween(route, from, to);
     return points.length >= 2 ? points : null;
   });

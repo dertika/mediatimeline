@@ -25,8 +25,12 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
     const { assets } = snapshot;
     if (!share.showRoute || !geopulse || !config.geopulse || assets.length < 2) return null;
     const tripEnd = share.tripEndSameAsStart ? share.tripStart : share.tripEnd;
-    const from = assets[0]!.takenAt;
-    const to = assets.at(-1)!.takenAt;
+    // The outward journey and the way back lie outside the photos: the link can widen the range
+    // (never narrow it, the route always covers the photos).
+    const first = assets[0]!.takenAt;
+    const last = assets.at(-1)!.takenAt;
+    const from = share.routeFrom && share.routeFrom < first ? share.routeFrom : first;
+    const to = share.routeTo && share.routeTo > last ? share.routeTo : last;
     try {
       const route = await geopulse.route(from, to, {
         privacyRadiusMeters: config.geopulse.privacyRadiusMeters,

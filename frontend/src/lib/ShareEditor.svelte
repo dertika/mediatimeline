@@ -31,6 +31,14 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
 
+  async function setRouteTime(field: "routeFrom" | "routeTo", e: Event & { currentTarget: HTMLInputElement }) {
+    const raw = e.currentTarget.value;
+    const date = raw ? new Date(raw) : null;
+    if (!(await patch({ [field]: date && !Number.isNaN(date.getTime()) ? date.toISOString() : null }))) {
+      e.currentTarget.value = toLocalInput(share[field]);
+    }
+  }
+
   async function patch(body: Record<string, unknown>) {
     busy = true;
     error = null;
@@ -298,6 +306,31 @@
           Statt gerader Linien zeigen Karte und Tour die aufgezeichnete Strecke zwischen dem ersten und letzten Foto,
           nach Verkehrsmittel eingefärbt. Rund um Start und Ziel wird sie abgeschnitten.
         </p>
+        {#if share.showRoute}
+          <label>
+            Route ab (Hinreise, optional)
+            <input
+              type="datetime-local"
+              value={toLocalInput(share.routeFrom)}
+              disabled={busy}
+              onchange={(e) => setRouteTime("routeFrom", e)}
+            />
+          </label>
+          <label>
+            Route bis (Rückreise, optional)
+            <input
+              type="datetime-local"
+              value={toLocalInput(share.routeTo)}
+              disabled={busy}
+              onchange={(e) => setRouteTime("routeTo", e)}
+            />
+          </label>
+          <p class="hint muted">
+            Leer: Die Route reicht vom ersten bis zum letzten Foto. Mit „ab“ kommt die Hinreise vom Start dazu, mit „bis“ die
+            Rückreise zum Ziel. Nur so weit holt GeoPulse die Fahrten, damit nicht der ganze Weg davor erscheint. Der Wert gilt
+            nur, wenn er vor dem ersten Foto bzw. nach dem letzten liegt. Die Uhrzeit ist die dieses Browsers.
+          </p>
+        {/if}
       {/if}
     </fieldset>
 

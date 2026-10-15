@@ -79,7 +79,7 @@ npm run build   # Frontend + Backend
 - Statt Push-Benachrichtigungen: Hinweis-Pille „N neue Fotos · Zum nächsten“. Beim ersten Besuch gilt alles als gesehen.
 - Fotos laden progressiv (Thumbnail → Preview). Weite Sprünge erst nah ans Ziel, dann gleiten.
 - `content-visibility` / Tage stückweise laden bewusst **nicht**, weil die Sprungziele sonst ungenau werden (Issue #5 bleibt offen).
-- GeoPulse: Die Karte zeigt alle Fahrten zwischen erstem und letztem Foto, auch Wanderungen ohne Fotos. Die Tour bleibt bei Wegen zwischen Orten. Gegen **Release-Tags** prüfen (aktuell 1.39, Pfade `/api/streaming-timeline`, `/api/gps/path`), nicht gegen GeoPulse `main` (dort liegt das unveröffentlichte v2).
+- GeoPulse: Die Karte zeigt alle Fahrten zwischen erstem und letztem Foto, auch Wanderungen ohne Fotos. Hin- und Rückreise nur, wenn der Link „Route ab/bis“ (`route_from`/`route_to`) setzt; die Zeiten erweitern den Bereich nur, sonst käme der ganze Weg davor und danach. Die Tour bleibt bei Wegen zwischen Orten. Gegen **Release-Tags** prüfen (aktuell 1.39, Pfade `/api/streaming-timeline`, `/api/gps/path`), nicht gegen GeoPulse `main` (dort liegt das unveröffentlichte v2).
 - Foto-Links nutzen `?foto=<id>` statt `#`, damit die Linkvorschau das Foto zeigt. Bei Passwort-Links wird nie ein Foto verraten.
 
 ## Betrieb beim Nutzer (allgemein)

@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.18.0] – 2026-10-15
+
+### Neu
+- GeoPulse-Route mit **Hin- und Rückreise**: Pro Link gibt es die optionalen Felder „Route ab“ und „Route bis“ (nur sichtbar, wenn die GeoPulse-Route eingeschaltet ist). Nur in diesem Zeitraum holt GeoPulse die Fahrten, damit nicht der ganze Weg davor oder danach erscheint. Leer bleibt alles wie bisher (erstes bis letztes Foto). Die Zeiten können den Bereich nur erweitern, nie die Fotos abschneiden; die Uhrzeit ist die des Browsers.
+- Die Tour fährt die Hinreise vom Start der Reise zum ersten Ort und die Rückreise zum Ziel entlang der aufgezeichneten Strecke ab (bisher geradlinig). Auf der Karte erscheinen sie in den Farben der Verkehrsmittel; Start und Ziel bleiben datenschutzhalber abgeschnitten.
+
 ## [0.17.1] – 2026-10-15
 
 ### Geändert
@@ -152,6 +158,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.18.0]: https://github.com/dertika/mediatimeline/pull/62
 [0.17.1]: https://github.com/dertika/mediatimeline/pull/61
 [0.17.0]: https://github.com/dertika/mediatimeline/pull/58
 [0.16.0]: https://github.com/dertika/mediatimeline/pull/57

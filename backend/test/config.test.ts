@@ -13,6 +13,14 @@ describe("config", () => {
     expect(config.cache.albumTtlSeconds).toBe(300);
   });
 
+  it("has a 15 s geocoder timeout that can be changed within 1 to 60", () => {
+    const base = { immich: { url: "https://immich.example.com", apiKey: "k" } };
+    expect(parseConfig(base).geocoder.timeoutSeconds).toBe(15);
+    expect(parseConfig({ ...base, geocoder: { timeoutSeconds: 30 } }).geocoder.timeoutSeconds).toBe(30);
+    expect(() => parseConfig({ ...base, geocoder: { timeoutSeconds: 0 } })).toThrow();
+    expect(() => parseConfig({ ...base, geocoder: { timeoutSeconds: 61 } })).toThrow();
+  });
+
   it("fails with a readable message when required values are missing", () => {
     expect(() => parseConfig({ immich: { url: "nope" } })).toThrow(/immich\.url[\s\S]*immich\.apiKey/);
   });

@@ -56,6 +56,10 @@ geocoder:
   # weltweit). Standard ist der öffentliche Dienst von komoot; die Anfragen
   # stellt das Backend, nur Admins können suchen.
   # url: https://photon.komoot.io
+  # Wie lange das Backend auf die Antwort wartet (1 bis 60, Standard 15). Der
+  # öffentliche Dienst braucht zeitweise viele Sekunden; ein eigener Photon-Server
+  # (url) ist schneller.
+  # timeoutSeconds: 15
 
 # Optional: echte Route aus GeoPulse (https://github.com/tess1o/geopulse).
 # Pro Link in der Adminseite einschaltbar; Karte und Tour zeigen dann die

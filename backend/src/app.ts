@@ -48,7 +48,7 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
   const cache = new AlbumCache(immich, config.cache.albumTtlSeconds * 1000, Date.now, (msg, err) =>
     app.log.warn({ err }, msg),
   );
-  const geocoder = opts.geocoder ?? new Geocoder(config.geocoder.url);
+  const geocoder = opts.geocoder ?? new Geocoder(config.geocoder.url, fetch, config.geocoder.timeoutSeconds * 1000);
   const geopulse =
     opts.geopulse !== undefined
       ? opts.geopulse

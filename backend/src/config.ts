@@ -64,6 +64,8 @@ const ConfigSchema = z.object({
         .url()
         .transform((u) => u.replace(/\/+$/, ""))
         .default("https://photon.komoot.io"),
+      // The public Photon service is sometimes slow (seconds until the first byte).
+      timeoutSeconds: z.number().int().min(1).max(60).default(15),
     })
     .prefault({}),
   // Optional: the real route of a trip from GeoPulse (https://github.com/tess1o/geopulse).

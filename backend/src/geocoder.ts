@@ -45,6 +45,7 @@ export class Geocoder {
   constructor(
     private url: string,
     private fetchImpl: typeof fetch = fetch,
+    private timeoutMs = 15_000,
   ) {}
 
   async search(query: string, lang = "de"): Promise<PlaceSuggestion[]> {
@@ -55,7 +56,7 @@ export class Geocoder {
     const params = new URLSearchParams({ q: query, limit: "6", lang });
     const res = await this.fetchImpl(`${this.url}/api/?${params}`, {
       headers: { "user-agent": "mediatimeline (https://github.com/dertika/mediatimeline)" },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(this.timeoutMs),
     });
     if (!res.ok) throw new Error(`geocoder answered ${res.status}`);
     const body = (await res.json()) as { features?: PhotonFeature[] };

@@ -20,12 +20,16 @@
 
   const id = `place-${Math.random().toString(36).slice(2, 9)}`;
   const DEBOUNCE_MS = 250;
+  const SLOW_MS = 2000;
 
   let query = $state("");
   let results = $state<Suggestion[]>([]);
   let active = $state(-1);
   let open = $state(false);
   let loading = $state(false);
+  /** The search takes noticeably long (the public Photon service is sometimes slow). */
+  let slow = $state(false);
+  let slowTimer: ReturnType<typeof setTimeout> | undefined;
   let error = $state<string | null>(null);
   let editing = $state(false);
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -36,11 +40,14 @@
 
   async function search(q: string) {
     controller?.abort();
-    controller = new AbortController();
+    const mine = (controller = new AbortController());
     loading = true;
     error = null;
+    slow = false;
+    clearTimeout(slowTimer);
+    slowTimer = setTimeout(() => (slow = true), SLOW_MS);
     try {
-      const res = await fetch(`/api/admin/geocode?q=${encodeURIComponent(q)}`, { signal: controller.signal });
+      const res = await fetch(`/api/admin/geocode?q=${encodeURIComponent(q)}`, { signal: mine.signal });
       if (!res.ok) throw new Error(String(res.status));
       results = await res.json();
       active = results.length > 0 ? 0 : -1;
@@ -48,9 +55,14 @@
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
       results = [];
-      error = "Die Ortssuche ist gerade nicht erreichbar.";
+      error = "Die Ortssuche antwortet nicht (zu langsam oder nicht erreichbar). Bitte später erneut versuchen.";
     } finally {
-      loading = false;
+      // An aborted older search must not switch off the state of the newer one.
+      if (controller === mine) {
+        loading = false;
+        clearTimeout(slowTimer);
+        slow = false;
+      }
     }
   }
 
@@ -147,6 +159,7 @@
       {/if}
     </div>
     {#if editing}<button type="button" class="link" onclick={() => (editing = false)}>Abbrechen</button>{/if}
+    {#if slow && loading}<span class="slow" role="status">Suche dauert länger …</span>{/if}
     {#if error}<span class="error">{error}</span>{/if}
   {:else if value}
     <span class="chosen">
@@ -267,6 +280,10 @@
     text-decoration: underline;
   }
 
+  .slow {
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
   .error {
     color: var(--danger);
     font-size: 0.8rem;

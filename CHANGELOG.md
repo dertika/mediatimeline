@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.17.1] – 2026-10-15
+
+### Geändert
+- Die Ortssuche der Adminseite wartet jetzt bis zu 15 Sekunden auf Photon (vorher fest 5). Der öffentliche Dienst `photon.komoot.io` antwortet zeitweise erst nach 7 bis 13 Sekunden, dann kam immer „Die Ortssuche ist gerade nicht erreichbar.“ Das Limit ist in der `config.yaml` einstellbar (`geocoder.timeoutSeconds`, 1 bis 60).
+- Dauert eine Suche länger als zwei Sekunden, steht unter dem Feld „Suche dauert länger …“. Die Fehlermeldung sagt jetzt, dass die Suche zu langsam oder nicht erreichbar ist.
+
 ## [0.17.0] – 2026-10-14
 
 ### Neu
@@ -146,6 +152,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.17.1]: https://github.com/dertika/mediatimeline/pull/61
 [0.17.0]: https://github.com/dertika/mediatimeline/pull/58
 [0.16.0]: https://github.com/dertika/mediatimeline/pull/57
 [0.15.1]: https://github.com/dertika/mediatimeline/pull/56

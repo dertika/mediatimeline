@@ -142,6 +142,11 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Messung nur gegen den Mock mit künstlicher Verzögerung (3 s je Vorschau, 2 s Wartezeit, alle Fotos an einem Ort): vorher ca. 0,6 s leerer Rahmen pro Foto, nachher 0. Bei Fotos an verschiedenen Orten reichte schon das alte Vorladen (ein Schritt dauert dort ca. 7 s). Wichtig beim Testen mit Playwright: Request-Interception (`route`) schaltet den Browser-Cache ab, dann sieht man keinen Vorlade-Effekt.
 - Nachtrag (gleiche Version): Radius ab **10 m** (Backend `min(10)`, Feld `step=1`). Neuer Schalter `tour_place_cards` (Migration 9, Standard 1, API `tourPlaceCards`, öffentlich `tour.placeCards`): Aus entfällt in `Tour.svelte#goTo` nur der Zweig der Ortskarte (`travel && arrive && i === 0`); Flug, Ortsname am Foto, Tageskarte bei neuem Tag und die Karten von Start/Ziel bleiben. Auslöser war die Tourdauer: bei kleinem Radius kam die Karte sonst zwischen fast jedem Bild. `estimateTourSeconds` zählt die Kartenpause dann nur noch für Start/Ziel.
 
+### 0.17.1 – Ortssuche bei langsamem Photon
+- Meldung „Die Ortssuche ist gerade nicht erreichbar.“ mit `TimeoutError` im Journal. Messung auf dem Server des Nutzers (`curl -w`): DNS 0,01 s, Verbindung 0,03 s, TLS 0,11 s, **erstes Byte nach 9 s**; im Container 7 bis 13 s je Anfrage. Also lag es am öffentlichen Photon-Dienst, nicht am Netz (IPv6 fehlt auf dem Server, Node weicht ohne Verzögerung auf IPv4 aus). Das feste Limit von 5 s passte dazu nicht.
+- Jetzt `geocoder.timeoutSeconds` (Standard 15, 1 bis 60), keine automatische Wiederholung (verdoppelt nur die Wartezeit). `PlaceInput.svelte` zeigt nach 2 s „Suche dauert länger …“. Ein abgebrochener älterer Suchlauf darf den Ladezustand des neueren nicht zurücksetzen (Vergleich mit dem aktuellen `AbortController`).
+- Nur gegen eine verzögerte Attrappe getestet.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

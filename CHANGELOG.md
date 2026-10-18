@@ -4,6 +4,9 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 
 ## [0.18.1] – 2026-10-18
 
+### Geändert
+- Adminseite: Alben mit Links starten zugeklappt. Neben „Weiteren Link erstellen“ zeigt ein Knopf „▸ 2 Links“, dass es schon Links gibt, und klappt sie auf und wieder zu. Ein neu erstellter Link klappt das Album auf. Alben ohne Link bleiben wie bisher.
+
 ### Behoben
 - Läuft die Authelia-Sitzung ab, zeigt die Adminseite nicht mehr „Alben konnten nicht geladen werden“ mit einem „Erneut versuchen“, das nie hilft. Stattdessen lädt sie die Seite neu, der Browser landet beim Authelia-Login und kommt danach zur Verwaltung zurück. Das gilt auch, wenn die Sitzung mitten in der Bearbeitung abläuft (Einstellungen speichern, Ortssuche, Cache leeren). Ist stattdessen die Verbindung weg, bleibt es bei der Fehlermeldung, ohne Neuladen; höchstens ein automatisches Neuladen alle 15 Sekunden.
 

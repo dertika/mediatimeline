@@ -157,6 +157,7 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Beobachtet (Screenshot des Nutzers): Nach Ablauf der Sitzung zeigte die Adminseite „Alben konnten nicht geladen werden …“, „Erneut versuchen“ half nie, nur ein Neuladen der Seite führte zum Login.
 - Ursache: Leitet der Proxy die API-Anfrage auf die Authelia-Domain um, folgt `fetch` der Weiterleitung, die andere Herkunft scheitert an CORS, `fetch` wirft. Das fiel in den allgemeinen Fehlerzweig. Das nginx-Beispiel in `deploy/` antwortet für `/api/admin/` mit einem schlichten 401, andere Einrichtungen leiten um; beide Wege sind jetzt abgedeckt.
 - Neu `adminFetch.ts` (`redirect: "manual"`, `opaqueredirect` → `location.reload()`, bei geworfenem Fehler erst prüfen, ob `/admin` umleitet, damit eine fehlende Verbindung nicht neu lädt; höchstens ein Neuladen je 15 s per `sessionStorage`). Die Adminseite lädt bei 401 ohne OIDC-Anmeldung einmal selbst neu.
+- Nachtrag (gleiche Version): Alben mit Links sind in der Adminseite einklappbar und starten zugeklappt (`expanded` je Album-ID im Zustand der Seite, nicht gespeichert; Knopf „▸ N Links“ mit `aria-expanded`). Ein neu erstellter Link klappt das Album auf.
 - Getestet gegen einen Vorschaltserver als Authelia-Attrappe (Cookie, 302 oder 401 für die API), nicht gegen die echte Einrichtung. Nachstellen der Fehlerseite: Seite aus dem Cache liefern (Playwright `route`), Cookie weg. Dabei nur den ersten Aufruf von `/admin` aus dem Cache bedienen, sonst sieht das Neuladen wieder die alte Seite.
 
 ## Test-Setup in der Cloud-Sitzung

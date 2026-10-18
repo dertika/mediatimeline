@@ -69,6 +69,27 @@ podman run -d --name mediatimeline -p 127.0.0.1:8080:8080 \
 
 Alternativ: `podman-compose -f deploy/compose.yaml up -d` (erwartet `config.yaml` im Repo-Root).
 
+### Feste Version verwenden
+
+Jeder Push auf `main` baut ein Image mit diesen Tags (die Nummer kommt aus der `package.json`, es braucht keinen Git-Tag):
+
+| Tag | Bedeutung |
+| --- | --- |
+| `latest` | der jeweils neueste Stand |
+| `1.0.1` | genau diese Version |
+| `1.0` | die neueste Korrektur-Version von 1.0 (neue Funktionen kommen erst mit `1.1`) |
+| `sha-…` | ein bestimmter Commit |
+
+Nach einem fehlerhaften Update zurück auf eine feste Version, als Quadlet-Dienst (die Zeile `Image=` in `~/.config/containers/systemd/mediatimeline.container` ändern, zum Beispiel auf `Image=ghcr.io/dertika/mediatimeline:1.0.1`; Versionstags gibt es erst ab 1.0.1, frühere Stände nur als `sha-…`):
+
+```sh
+podman pull ghcr.io/dertika/mediatimeline:1.0.1
+systemctl --user daemon-reload
+systemctl --user restart mediatimeline
+```
+
+Mit `AutoUpdate=registry` folgt `podman auto-update` danach dem gewählten Tag: bei `1.0.1` bleibt alles stehen, bei `1.0` kommen nur Korrekturen. Die Version steht außerdem im Image-Label `org.opencontainers.image.version` (`podman inspect ghcr.io/dertika/mediatimeline:1.0 --format '{{ index .Config.Labels "org.opencontainers.image.version" }}'`).
+
 ### Docker und Bind Mounts: Rechte für `/data`
 
 Der Container läuft als Nutzer `node` mit **uid/gid 1000** und muss in `/data` schreiben dürfen (SQLite-Datenbank, `session-secret`). Podman regelt das mit der Volume-Option `:U` selbst. **Docker kennt `:U` nicht.** Ein Bind Mount auf einen Ordner, der root gehört (z. B. mit `sudo mkdir` angelegt), ist dann nicht beschreibbar. Der Dienst bricht beim Start ab und nennt im Log die uid und beide Lösungen:

@@ -171,6 +171,11 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Grenzen: nur Links nach dem Update, kein Abgleich zwischen Geräten, Safari-Löschfrist von 7 Tagen für Webspeicher. Entschieden wurde auf Nachfrage: Gültigkeit beim Öffnen prüfen und grau markieren, Vorschaubild zeigen.
 - Getestet nur gegen den Immich-Mock (Handy hell/dunkel, gesperrter Speicher, Status nicht erreichbar), nicht auf einem echten iPhone.
 
+### 1.0.0 – Erste stabile Version
+- Auslöser: Der Nutzer fragte, ob 0.20.0 schon eine 1.0 sei und wann man sie setzt. Die 0.x-Reihe heißt in SemVer „Entwicklungsphase“; 1.0 ist ein Versprechen, nicht ein Funktionsumfang. Offen waren zuletzt nur die Echttests von OIDC und GeoPulse. Der Nutzer meldete: GeoPulse (auch Hin- und Rückreise) läuft bei ihm, OIDC läuft in einer Umgebung eines Bekannten. Damit 1.0.0.
+- Zugesagt (README, Abschnitt „Stabilität“): `config.yaml`, Datenbank (nur angehängte Migrationen), Link-Format `/t/<token>`; Brüche nur mit Ankündigung und Hauptversion. Die Admin-API und die internen Endpunkte gehören nicht dazu.
+- Keine Code-Änderung, nur Version und Dokumentation. Offen bleiben Issue #5 und echte Geräte für Opera/iPhone-Eigenheiten (Wake Lock, Safari-Speicherfrist der Startseite).
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

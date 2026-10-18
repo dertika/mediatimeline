@@ -2,6 +2,12 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [1.0.0] – 2026-10-18
+
+### Neu
+- **Erste stabile Version.** Keine neue Funktion, sondern eine Zusage: `config.yaml`, Datenbank (Migrationen werden nur angehängt) und verschickte Links (`/t/<token>`) bleiben ab jetzt kompatibel. Brüche gibt es nur mit Ankündigung hier im CHANGELOG und einer neuen Hauptversion. Siehe README, Abschnitt „Stabilität“.
+- Der Stand der Tests ist nachgetragen: Die GeoPulse-Anbindung (auch Hin- und Rückreise) und die Anmeldung über OpenID Connect laufen in echten Umgebungen; die automatischen Tests nutzen weiter Attrappen.
+
 ## [0.20.0] – 2026-10-18
 
 ### Neu
@@ -180,6 +186,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[1.0.0]: https://github.com/dertika/mediatimeline/pull/67
 [0.20.0]: https://github.com/dertika/mediatimeline/pull/66
 [0.19.1]: https://github.com/dertika/mediatimeline/pull/65
 [0.19.0]: https://github.com/dertika/mediatimeline/pull/64

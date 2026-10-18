@@ -179,6 +179,10 @@ admin:
 
 Statuscodes der öffentlichen API: `404` = unbekannt/deaktiviert, `410` = abgelaufen, `401` = Passwort nötig, `429` = zu viele Passwortversuche (10 pro 15 min).
 
+## Stabilität
+
+Ab Version 1.0.0 bleiben die `config.yaml`, die Datenbank (Migrationen werden nur angehängt) und bereits verschickte Links (`/t/<token>`) kompatibel: Ein Update bricht keine bestehende Einrichtung. Eine Änderung, die das doch täte, kommt nur mit Ankündigung im [CHANGELOG](CHANGELOG.md) und einer neuen Hauptversion (2.0). Die Versionsnummern folgen [Semantic Versioning](https://semver.org/lang/de/): neue Funktion → zweite Stelle, Korrektur → dritte Stelle.
+
 ## iOS-App
 
 Unter [`ios/`](ios/README.md) liegt eine native iPhone-App (SwiftUI, iOS 17+) zum Ansehen geteilter Links: Timeline nach Tagen, Karte mit MapKit, Vollbild-Galerie, Passwort-Links und Hinweis auf neue Fotos. Eine Tour hat sie noch nicht. Installiert wird sie über Xcode auf dem eigenen iPhone, die Anleitung steht in [ios/README.md](ios/README.md).

@@ -57,11 +57,12 @@ npm run build   # Frontend + Backend
   5. Commit, Push, PR, PR-Aktivität abonnieren.
   6. Der Nutzer merged selbst, meist sofort.
 - Größere Wünsche erst als Plan mit kurzen Rückfragen (AskUserQuestion), Vorschläge mit Empfehlung.
-- Ehrlich bleiben: Was nur gegen Mocks getestet wurde, als solches benennen (z. B. GeoPulse, Opera auf echtem Gerät).
+- Ehrlich bleiben: Was nur gegen Mocks getestet wurde, als solches benennen (z. B. Opera auf echtem Gerät; GeoPulse und OIDC laufen seit 1.0.0 in echten Umgebungen des Nutzers, die automatischen Tests nutzen Attrappen).
 
 ## Versionierung
 
 - Jede Änderung: neuer Eintrag oben in `CHANGELOG.md` (Keep a Changelog, deutsch, mit PR-Link unten). Dazu die gleiche Version in den drei `package.json` (Root, backend, frontend) und als `MARKETING_VERSION` in `ios/MediaTimeline.xcodeproj/project.pbxproj` (4 Stellen), danach `npm install --package-lock-only`. `frontend/src/lib/version.test.ts` erzwingt den Gleichstand.
+- **Ab 1.0.0 gilt die Stabilitätszusage der README** (Abschnitt „Stabilität“): Änderungen an `config.yaml`, an den Migrationen oder an den Link-Formaten (`/t/<token>`) müssen abwärtskompatibel sein, sonst gibt es eine neue Hauptversion mit Ankündigung im CHANGELOG. Neue Funktion = Minor, Korrektur = Patch.
 - Die iOS-App hat dieselbe Version (`MARKETING_VERSION` in `ios/MediaTimeline.xcodeproj/project.pbxproj`, beide Configs), ebenfalls vom Versionstest geprüft.
 - Die Version steht in der Fußzeile (Admin, Timeline, Demo) und kommt per Vite `__APP_VERSION__` aus `frontend/package.json`.
 - Dependabot (`.github/dependabot.yml`, wöchentlich: npm, GitHub Actions, Basis-Image in `deploy/Dockerfile`) öffnet PRs für neue Versionen. Die bekommen keinen eigenen Changelog-Eintrag oder Versionssprung; beim nächsten Release kommt ein Sammel-Eintrag. Major-Updates von Node (Image), `@types/node`, TypeScript, `cookie`, `@sveltejs/kit` und `adapter-static` ignoriert Dependabot bewusst: Die macht man von Hand und mit Test (`@types/node` folgt der Node-Version im Dockerfile).
@@ -73,7 +74,7 @@ npm run build   # Frontend + Backend
 - Ortskarte der Tour (Karte mit Kartenpause beim Ortswechsel) ist pro Link abschaltbar, Standard an. Der Ortsname am Foto bleibt immer; Tageskarten sowie Start und Ziel der Reise behalten ihre Karten.
 - Startseite zeigt nur Timelines, die dieses Gerät selbst gemerkt hat (`visited.ts`, localStorage, höchstens 30, kein Abgleich zwischen Geräten). Passwort-Links ohne Entsperren nie mit Vorschaubild; Gültigkeit über `/api/public/timeline/:token/status`.
 - Akzentfarbe pro Link nur aus der **kuratierten Liste** (`backend/src/accent.ts` und `frontend/src/lib/accents.ts`, gleiche IDs, Test prüft Gleichstand und Kontrast), keine freie Farbwahl. Standard Waldgrün, die Adminseite bleibt grün. Neue Farben nur ans Ende anhängen.
-- Adminseite: Der **Authelia-Header bleibt der Standardweg**. OpenID Connect (`admin.oidc`) ist optional, standardmäßig aus und für andere Umgebungen gedacht; Gruppen wie bei Authelia (`allowedGroups`). Nur gegen eine Attrappe getestet, nicht gegen einen echten Anbieter.
+- Adminseite: Der **Authelia-Header bleibt der Standardweg**. OpenID Connect (`admin.oidc`) ist optional, standardmäßig aus und für andere Umgebungen gedacht; Gruppen wie bei Authelia (`allowedGroups`). Läuft in einer echten Umgebung eines Bekannten des Nutzers (Stand 1.0.0); die automatischen Tests nutzen weiter eine Attrappe (`backend/test/mockOidc.ts`).
 - Tour ab Foto (Option pro Link): startet direkt beim Foto; beim Verlassen zum zuletzt gezeigten Foto, nach komplettem Durchlauf an den Seitenanfang. Galerie dann über ⛶.
 - Highlights als Tour: Like im geteilten Album **oder** Favorit des Besitzers; Karte erst ab Mindestzahl solcher Fotos (pro Link, Standard 5, 0 = aus).
 - „Tour starten“ beginnt immer von vorn. **Fortsetzen** ist eine eigene Karte darunter, mit Restzeit, gilt 6 h, mit ✕ entfernbar.

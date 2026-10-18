@@ -159,6 +159,9 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Neu `adminFetch.ts` (`redirect: "manual"`, `opaqueredirect` → `location.reload()`, bei geworfenem Fehler erst prüfen, ob `/admin` umleitet, damit eine fehlende Verbindung nicht neu lädt; höchstens ein Neuladen je 15 s per `sessionStorage`). Die Adminseite lädt bei 401 ohne OIDC-Anmeldung einmal selbst neu.
 - Getestet gegen einen Vorschaltserver als Authelia-Attrappe (Cookie, 302 oder 401 für die API), nicht gegen die echte Einrichtung. Nachstellen der Fehlerseite: Seite aus dem Cache liefern (Playwright `route`), Cookie weg. Dabei nur den ersten Aufruf von `/admin` aus dem Cache bedienen, sonst sieht das Neuladen wieder die alte Seite.
 
+### 0.19.0 – Alben mit Links einklappbar
+- Alben mit Links sind in der Adminseite einklappbar und starten zugeklappt (`expanded` je Album-ID im Zustand der Seite, nicht gespeichert; Knopf „▸ N Links“ mit `aria-expanded`). Ein neu erstellter Link klappt das Album auf.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

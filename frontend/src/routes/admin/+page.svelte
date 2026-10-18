@@ -15,6 +15,8 @@
   let query = $state("");
   let onlyShared = $state(false);
   let creating = $state<string | null>(null);
+  /** Albums whose links are shown. Albums with links start collapsed, so the list stays short. */
+  let expanded = $state<Record<string, boolean>>({});
 
   async function load() {
     status = "loading";
@@ -50,7 +52,10 @@
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ albumId: album.id }),
       });
-      if (res.ok) album.shares.push(await res.json());
+      if (res.ok) {
+        album.shares.push(await res.json());
+        expanded[album.id] = true; // show the new link
+      }
     } finally {
       creating = null;
     }
@@ -136,18 +141,34 @@
               {album.assetCount} Medien{formatRange(album.startDate, album.endDate) ? ` · ${formatRange(album.startDate, album.endDate)}` : ""}
             </p>
           </div>
+          {#if album.shares.length}
+            <button
+              class="links-toggle"
+              aria-expanded={!!expanded[album.id]}
+              aria-controls="links-{album.id}"
+              title={expanded[album.id] ? "Links ausblenden" : "Links anzeigen"}
+              onclick={() => (expanded[album.id] = !expanded[album.id])}
+            >
+              <span class="chevron" aria-hidden="true">{expanded[album.id] ? "▾" : "▸"}</span>
+              {album.shares.length === 1 ? "1 Link" : `${album.shares.length} Links`}
+            </button>
+          {/if}
           <button class="primary" disabled={creating === album.id} onclick={() => createShare(album)}>
             {album.shares.length ? "Weiteren Link erstellen" : "Freigeben"}
           </button>
         </div>
-        {#each album.shares as share (share.id)}
-          <ShareEditor
-            {share}
-            geopulse={user?.geopulse ?? false}
-            onchange={(updated) => replaceShare(album, updated)}
-            ondelete={(id) => removeShare(album, id)}
-          />
-        {/each}
+        {#if expanded[album.id]}
+          <div class="links" id="links-{album.id}">
+            {#each album.shares as share (share.id)}
+              <ShareEditor
+                {share}
+                geopulse={user?.geopulse ?? false}
+                onchange={(updated) => replaceShare(album, updated)}
+                ondelete={(id) => removeShare(album, id)}
+              />
+            {/each}
+          </div>
+        {/if}
       </article>
     {:else}
       <p class="muted">Keine Alben gefunden.</p>
@@ -248,6 +269,7 @@
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .album-head img,
@@ -258,6 +280,28 @@
     object-fit: cover;
     background: var(--border);
     flex: none;
+  }
+
+  .links {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .links-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.875rem;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .links-toggle .chevron {
+    font-size: 0.8em;
   }
 
   .info {

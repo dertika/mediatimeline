@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { adminFetch } from "./adminFetch";
   import PlaceInput from "./PlaceInput.svelte";
   import { ACCENTS } from "./accents";
   import { formatDateTime } from "./format";
@@ -43,7 +44,7 @@
     busy = true;
     error = null;
     try {
-      const res = await fetch(`/api/admin/shares/${share.id}`, {
+      const res = await adminFetch(`/api/admin/shares/${share.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
@@ -108,7 +109,7 @@
   async function remove() {
     if (!confirm("Diesen Link wirklich widerrufen? Er funktioniert danach nicht mehr.")) return;
     busy = true;
-    const res = await fetch(`/api/admin/shares/${share.id}`, { method: "DELETE" });
+    const res = await adminFetch(`/api/admin/shares/${share.id}`, { method: "DELETE" });
     busy = false;
     if (res.ok) ondelete(share.id);
     else error = "Löschen fehlgeschlagen.";

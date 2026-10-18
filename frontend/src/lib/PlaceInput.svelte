@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick } from "svelte";
+  import { adminFetch } from "./adminFetch";
   import type { Place } from "./types";
 
   interface Suggestion extends Place {
@@ -47,7 +48,7 @@
     clearTimeout(slowTimer);
     slowTimer = setTimeout(() => (slow = true), SLOW_MS);
     try {
-      const res = await fetch(`/api/admin/geocode?q=${encodeURIComponent(q)}`, { signal: mine.signal });
+      const res = await adminFetch(`/api/admin/geocode?q=${encodeURIComponent(q)}`, { signal: mine.signal });
       if (!res.ok) throw new Error(String(res.status));
       results = await res.json();
       active = results.length > 0 ? 0 : -1;

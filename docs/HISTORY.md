@@ -153,6 +153,12 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - `stopLegs` (`route.ts`): Der Weg zum ersten Ort ist alles Aufgezeichnete vor seinem ersten Foto, der Weg zum Ziel alles nach dem letzten Foto. Ohne Zeiten sind das keine Punkte, also bleibt es geradlinig wie vorher.
 - Getestet nur gegen den GeoPulse-Mock (Flug Hamburg–Bergen vor dem ersten Foto, Zug Oslo–Hamburg danach, eine fremde Fahrt im Mai, die ohne passende Zeit draußen bleibt). Der Mock fährt gerade Linien, die Form der Strecke in der Tour ist also nicht sichtbar belegt, nur dass der Weg verwendet wird.
 
+### 0.18.1 – Abgelaufene Authelia-Sitzung
+- Beobachtet (Screenshot des Nutzers): Nach Ablauf der Sitzung zeigte die Adminseite „Alben konnten nicht geladen werden …“, „Erneut versuchen“ half nie, nur ein Neuladen der Seite führte zum Login.
+- Ursache: Leitet der Proxy die API-Anfrage auf die Authelia-Domain um, folgt `fetch` der Weiterleitung, die andere Herkunft scheitert an CORS, `fetch` wirft. Das fiel in den allgemeinen Fehlerzweig. Das nginx-Beispiel in `deploy/` antwortet für `/api/admin/` mit einem schlichten 401, andere Einrichtungen leiten um; beide Wege sind jetzt abgedeckt.
+- Neu `adminFetch.ts` (`redirect: "manual"`, `opaqueredirect` → `location.reload()`, bei geworfenem Fehler erst prüfen, ob `/admin` umleitet, damit eine fehlende Verbindung nicht neu lädt; höchstens ein Neuladen je 15 s per `sessionStorage`). Die Adminseite lädt bei 401 ohne OIDC-Anmeldung einmal selbst neu.
+- Getestet gegen einen Vorschaltserver als Authelia-Attrappe (Cookie, 302 oder 401 für die API), nicht gegen die echte Einrichtung. Nachstellen der Fehlerseite: Seite aus dem Cache liefern (Playwright `route`), Cookie weg. Dabei nur den ersten Aufruf von `/admin` aus dem Cache bedienen, sonst sieht das Neuladen wieder die alte Seite.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

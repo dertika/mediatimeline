@@ -66,6 +66,7 @@ npm run build   # Frontend + Backend
 - Die iOS-App hat dieselbe Version (`MARKETING_VERSION` in `ios/MediaTimeline.xcodeproj/project.pbxproj`, beide Configs), ebenfalls vom Versionstest geprüft.
 - Die Version steht in der Fußzeile (Admin, Timeline, Demo) und kommt per Vite `__APP_VERSION__` aus `frontend/package.json`.
 - Dependabot (`.github/dependabot.yml`, wöchentlich: npm, GitHub Actions, Basis-Image in `deploy/Dockerfile`) öffnet PRs für neue Versionen. Die bekommen keinen eigenen Changelog-Eintrag oder Versionssprung; beim nächsten Release kommt ein Sammel-Eintrag. Major-Updates von Node (Image), `@types/node`, TypeScript, `cookie`, `@sveltejs/kit` und `adapter-static` ignoriert Dependabot bewusst: Die macht man von Hand und mit Test (`@types/node` folgt der Node-Version im Dockerfile).
+- Die Image-Tags (`latest`, `X.Y.Z`, `X.Y`, `sha-…`) leitet `.github/workflows/container.yml` aus der Wurzel-`package.json` ab; dafür braucht es keinen Git-Tag.
 - **Keine Git-Tags pushen:** Der Sitzungs-Proxy erlaubt nur den Arbeitsbranch. Der Nutzer braucht keine Tags, er betreibt `latest` mit `podman auto-update`.
 
 ## Bewusste Entscheidungen (nicht ohne Rückfrage ändern)

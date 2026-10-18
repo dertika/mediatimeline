@@ -2,6 +2,11 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [1.0.1] – 2026-10-18
+
+### Geändert
+- Die Container-Images tragen jetzt Versionstags: Jeder Push auf `main` baut zusätzlich `X.Y.Z` (z. B. `1.0.1`) und `X.Y` (z. B. `1.0`), abgeleitet aus der `package.json`, dazu das Label `org.opencontainers.image.version`. Bisher gab es nur `latest` und `sha-…`, die Versionstags hätten einen Git-Tag gebraucht. So lässt sich nach einem fehlerhaften Update gezielt auf eine feste Version zurückgehen. Siehe README, „Feste Version verwenden“. Die Tags gibt es ab dieser Version; die früheren Stände (bis 1.0.0) bleiben nur über `sha-…` erreichbar. Die Anwendung selbst ist unverändert.
+
 ## [1.0.0] – 2026-10-18
 
 ### Neu
@@ -186,6 +191,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[1.0.1]: https://github.com/dertika/mediatimeline/pull/68
 [1.0.0]: https://github.com/dertika/mediatimeline/pull/67
 [0.20.0]: https://github.com/dertika/mediatimeline/pull/66
 [0.19.1]: https://github.com/dertika/mediatimeline/pull/65

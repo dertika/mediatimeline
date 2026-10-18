@@ -176,6 +176,12 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Zugesagt (README, Abschnitt „Stabilität“): `config.yaml`, Datenbank (nur angehängte Migrationen), Link-Format `/t/<token>`; Brüche nur mit Ankündigung und Hauptversion. Die Admin-API und die internen Endpunkte gehören nicht dazu.
 - Keine Code-Änderung, nur Version und Dokumentation. Offen bleiben Issue #5 und echte Geräte für Opera/iPhone-Eigenheiten (Wake Lock, Safari-Speicherfrist der Startseite).
 
+### 1.0.1 – Versionstags für die Container-Images
+- Frage des Nutzers: Haben die Container Versionsnummern? Ausgangslage: `container.yml` baute `latest` und `sha-…`; `type=semver` (`1.0.0`, `1.0`) greift nur bei einem Git-Tag `v*`, und Tags werden hier nicht gepusht (der Sitzungs-Proxy erlaubt nur den Arbeitsbranch). Der Nutzer betreibt `latest` mit `podman auto-update`.
+- Jetzt ein Schritt `Image version`, der die Version aus der Wurzel-`package.json` liest und zusätzlich `X.Y.Z` und `X.Y` taggt (auf `main` und im Pull-Request-Lauf, damit man die Tags schon vor dem Merge in den Logs sieht; gepusht wird nur auf `main`). `type=semver` bleibt für den Fall eines späteren `v*`-Tags. Das Label `org.opencontainers.image.version` überschreibt das der Metadata-Action.
+- Das `X.Y`-Tag wandert mit jedem Patch. Dependabot-PRs ändern die Version nicht und überschreiben deshalb `latest`, `sha-…` und das Tag der aktuellen Version.
+- Bewusst nicht gemacht: Version in `/healthz` (öffentlich erreichbar, würde die Version verraten).
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

@@ -162,6 +162,9 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 ### 0.19.0 – Alben mit Links einklappbar
 - Alben mit Links sind in der Adminseite einklappbar und starten zugeklappt (`expanded` je Album-ID im Zustand der Seite, nicht gespeichert; Knopf „▸ N Links“ mit `aria-expanded`). Ein neu erstellter Link klappt das Album auf.
 
+### 0.19.1 – Albumkopf auf schmalen Displays
+- Fehler aus dem Screenshot des Nutzers (iPhone): `.album-head` hatte `flex-wrap: wrap`, aber `.info` `flex: 1` mit Basis 0 und `min-width: 0`, schrumpfte also statt umzubrechen, und der Titel stand Buchstabe für Buchstabe in einer Spalte. Jetzt `flex: 1 1 10rem` und die beiden Knöpfe in `.actions`, das bei Platzmangel unter den Titel umbricht. Beim ersten Test (Pixel 7, 412 px) fiel das nicht auf, weil dort alles in eine Zeile passte; geprüft wird jetzt mit 320, 360, 390, 430 und 700 px.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

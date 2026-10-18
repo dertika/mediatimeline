@@ -129,6 +129,29 @@ describe("public timeline", () => {
     expect(body.albumComments).toEqual([]);
   });
 
+  it("reports a light status for the start page: valid, expired, disabled, unknown", async () => {
+    const { id, url } = await createShare();
+    const status = (token: string) => app.inject({ url: `/api/public/timeline/${token}/status` });
+    const token = tokenOf(url);
+
+    const ok = await status(token);
+    expect(ok.statusCode).toBe(200);
+    expect(ok.headers["cache-control"]).toBe("private, no-cache");
+    const body = ok.json();
+    expect(body).toMatchObject({ state: "ok", title: "Norwegen 2026", cover: "a1" });
+    expect(body.startDate).toBeTruthy();
+    expect(body).not.toHaveProperty("assets");
+
+    store.update(id, { titleOverride: "Sommer" });
+    expect((await status(token)).json().title).toBe("Sommer");
+
+    store.update(id, { expiresAt: "2000-01-01T00:00:00.000Z" });
+    expect((await status(token)).json()).toEqual({ state: "expired" });
+    store.update(id, { expiresAt: null, enabled: false });
+    expect((await status(token)).json()).toEqual({ state: "notfound" });
+    expect((await status("unknown")).json()).toEqual({ state: "notfound" });
+  });
+
   it("returns 404 for unknown or disabled tokens", async () => {
     expect((await app.inject({ url: "/api/public/timeline/unknown" })).statusCode).toBe(404);
     const { id, url } = await createShare();
@@ -514,6 +537,18 @@ describe("password protection", () => {
     expect(res.statusCode).toBe(401);
     expect(res.json()).toEqual({ error: "password_required", passwordRequired: true, title: "Norwegen 2026" });
     expect((await app.inject({ url: `/api/public/timeline/${token}/assets/a1/preview` })).statusCode).toBe(401);
+  });
+
+  it("reports the status without a photo while locked, with the cover once unlocked", async () => {
+    const { token } = await protectedShare();
+    const locked = await app.inject({ url: `/api/public/timeline/${token}/status` });
+    expect(locked.statusCode).toBe(200);
+    expect(locked.json()).toEqual({ state: "password", title: "Norwegen 2026" });
+
+    const right = await app.inject({ method: "POST", url: `/api/public/timeline/${token}/unlock`, payload: { password: "geheim" } });
+    const cookies = { mt_unlock: right.cookies.find((c) => c.name === "mt_unlock")!.value };
+    const open = (await app.inject({ url: `/api/public/timeline/${token}/status`, cookies })).json();
+    expect(open).toMatchObject({ state: "ok", cover: "a1" });
   });
 
   it("unlocks with the right password via a signed cookie", async () => {

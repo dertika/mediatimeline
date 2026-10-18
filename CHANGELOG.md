@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [0.20.0] – 2026-10-18
+
+### Neu
+- **Startseite mit den eigenen Timelines:** `reise.dertika.de/` zeigt jetzt die Timelines, die auf diesem Gerät schon mit einem Link geöffnet wurden, als Karten mit Vorschaubild (erstes Foto), Titel, Zeitraum und „zuletzt geöffnet vor …“, die zuletzt geöffnete zuerst. Ein Tipp öffnet die Timeline, das ✕ entfernt sie aus der Liste. Abgelaufene oder widerrufene Links erscheinen ausgegraut als „nicht mehr verfügbar“; passwortgeschützte mit Schloss statt Bild. Wer noch nichts geöffnet hat, sieht wie bisher den Hinweis auf den geteilten Link.
+- Die Liste liegt nur im Browser (höchstens 30 Einträge) und enthält nur Timelines, die nach diesem Update geöffnet wurden. Sie wird nicht zwischen Geräten abgeglichen. Safari löscht Webspeicher nach etwa einer Woche ohne Besuch, wenn die Seite nicht als App auf dem Home-Bildschirm liegt.
+- Neuer leichter Endpunkt `GET /api/public/timeline/:token/status` (Gültigkeit, Titel, Zeitraum, Vorschaubild). Bei einem Passwort-Link ohne Entsperren gibt er nie ein Foto preis.
+
 ## [0.19.1] – 2026-10-18
 
 ### Behoben
@@ -173,6 +180,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[0.20.0]: https://github.com/dertika/mediatimeline/pull/66
 [0.19.1]: https://github.com/dertika/mediatimeline/pull/65
 [0.19.0]: https://github.com/dertika/mediatimeline/pull/64
 [0.18.1]: https://github.com/dertika/mediatimeline/pull/63

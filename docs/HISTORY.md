@@ -165,6 +165,12 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 ### 0.19.1 – Albumkopf auf schmalen Displays
 - Fehler aus dem Screenshot des Nutzers (iPhone): `.album-head` hatte `flex-wrap: wrap`, aber `.info` `flex: 1` mit Basis 0 und `min-width: 0`, schrumpfte also statt umzubrechen, und der Titel stand Buchstabe für Buchstabe in einer Spalte. Jetzt `flex: 1 1 10rem` und die beiden Knöpfe in `.actions`, das bei Platzmangel unter den Titel umbricht. Beim ersten Test (Pixel 7, 412 px) fiel das nicht auf, weil dort alles in eine Zeile passte; geprüft wird jetzt mit 320, 360, 390, 430 und 700 px.
 
+### 0.20.0 – Startseite mit den eigenen Timelines
+- Wunsch: Die Startseite soll die Timelines zeigen, die der Browser schon mit einem Link geöffnet hat. Der HTTP-Cache lässt sich nicht auflisten, deshalb merkt sich die Timeline-Seite selbst `{token, title, lastVisit}` (`visited.ts`, `localStorage` unter `mediatimeline:visited`, höchstens 30). Startseite und Timelines haben denselben Ursprung, daher kann die Startseite die Liste lesen.
+- Neuer Endpunkt `/api/public/timeline/:token/status`, weil die volle Timeline-Antwort für eine Liste zu schwer ist (ganzes Album, Kommentare, GeoPulse-Route). Zustand `ok`/`password`/`expired`/`notfound`; bei Passwort ohne Entsperren nur der Titel, nie ein `cover`. Die Startseite fragt beim Öffnen je Link einmal (höchstens 6 parallel); ein Netzwerkfehler ändert die Karte nicht.
+- Grenzen: nur Links nach dem Update, kein Abgleich zwischen Geräten, Safari-Löschfrist von 7 Tagen für Webspeicher. Entschieden wurde auf Nachfrage: Gültigkeit beim Öffnen prüfen und grau markieren, Vorschaubild zeigen.
+- Getestet nur gegen den Immich-Mock (Handy hell/dunkel, gesperrter Speicher, Status nicht erreichbar), nicht auf einem echten iPhone.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

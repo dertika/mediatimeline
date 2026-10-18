@@ -132,6 +132,35 @@ export async function publicRoutes(app: FastifyInstance, deps: AppDeps) {
     };
   });
 
+  /**
+   * A light check of a link for the start page, which lists the timelines a browser opened before:
+   * is it still valid, its title and period, and the first photo as a cover. Never reveals a photo
+   * of a password-protected link that is not unlocked yet.
+   */
+  app.get<{ Params: { token: string } }>("/api/public/timeline/:token/status", async (req, reply) => {
+    reply.header("cache-control", "private, no-cache");
+    const share = store.getByToken(req.params.token);
+    if (!share || !share.enabled) return { state: "notfound" };
+    if (isExpired(share)) return { state: "expired" };
+    let snapshot: AlbumSnapshot;
+    try {
+      snapshot = await cache.get(share.albumId);
+    } catch (err) {
+      if (err instanceof ImmichError && (err.status === 404 || err.status === 400)) return { state: "notfound" };
+      throw err;
+    }
+    const { album, assets } = snapshot;
+    const title = share.titleOverride ?? album.albumName;
+    if (share.passwordHash && !isUnlocked(req, share)) return { state: "password", title };
+    return {
+      state: "ok",
+      title,
+      startDate: assets[0]?.localDateTime ?? null,
+      endDate: assets.at(-1)?.localDateTime ?? null,
+      cover: assets[0]?.id ?? null,
+    };
+  });
+
   app.post<{ Params: { token: string }; Body: { password?: unknown } }>(
     "/api/public/timeline/:token/unlock",
     {

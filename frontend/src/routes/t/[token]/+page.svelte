@@ -3,6 +3,7 @@
   import TimelineView from "$lib/TimelineView.svelte";
   import { applyAccent } from "$lib/accents";
   import { apiMedia } from "$lib/media";
+  import { recordVisit } from "$lib/visited";
   import type { Timeline } from "$lib/types";
 
   type State =
@@ -29,9 +30,14 @@
         const timeline: Timeline = await res.json();
         // Before the page renders: the map reads the accent once when it is built.
         applyAccent(timeline.accent);
+        recordVisit(token, timeline.title);
         view = { kind: "ready", timeline };
       }
-      else if (res.status === 401) view = { kind: "password", title: (await res.json()).title ?? null };
+      else if (res.status === 401) {
+        const title: string | null = (await res.json()).title ?? null;
+        if (title) recordVisit(token, title);
+        view = { kind: "password", title };
+      }
       else if (res.status === 410) view = { kind: "expired" };
       else if (res.status === 404) view = { kind: "notfound" };
       else view = { kind: "error" };

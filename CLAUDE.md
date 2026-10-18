@@ -24,6 +24,7 @@ frontend/src/lib/
   Tour.svelte          Vollbild-Tour (Leaflet flyTo, Tages-/Ortskarten, Pause, Wake Lock, Fortsetzen); tourPreload.ts lädt die nächsten 2 Medien vor
   TimelineMap.svelte   Übersichtskarte (Cluster, Start/Ziel, GeoPulse-Route mit Legende)
   tour.ts / route.ts   Stops, Flugkurve (van Wijk), Dauer-Schätzung / Routen-Legs für die Tour
+  visited.ts           geöffnete Timelines des Geräts für die Startseite (localStorage)
   progressive.ts       erst Thumbnail, dann Preview (Verweilzeit 150 ms)
   keepAwake.ts         Wake Lock + Video-Fallback (nur Opera / ohne API, nie WebKit)
   seenMedia.ts         gesehene Asset-IDs pro Link (localStorage) für „neue Fotos“
@@ -70,6 +71,7 @@ npm run build   # Frontend + Backend
 
 - Beim Springen zu einem Foto **kein grüner Rahmen** (0.8.1).
 - Ortskarte der Tour (Karte mit Kartenpause beim Ortswechsel) ist pro Link abschaltbar, Standard an. Der Ortsname am Foto bleibt immer; Tageskarten sowie Start und Ziel der Reise behalten ihre Karten.
+- Startseite zeigt nur Timelines, die dieses Gerät selbst gemerkt hat (`visited.ts`, localStorage, höchstens 30, kein Abgleich zwischen Geräten). Passwort-Links ohne Entsperren nie mit Vorschaubild; Gültigkeit über `/api/public/timeline/:token/status`.
 - Akzentfarbe pro Link nur aus der **kuratierten Liste** (`backend/src/accent.ts` und `frontend/src/lib/accents.ts`, gleiche IDs, Test prüft Gleichstand und Kontrast), keine freie Farbwahl. Standard Waldgrün, die Adminseite bleibt grün. Neue Farben nur ans Ende anhängen.
 - Adminseite: Der **Authelia-Header bleibt der Standardweg**. OpenID Connect (`admin.oidc`) ist optional, standardmäßig aus und für andere Umgebungen gedacht; Gruppen wie bei Authelia (`allowedGroups`). Nur gegen eine Attrappe getestet, nicht gegen einen echten Anbieter.
 - Tour ab Foto (Option pro Link): startet direkt beim Foto; beim Verlassen zum zuletzt gezeigten Foto, nach komplettem Durchlauf an den Seitenanfang. Galerie dann über ⛶.

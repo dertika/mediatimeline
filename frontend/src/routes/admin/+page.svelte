@@ -141,6 +141,7 @@
               {album.assetCount} Medien{formatRange(album.startDate, album.endDate) ? ` · ${formatRange(album.startDate, album.endDate)}` : ""}
             </p>
           </div>
+          <div class="actions">
           {#if album.shares.length}
             <button
               class="links-toggle"
@@ -156,6 +157,7 @@
           <button class="primary" disabled={creating === album.id} onclick={() => createShare(album)}>
             {album.shares.length ? "Weiteren Link erstellen" : "Freigeben"}
           </button>
+          </div>
         </div>
         {#if expanded[album.id]}
           <div class="links" id="links-{album.id}">
@@ -305,8 +307,24 @@
   }
 
   .info {
-    flex: 1;
+    /* The basis lets the buttons wrap below the title on narrow screens instead of squeezing it. */
+    flex: 1 1 10rem;
     min-width: 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  @media (max-width: 600px) {
+    .actions {
+      margin-left: 0;
+      width: 100%;
+    }
   }
 
   .info h2 {

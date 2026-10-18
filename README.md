@@ -136,6 +136,7 @@ In Immich unter *Kontoeinstellungen → API-Schlüssel* einen Key mit den Rechte
 `deploy/nginx/mediatimeline.conf` (plus Snippet `mediatimeline-proxy.conf`) enthält eine vollständige Beispielkonfiguration:
 
 - `/admin` und `/api/admin/` laufen über `auth_request` gegen Authelia (`/api/authz/auth-request`); nginx reicht `Remote-User`/`Remote-Groups` an mediatimeline weiter.
+- Läuft die Sitzung ab, lädt die Adminseite sich selbst neu und landet so beim Authelia-Login. Das klappt, ob `/api/admin/` mit einer Weiterleitung zum Login oder mit einem schlichten 401 antwortet.
 - Für alle anderen Pfade werden diese Header geleert, damit niemand sie fälschen kann.
 - Die Authelia-Regeln stehen als Kommentar am Ende der Datei (`/admin*` → `two_factor`, Rest → `bypass`).
 - Optional: ein Cache für Vorschaubilder (`proxy_cache_path` oben in der Datei, Verzeichnis `/var/cache/nginx/mediatimeline` anlegen). Er hält Thumbnails und Previews öffentlicher Links 10 Minuten und entlastet Immich, wenn viele Leute dieselbe Reise ansehen. Passwortgeschützte Links werden nie gecacht. Wird ein Link widerrufen oder bekommt er ein Passwort, sind bereits gecachte Bilder noch bis zu 10 Minuten abrufbar. Wer das nicht möchte, lässt den Block weg. Ob es greift, zeigt der Header `X-Cache-Status`.

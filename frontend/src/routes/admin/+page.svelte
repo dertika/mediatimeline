@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { adminFetch, reloadForLogin } from "$lib/adminFetch";
   import ShareEditor from "$lib/ShareEditor.svelte";
   import { formatRange } from "$lib/format";
   import type { AdminAlbum, ShareDto } from "$lib/types";
@@ -18,11 +19,13 @@
   async function load() {
     status = "loading";
     try {
-      const [meRes, albumsRes] = await Promise.all([fetch("/api/admin/me"), fetch("/api/admin/immich/albums")]);
+      const [meRes, albumsRes] = await Promise.all([adminFetch("/api/admin/me"), adminFetch("/api/admin/immich/albums")]);
       if (meRes.status === 401 || meRes.status === 403) {
         const body = await meRes.json().catch(() => null);
         loginUrl = typeof body?.login === "string" ? body.login : null;
         status = "unauthorized";
+        // Behind Authelia, a reload leads to the login (an expired session lands here as a 401).
+        if (!loginUrl) reloadForLogin();
         return;
       }
       if (!albumsRes.ok) throw new Error(String(albumsRes.status));
@@ -42,7 +45,7 @@
   async function createShare(album: AdminAlbum) {
     creating = album.id;
     try {
-      const res = await fetch("/api/admin/shares", {
+      const res = await adminFetch("/api/admin/shares", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ albumId: album.id }),
@@ -62,7 +65,7 @@
   }
 
   async function clearCache() {
-    await fetch("/api/admin/cache/clear", { method: "POST" });
+    await adminFetch("/api/admin/cache/clear", { method: "POST" });
   }
 
   const visible = $derived(
@@ -110,7 +113,7 @@
     <p class="error">Kein Zugriff. Bitte über Authelia anmelden.</p>
     <button onclick={() => location.reload()}>Neu laden</button>
   {:else if status === "error"}
-    <p class="error">Alben konnten nicht geladen werden. Ist Immich erreichbar und der API-Key gültig?</p>
+    <p class="error">Alben konnten nicht geladen werden. Ist Immich erreichbar und der API-Key gültig? Oder ist die Verbindung unterbrochen?</p>
     <button onclick={load}>Erneut versuchen</button>
   {:else}
     <div class="toolbar">

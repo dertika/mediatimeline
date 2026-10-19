@@ -2,6 +2,13 @@
 
 Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), die Versionsnummern [Semantic Versioning](https://semver.org/lang/de/). Die Versionen bis 0.6.0 wurden nachträglich aus den Pull Requests zusammengestellt.
 
+## [1.1.0] – 2026-10-19
+
+### Sicherheit
+- **Admin-Header nur noch mit Geheimnis von nginx (empfohlen):** Neue Einstellung `admin.proxySecret` (oder `MEDIATIMELINE_PROXY_SECRET` bzw. `MEDIATIMELINE_PROXY_SECRET_FILE` für ein Podman-Secret). Ist sie gesetzt, gelten `Remote-User`/`Remote-Groups` nur, wenn nginx zusätzlich denselben Wert im Header `X-Proxy-Auth` mitschickt. Hintergrund: Bei rootless Podman sieht der Container jeden Client mit einer Adresse aus dem Podman-Netz. Wer den veröffentlichten Port direkt erreichte (etwa aus dem Heimnetz), konnte die Header selbst setzen und war Admin, weil `trustedProxies` nginx nicht von anderen Clients unterscheiden konnte. Einrichtung siehe README, „Gemeinsames Geheimnis zwischen nginx und mediatimeline“; das nginx-Beispiel und die Quadlet-Datei enthalten die nötigen Zeilen.
+- Ohne `proxySecret` verhält sich alles wie bisher, beim Start steht dann eine Warnung im Log. `trustedProxies` bitte **nicht** auf `["loopback"]` verkleinern: Bei rootless Podman sperrt das auch nginx aus.
+- Falls der Port bisher aus dem Netz erreichbar war: In der Adminseite unter „nur freigegebene“ prüfen, ob unbekannte Links existieren.
+
 ## [1.0.1] – 2026-10-18
 
 ### Geändert
@@ -191,6 +198,7 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 - Öffentliche Foto-Timelines aus Immich-Alben: Adminseite hinter Authelia, teilbare Links mit optionalem Passwort und Ablaufdatum, Karte der Aufnahmeorte, Fotos und Videos nach Tagen (#1).
 - Container-Image auf der GitHub Container Registry, gebaut von GitHub Actions (#2).
 
+[1.1.0]: https://github.com/dertika/mediatimeline/pull/69
 [1.0.1]: https://github.com/dertika/mediatimeline/pull/68
 [1.0.0]: https://github.com/dertika/mediatimeline/pull/67
 [0.20.0]: https://github.com/dertika/mediatimeline/pull/66

@@ -161,10 +161,32 @@ In Immich unter *Kontoeinstellungen → API-Schlüssel* einen Key mit den Rechte
 - `/admin` und `/api/admin/` laufen über `auth_request` gegen Authelia (`/api/authz/auth-request`); nginx reicht `Remote-User`/`Remote-Groups` an mediatimeline weiter.
 - Läuft die Sitzung ab, lädt die Adminseite sich selbst neu und landet so beim Authelia-Login. Das klappt, ob `/api/admin/` mit einer Weiterleitung zum Login oder mit einem schlichten 401 antwortet.
 - Für alle anderen Pfade werden diese Header geleert, damit niemand sie fälschen kann.
+- In den beiden Admin-Locations schickt nginx zusätzlich das gemeinsame Geheimnis `X-Proxy-Auth` mit (siehe unten).
 - Die Authelia-Regeln stehen als Kommentar am Ende der Datei (`/admin*` → `two_factor`, Rest → `bypass`).
 - Optional: ein Cache für Vorschaubilder (`proxy_cache_path` oben in der Datei, Verzeichnis `/var/cache/nginx/mediatimeline` anlegen). Er hält Thumbnails und Previews öffentlicher Links 10 Minuten und entlastet Immich, wenn viele Leute dieselbe Reise ansehen. Passwortgeschützte Links werden nie gecacht. Wird ein Link widerrufen oder bekommt er ein Passwort, sind bereits gecachte Bilder noch bis zu 10 Minuten abrufbar. Wer das nicht möchte, lässt den Block weg. Ob es greift, zeigt der Header `X-Cache-Status`.
 
 Zusätzlich akzeptiert das Backend `Remote-User` nur von Adressen in `server.trustedProxies`. Welche Adresse der Container für nginx sieht, hängt vom Podman-Netzwerk ab (rootless mit pasta/slirp4netns oft `10.0.2.2` bzw. die Host-IP). Bei einem 401 auf der Adminseite steht die tatsächliche Adresse im Log (`podman logs mediatimeline`, Feld `remoteAddress`) und gehört dann in `trustedProxies`. Mit `admin.allowedGroups` lässt sich der Zugriff auf Authelia-Gruppen einschränken.
+
+### Gemeinsames Geheimnis zwischen nginx und mediatimeline (empfohlen)
+
+Bei rootless Podman kommt jede Verbindung über `rootlessport` bzw. pasta an. Der Container sieht dann jeden Client mit einer Adresse aus dem Podman-Netz, egal ob die Anfrage von nginx stammt oder von einem anderen Gerät, das den veröffentlichten Port erreicht. `trustedProxies` kann nginx dann nicht von einem Handy im WLAN unterscheiden, und wer `Remote-User` selbst setzt, wäre Admin. Deshalb gibt es `admin.proxySecret`: Ist es gesetzt, gelten die Header nur, wenn nginx zusätzlich genau diesen Wert in `X-Proxy-Auth` mitschickt (Name änderbar über `admin.proxySecretHeader`).
+
+1. Geheimnis als Podman-Secret anlegen und in `mediatimeline.container` einbinden (die Zeilen stehen dort als Kommentar):
+   ```sh
+   openssl rand -hex 32 | tr -d '\n' | podman secret create mediatimeline_proxy_secret -
+   ```
+   ```ini
+   Secret=mediatimeline_proxy_secret,type=mount,target=/run/secrets/mediatimeline_proxy_secret
+   Environment=MEDIATIMELINE_PROXY_SECRET_FILE=/run/secrets/mediatimeline_proxy_secret
+   ```
+   Alternativ `admin.proxySecret` direkt in die `config.yaml` (mindestens 32 Zeichen).
+2. Denselben Wert in nginx in `location /admin` und `location /api/admin/` setzen und in allen anderen Locations leeren, wie in `deploy/nginx/mediatimeline.conf`:
+   ```nginx
+   proxy_set_header X-Proxy-Auth "der-gleiche-wert";
+   ```
+3. `systemctl --user daemon-reload && systemctl --user restart mediatimeline`, dann `sudo nginx -t && sudo systemctl reload nginx`.
+
+`trustedProxies` bleibt dabei, wie es ist: Die Adresse wird weiterhin zusätzlich geprüft. Auf `["loopback"]` zu verkleinern sperrt bei rootless Podman in der Regel auch nginx aus. Ohne `proxySecret` ändert sich nichts, beim Start steht dann eine Warnung im Log. Kommt `Remote-User` mit fehlendem oder falschem Geheimnis an, steht das ebenfalls im Log (ohne den Wert).
 
 ### OpenID Connect (optional)
 
@@ -183,7 +205,7 @@ admin:
 
 - Beim Anbieter einen Client mit dem Ablauf „Authorization Code“ anlegen. Rücksprungadresse: `https://timeline.example.com/api/auth/callback`.
 - Die Gruppen kommen aus dem Claim `groups` (einstellbar mit `groupsClaim`), aus dem ID-Token oder, falls dort nicht enthalten, vom Userinfo-Endpunkt. Der Benutzername kommt aus `preferred_username`, sonst aus der E-Mail-Adresse.
-- Ohne `oidc` ändert sich nichts. Mit `oidc` zeigt die Adminseite ohne Anmeldung den Knopf „Mit OpenID Connect anmelden“. Kommen Header von einem vertrauten Proxy an, gelten sie weiterhin zuerst.
+- Ohne `oidc` ändert sich nichts. Mit `oidc` zeigt die Adminseite ohne Anmeldung den Knopf „Mit OpenID Connect anmelden“. Kommen Header von einem vertrauten Proxy an (mit `admin.proxySecret` auch mit dem passenden Geheimnis), gelten sie weiterhin zuerst.
 - nginx darf für `/admin` und `/api/admin/` dann **kein** `auth_request` erzwingen und muss die Header `Remote-User`/`Remote-Groups` leeren, sonst blockiert nginx die Seite, bevor sie den OIDC-Knopf zeigen kann.
 - Die Sitzung ist ein signiertes Cookie (`sessionHours`, Standard 12). Änderungen der Gruppen beim Anbieter gelten erst nach einer neuen Anmeldung. Wer alle Sitzungen sofort beenden will, ändert `server.sessionSecret` (oder löscht `session-secret` im Datenverzeichnis); dabei verfallen auch die Passwort-Freischaltungen der Links.
 - Der Anbieter wird erst beim ersten Login abgefragt: Ein falscher `issuer` verhindert den Start nicht, sondern zeigt auf der Adminseite „Die Anmeldung hat nicht geklappt“ (Details im Log). `issuer` muss `https` nutzen, `http` geht nur für `localhost`.

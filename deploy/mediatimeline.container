@@ -23,6 +23,12 @@ Volume=mediatimeline-data:/data:U,Z
 #   printf '%s' 'KEY' | podman secret create immich_api_key -
 # Secret=immich_api_key,type=mount,target=/run/secrets/immich_api_key
 # Environment=MEDIATIMELINE_IMMICH_API_KEY_FILE=/run/secrets/immich_api_key
+# Recommended with nginx and Authelia: the shared secret nginx sends as
+# X-Proxy-Auth (see README, "Authelia & nginx"). Rootless Podman hides the
+# client address, so without it anyone reaching this port could pose as admin.
+#   openssl rand -hex 32 | tr -d '\n' | podman secret create mediatimeline_proxy_secret -
+# Secret=mediatimeline_proxy_secret,type=mount,target=/run/secrets/mediatimeline_proxy_secret
+# Environment=MEDIATIMELINE_PROXY_SECRET_FILE=/run/secrets/mediatimeline_proxy_secret
 # Optional: GeoPulse on the same host. Join its Podman network so that
 # geopulse.url can use the container name (e.g. http://geopulse-backend:8080),
 # and keep its API token in a secret as well.

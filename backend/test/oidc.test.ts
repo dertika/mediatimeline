@@ -26,13 +26,14 @@ afterAll(async () => {
   await idp.app.close();
 });
 
-async function build(oidc: object | null = {}, allowedGroups = ["admins"]) {
+async function build(oidc: object | null = {}, allowedGroups = ["admins"], admin: object = {}) {
   await app?.close();
   const config = parseConfig({
     immich: { url: immich.url, apiKey: API_KEY },
     server: { trustedProxies: ["loopback"], publicBaseUrl: BASE },
     admin: {
       allowedGroups,
+      ...admin,
       ...(oidc ? { oidc: { issuer: idp.issuer, clientId: CLIENT_ID, clientSecret: CLIENT_SECRET, ...oidc } } : {}),
     },
   });
@@ -212,6 +213,16 @@ describe("OpenID Connect login", () => {
       headers: { ...ADMIN_HEADERS, cookie: cookieHeader({ mt_admin: session.mt_admin! }) },
     });
     expect(both.json()).toMatchObject({ name: "carol", via: "header" });
+  });
+
+  it("falls back to the session when the proxy secret is missing", async () => {
+    await build({}, ["admins"], { proxySecret: "p".repeat(32) });
+    const { session } = await login();
+    const res = await app.inject({
+      url: "/api/admin/me",
+      headers: { ...ADMIN_HEADERS, cookie: cookieHeader({ mt_admin: session.mt_admin! }) },
+    });
+    expect(res.json()).toMatchObject({ name: "alice", via: "oidc" });
   });
 
   it("does not trust the headers from an address that is no proxy", async () => {

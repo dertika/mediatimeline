@@ -45,6 +45,27 @@ describe("config", () => {
     expect(withGeoPulse.geopulse).toEqual({ url: "http://geopulse:8080", apiKey: "from-secret", privacyRadiusMeters: 1000 });
   });
 
+  it("has no proxy secret by default and takes one from the environment or a file", () => {
+    const dir = mkdtempSync(join(tmpdir(), "mt-"));
+    const path = join(dir, "config.yaml");
+    writeFileSync(path, "immich:\n  url: https://a.example\n  apiKey: k\n");
+    writeFileSync(join(dir, "proxy"), "f".repeat(32) + "\n");
+
+    const plain = loadConfig({ MEDIATIMELINE_CONFIG: path });
+    expect(plain.admin.proxySecret).toBeUndefined();
+    expect(plain.admin.proxySecretHeader).toBe("X-Proxy-Auth");
+    expect(loadConfig({ MEDIATIMELINE_CONFIG: path, MEDIATIMELINE_PROXY_SECRET_FILE: join(dir, "proxy") }).admin.proxySecret).toBe(
+      "f".repeat(32),
+    );
+    expect(loadConfig({ MEDIATIMELINE_CONFIG: path, MEDIATIMELINE_PROXY_SECRET: "e".repeat(32) }).admin.proxySecret).toBe("e".repeat(32));
+  });
+
+  it("refuses a proxy secret shorter than 32 characters", () => {
+    expect(() => parseConfig({ immich: { url: "https://a.example", apiKey: "k" }, admin: { proxySecret: "kurz" } })).toThrow(
+      /admin\.proxySecret/,
+    );
+  });
+
   describe("OpenID Connect", () => {
     const base = { immich: { url: "https://i.example", apiKey: "k" }, server: { publicBaseUrl: "https://t.example" } };
     const oidc = { issuer: "https://id.example/", clientId: "mt", clientSecret: "s" };

@@ -44,6 +44,11 @@ export async function buildApp(opts: BuildOptions): Promise<FastifyInstance> {
     logger: opts.logger ?? true,
     trustProxy: config.server.trustedProxies,
   });
+  if (!config.admin.proxySecret) {
+    app.log.warn(
+      "admin.proxySecret is not set: Remote-User is trusted by the peer address alone, which behind rootless Podman can be any client (see README, Authelia & nginx)",
+    );
+  }
 
   const cache = new AlbumCache(immich, config.cache.albumTtlSeconds * 1000, Date.now, (msg, err) =>
     app.log.warn({ err }, msg),

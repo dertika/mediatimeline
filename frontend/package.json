@@ -22,9 +22,9 @@
     "@types/leaflet.markercluster": "^1.5.6",
     "cookie": "^0.7.2",
     "svelte": "^5.57.2",
-    "svelte-check": "^4.7.6",
+    "svelte-check": "^4.7.7",
     "typescript": "^5.9.3",
     "vite": "^8.3.4",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.5"
   }
 }

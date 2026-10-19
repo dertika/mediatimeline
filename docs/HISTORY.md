@@ -182,6 +182,14 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - Das `X.Y`-Tag wandert mit jedem Patch. Dependabot-PRs ändern die Version nicht und überschreiben deshalb `latest`, `sha-…` und das Tag der aktuellen Version.
 - Bewusst nicht gemacht: Version in `/healthz` (öffentlich erreichbar, würde die Version verraten).
 
+### 1.1.0 – Gemeinsames Geheimnis für die Admin-Header
+- Auslöser: Eine Sicherheitsprüfung beim Nutzer (Befund H1). Der Port war im LAN freigegeben; aus dem WLAN reichte `curl -H 'Remote-User: …' -H 'Remote-Groups: admins'` direkt auf den Port für vollen Admin-Zugriff. Ursache: Rootless Podman leitet veröffentlichte Ports über `rootlessport`, im Container hat jede Verbindung eine Adresse aus dem Podman-Netz (dort `10.89.0.0/24`), die in `trustedProxies` stand. Die IP-Prüfung unterscheidet nginx dann nicht von anderen Clients. Sofortmaßnahme beim Nutzer: Port aus der nftables-LAN-Freigabe genommen.
+- App-seitig jetzt `admin.proxySecret` (+ `proxySecretHeader`, Standard `X-Proxy-Auth`, ENV `MEDIATIMELINE_PROXY_SECRET(_FILE)`). Die Header gelten nur, wenn Adresse **und** Geheimnis passen. Vergleich über SHA-256 + `timingSafeEqual`, damit weder Zeit noch Länge etwas verraten.
+- Optional wegen der Stabilitätszusage (sonst bräche jede bestehende Einrichtung beim Update), daher Minor. Ohne Geheimnis eine Warnung beim Start.
+- Bewusst **nicht** empfohlen: `trustedProxies` auf `["loopback"]` verkleinern, wie es der Befund vorschlug. Bei rootless Podman sieht der Container auch nginx nicht als loopback, das sperrt die Adminseite aus. Das Geheimnis ist die eigentliche Absicherung.
+- `trustProxy` (X-Forwarded-*) hängt weiterhin nur an `trustedProxies`. Mit offenem Port könnte ein LAN-Client `X-Forwarded-For` setzen und so das Passwort-Rate-Limit umgehen; mit geschlossenem Port (nur nginx) nicht.
+- Getestet gegen die eigenen Tests und lokal per `curl`; nginx- und Podman-Teil sind Beispielkonfiguration, nicht in der echten Umgebung geprüft.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

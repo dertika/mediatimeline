@@ -48,6 +48,9 @@ const ConfigSchema = z.object({
       userHeader: z.string().default("Remote-User"),
       groupsHeader: z.string().default("Remote-Groups"),
       allowedGroups: z.array(z.string()).default([]),
+      // Shared secret nginx sends along with Remote-User; without it the headers are trusted by address alone.
+      proxySecret: z.string().min(32, "admin.proxySecret braucht mindestens 32 Zeichen").optional(),
+      proxySecretHeader: z.string().default("X-Proxy-Auth"),
       // Optional second way to sign in to the admin page (OpenID Connect).
       oidc: OidcSchema.optional(),
     })
@@ -108,6 +111,8 @@ export function parseConfig(raw: unknown): Config {
  *  MEDIATIMELINE_GEOPULSE_URL          overrides geopulse.url
  *  MEDIATIMELINE_GEOPULSE_API_KEY      overrides geopulse.apiKey
  *  MEDIATIMELINE_GEOPULSE_API_KEY_FILE reads geopulse.apiKey from a file
+ *  MEDIATIMELINE_PROXY_SECRET          overrides admin.proxySecret
+ *  MEDIATIMELINE_PROXY_SECRET_FILE     reads admin.proxySecret from a file (e.g. a Podman secret)
  *  MEDIATIMELINE_OIDC_CLIENT_SECRET    overrides admin.oidc.clientSecret (only with admin.oidc set)
  *  MEDIATIMELINE_OIDC_CLIENT_SECRET_FILE reads it from a file
  *  MEDIATIMELINE_DATA_DIR / MEDIATIMELINE_STATIC_DIR / PORT
@@ -135,6 +140,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       raw.geopulse.apiKey = readFileSync(env.MEDIATIMELINE_GEOPULSE_API_KEY_FILE, "utf8").trim();
     }
     if (env.MEDIATIMELINE_GEOPULSE_API_KEY) raw.geopulse.apiKey = env.MEDIATIMELINE_GEOPULSE_API_KEY;
+  }
+  if (env.MEDIATIMELINE_PROXY_SECRET || env.MEDIATIMELINE_PROXY_SECRET_FILE) {
+    raw.admin ??= {};
+    if (env.MEDIATIMELINE_PROXY_SECRET_FILE) {
+      raw.admin.proxySecret = readFileSync(env.MEDIATIMELINE_PROXY_SECRET_FILE, "utf8").trim();
+    }
+    if (env.MEDIATIMELINE_PROXY_SECRET) raw.admin.proxySecret = env.MEDIATIMELINE_PROXY_SECRET;
   }
   if (raw.admin?.oidc) {
     if (env.MEDIATIMELINE_OIDC_CLIENT_SECRET_FILE) {

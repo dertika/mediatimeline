@@ -19,6 +19,9 @@ server:
   # Adressen/Netze des Reverse-Proxys (nginx). Nur von dort wird Remote-User
   # akzeptiert und X-Forwarded-* vertraut. Erlaubt sind IPs, CIDRs und die
   # Schlüsselwörter loopback, linklocal, uniquelocal.
+  # Achtung: Bei rootless Podman (pasta/rootlessport) sieht der Container jeden
+  # Client mit einer Adresse aus dem Podman-Netz, nicht nur nginx. Die Adresse
+  # allein schützt dann nicht – dafür gibt es admin.proxySecret.
   trustedProxies: ["loopback", "10.0.2.2", "10.88.0.0/16"]
   # Geheimnis zum Signieren der Freischalt-Cookies passwortgeschützter Links.
   # Fehlt es, wird eines erzeugt und in /data/session-secret gespeichert.
@@ -32,6 +35,13 @@ admin:
   groupsHeader: Remote-Groups
   # Nur diese Authelia-Gruppen dürfen die Adminseite nutzen (leer = jeder angemeldete Benutzer)
   allowedGroups: ["admins"]
+  # Empfohlen: gemeinsames Geheimnis mit nginx (mindestens 32 Zeichen, z. B.
+  # `openssl rand -hex 32`). nginx sendet es in den Admin-Locations als
+  # X-Proxy-Auth; nur dann gelten Remote-User/Remote-Groups. Ohne Angabe wird
+  # wie bisher nur die Adresse geprüft. Besser als Podman-Secret über
+  # MEDIATIMELINE_PROXY_SECRET_FILE statt hier im Klartext.
+  # proxySecret: "…"
+  # proxySecretHeader: X-Proxy-Auth
   # Optional zweiter Weg: Anmeldung über OpenID Connect (Keycloak, Authentik, Authelia als
   # OIDC-Anbieter, …), wenn kein nginx mit Authelia-Header vorgeschaltet ist.
   # Braucht server.publicBaseUrl. Rücksprungadresse beim Anbieter:

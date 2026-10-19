@@ -54,7 +54,7 @@ const IdParams = z.object({ id: z.coerce.number().int().positive() });
 export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
   const { store, immich, cache, config, geocoder } = deps;
 
-  const { userHeader, groupsHeader, allowedGroups, oidc } = config.admin;
+  const { userHeader, groupsHeader, allowedGroups, proxySecret, proxySecretHeader, oidc } = config.admin;
   app.addHook(
     "onRequest",
     createAdminGuard({
@@ -62,6 +62,8 @@ export async function adminRoutes(app: FastifyInstance, deps: AppDeps) {
       userHeader,
       groupsHeader,
       allowedGroups,
+      proxySecret,
+      proxySecretHeader,
       oidc: oidc && {
         readSession,
         origin: new URL(config.server.publicBaseUrl!).origin,

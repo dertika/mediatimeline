@@ -75,6 +75,57 @@ describe("admin guard", () => {
     const res = await app.inject({ url: "/api/admin/me", headers: ADMIN });
     expect(res.json()).toEqual({ name: "alice", groups: ["users", "admins"], geopulse: false, via: "header" });
   });
+
+  describe("with admin.proxySecret", () => {
+    const PROXY_SECRET = "s".repeat(40);
+
+    beforeEach(async () => {
+      await app.close();
+      const config = parseConfig({
+        immich: { url: immich.url, apiKey: API_KEY },
+        server: { trustedProxies: ["loopback"] },
+        admin: { allowedGroups: ["admins"], proxySecret: PROXY_SECRET },
+      });
+      app = await buildApp({ config, store, sessionSecret: "x".repeat(32), logger: false });
+    });
+
+    it("accepts the headers only together with the secret", async () => {
+      const ok = await app.inject({ url: "/api/admin/me", headers: { ...ADMIN, "x-proxy-auth": PROXY_SECRET } });
+      expect(ok.json()).toMatchObject({ name: "alice", via: "header" });
+
+      const without = await app.inject({ url: "/api/admin/me", headers: ADMIN });
+      expect(without.statusCode).toBe(401);
+    });
+
+    it("turns away a wrong secret of any length", async () => {
+      for (const wrong of ["", "s", "s".repeat(39) + "t", PROXY_SECRET + "s"]) {
+        const res = await app.inject({ url: "/api/admin/me", headers: { ...ADMIN, "x-proxy-auth": wrong } });
+        expect(res.statusCode).toBe(401);
+      }
+    });
+
+    it("still needs a trusted peer", async () => {
+      const res = await app.inject({
+        url: "/api/admin/me",
+        headers: { ...ADMIN, "x-proxy-auth": PROXY_SECRET },
+        remoteAddress: "203.0.113.5",
+      });
+      expect(res.statusCode).toBe(401);
+    });
+
+    it("reads the secret from admin.proxySecretHeader", async () => {
+      await app.close();
+      const config = parseConfig({
+        immich: { url: immich.url, apiKey: API_KEY },
+        admin: { proxySecret: PROXY_SECRET, proxySecretHeader: "X-Mediatimeline-Proxy" },
+      });
+      app = await buildApp({ config, store, sessionSecret: "x".repeat(32), logger: false });
+      const ok = await app.inject({ url: "/api/admin/me", headers: { ...ADMIN, "x-mediatimeline-proxy": PROXY_SECRET } });
+      expect(ok.statusCode).toBe(200);
+      const old = await app.inject({ url: "/api/admin/me", headers: { ...ADMIN, "x-proxy-auth": PROXY_SECRET } });
+      expect(old.statusCode).toBe(401);
+    });
+  });
 });
 
 describe("admin api", () => {

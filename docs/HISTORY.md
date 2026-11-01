@@ -190,6 +190,9 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - `trustProxy` (X-Forwarded-*) hängt weiterhin nur an `trustedProxies`. Mit offenem Port könnte ein LAN-Client `X-Forwarded-For` setzen und so das Passwort-Rate-Limit umgehen; mit geschlossenem Port (nur nginx) nicht.
 - Getestet gegen die eigenen Tests und lokal per `curl`; nginx- und Podman-Teil sind Beispielkonfiguration, nicht in der echten Umgebung geprüft.
 
+### 1.1.1 – Dependabot mit Wartezeit
+- Wunsch: Dependabot soll nur „abgehangene“ Updates vorschlagen. Umsetzung mit `cooldown` je Paketsystem (`default-days: 7`, Patch 3, Minor 7, Major 21). Sicherheitsupdates sind vom Cooldown ausgenommen. Schon offene Dependabot-PRs ändern sich nicht; die Wirkung zeigt sich erst beim nächsten Wochenlauf (montags).
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:

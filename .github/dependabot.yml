@@ -1,5 +1,8 @@
 # Weekly check for new versions. Minor and patch updates of one ecosystem
-# arrive as a single pull request, major updates one by one.
+# arrive as a single pull request, major updates one by one. A new version is
+# only proposed once it has been out for a while (cooldown below), so that
+# versions pulled back in their first days never arrive; security updates
+# ignore the cooldown.
 version: 2
 updates:
   # backend and frontend are npm workspaces with one lockfile in the root, so
@@ -12,6 +15,11 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     labels: [dependencies]
+    cooldown:
+      default-days: 7
+      semver-major-days: 21
+      semver-minor-days: 7
+      semver-patch-days: 3
     groups:
       npm-minor-patch:
         update-types: [minor, patch]
@@ -39,6 +47,11 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     labels: [dependencies]
+    cooldown:
+      default-days: 7
+      semver-major-days: 21
+      semver-minor-days: 7
+      semver-patch-days: 3
     groups:
       actions-minor-patch:
         update-types: [minor, patch]
@@ -52,6 +65,11 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     labels: [dependencies]
+    cooldown:
+      default-days: 7
+      semver-major-days: 21
+      semver-minor-days: 7
+      semver-patch-days: 3
     ignore:
       - dependency-name: node
         update-types: ["version-update:semver-major"]

@@ -7,6 +7,9 @@ Alle nennenswerten Änderungen an mediatimeline. Das Format folgt [Keep a Change
 ### Geändert
 - Dependabot schlägt neue Versionen erst nach einer Wartezeit vor (`cooldown` in `.github/dependabot.yml`, für npm, GitHub Actions und das Basis-Image): 7 Tage, Patch-Versionen 3 Tage, Major-Versionen 21 Tage. So erreichen uns Versionen nicht mehr, die in den ersten Tagen zurückgezogen werden. Sicherheitsupdates sind ausgenommen und kommen weiter sofort. Die Anwendung selbst ist unverändert.
 
+### Behoben
+- Der Bau der Projektseite brach ab, wenn die Wikimedia-Commons-API „Search is currently too busy“ meldete: Das Demo-Skript (`site/scripts/demo-data.mjs`) wiederholte zwar HTTP-Fehler, aber nicht diese Meldung, die als normale Antwort mit `error`-Feld kommt. Es versucht jetzt bis zu fünfmal mit wachsender Wartezeit (2, 4, 8, 16 Sekunden).
+
 ## [1.1.0] – 2026-10-19
 
 ### Sicherheit

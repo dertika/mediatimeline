@@ -61,11 +61,19 @@ async function get(url, as = "json") {
   }
 }
 
-const api = (params) =>
-  get(`${API}?${new URLSearchParams({ format: "json", formatversion: "2", ...params })}`).then((r) => {
-    if (r.error) throw new Error(`Commons API: ${r.error.info}`);
-    return r;
-  });
+/**
+ * One API call. The API answers "Search is currently too busy" as a normal
+ * response with an `error` field, which `get` does not retry: do it here.
+ */
+async function api(params) {
+  const url = `${API}?${new URLSearchParams({ format: "json", formatversion: "2", ...params })}`;
+  for (let attempt = 1; ; attempt++) {
+    const r = await get(url);
+    if (!r.error) return r;
+    if (attempt >= 5) throw new Error(`Commons API: ${r.error.info}`);
+    await sleep(2000 * 2 ** (attempt - 1));
+  }
+}
 
 /** File details for up to 50 pages, as candidates. */
 async function details(selector) {

@@ -190,6 +190,10 @@ Dieses Dokument hält fest, was in den Claude-Code-Sitzungen gebaut wurde, **war
 - `trustProxy` (X-Forwarded-*) hängt weiterhin nur an `trustedProxies`. Mit offenem Port könnte ein LAN-Client `X-Forwarded-For` setzen und so das Passwort-Rate-Limit umgehen; mit geschlossenem Port (nur nginx) nicht.
 - Getestet gegen die eigenen Tests und lokal per `curl`; nginx- und Podman-Teil sind Beispielkonfiguration, nicht in der echten Umgebung geprüft.
 
+### 1.1.1 – Dependabot mit Wartezeit
+- Wunsch: Dependabot soll nur „abgehangene“ Updates vorschlagen. Umsetzung mit `cooldown` je Paketsystem (`default-days: 7`, Patch 3, Minor 7, Major 21). Sicherheitsupdates sind vom Cooldown ausgenommen. Schon offene Dependabot-PRs ändern sich nicht; die Wirkung zeigt sich erst beim nächsten Wochenlauf (montags).
+- Im selben PR: Der Bau der Projektseite war zweimal hintereinander rot, weil die Commons-API „Search is currently too busy“ meldete. `demo-data.mjs` wiederholte nur HTTP-Fehler (`get()`), diese Meldung kommt aber als HTTP 200 mit `error`-Feld. Jetzt wiederholt `api()` sie bis zu fünfmal (2, 4, 8, 16 s Wartezeit). Der Fehler hatte mit Dependabot nichts zu tun, hätte aber auch den Lauf auf `main` (Pages) getroffen.
+
 ## Test-Setup in der Cloud-Sitzung
 
 Die E2E-Skripte und Mocks lagen im Scratchpad der Sitzung, nicht im Repo. So lassen sie sich neu bauen:
